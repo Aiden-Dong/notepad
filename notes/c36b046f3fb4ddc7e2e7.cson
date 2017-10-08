@@ -58,7 +58,7 @@ content: '''
   
   提取器相当于 `apply` 的反操作， 我们调用 `val obj = Object(args)` ， 是调用单例对象的 `apply` 方法，
   
-  同样 `val Object(param) = obj` ， 是调用提取器方法。
+  同样 `val Object(param) = obj` ， 是调用提取器方法。`(相当于 param = Object.unapply(obj))`
   
   - unapply 方法:
   
@@ -101,4 +101,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-23T14:41:15.797Z"
-updatedAt: "2017-10-08T06:23:57.353Z"
+updatedAt: "2017-10-08T07:51:00.065Z"

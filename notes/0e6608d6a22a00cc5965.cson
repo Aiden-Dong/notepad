@@ -79,10 +79,137 @@ content: '''
   }
   ```
   
-  ### 
+  ### 3. 匹配数组，列表和元组
+  
+  > 匹配数组
+  
+  ```
+  val arr:Array[String] = Array("one","two","1","2") // 数组
+  
+  // 数组测试
+  arr match {
+    case Array("1") => println("array")            // 表示匹配只有一个元素切为 "1" 的值
+    case Array("one","two",_*) => println("haha")  // 匹配 ("one","two",....) 的数组
+    case Array(x,y, _*) => println(x+":"+y)        // 匹配两个元素及以上的构成的数组并且抓到前两个元素的值
+    case _ => println("Other Array")
+  }
+  ```
+  
+  > 匹配列表
+  
+  ```
+  val list:List[String] = "one"::"two"::Nil          // 列表
+  
+  // 列表测试
+  list match {
+    case a :: b => println(a + ":" + b)           //  a->head , b->tail
+    case x :: Nil => println(x)                   // 表示列表中只有一个有效值
+    case Nil => println("None")                   // 表示列表中没有有效值
+    case _ => println("Other List")
+  }
+  ```
+  
+  > 匹配元组
+  
+  ```
+  val tuples = ("one","two",1)                       // 元组
+  
+  // 元组
+  tuples match {
+    //case (x,y,_*) => println(x + ":" + y)        // 匹配两个元素及以上的构成的元组并且抓到前两个元素的值
+    case ("one","two",_) => println("haha")        // 确定的值匹配个数要保持统一
+    case (x) => println(x)                         // 表示获取整个 tuple
+    case (x,y,z) => println(x + ":" + y + ":" + z) // 表示获取里面的值
+    case x:Tuple3[String, String, Int] => println("tuple")
+    case _=> println("other")
+  }
+  ```
+  
+  ### 4. 提取器
+  
+  match 语法可以用于提取器，带有从对象提取值的 unapply 或 unapplySeq 方法的对象。
+  
+  - unapply 方法用于提取固定数量的对象
+  - unapplySeq 提取的是一个序列，可长可短
+  
+  ```
+  val testStr = "hello,world,！"
+  
+  testStr match {
+    case SplitUnapply(a,b) => println(a+":" + b)               // 调用 val SplitUnapply(a,b) = "hello,world" => 调用 unapply(string)
+    case SplitUnapply(x,y,z) => println(x + ":" + y + ":" + z) // unppaySeq 方法
+    case _=>println("other")
+  }
+  }
+  ```
+  
+  自定义 SplitUnapply 类 : 
+  
+  ```
+  object SplitUnapply {
+    /*
+    def unapply(arg: String)={
+      if(arg == None){
+         None
+      }else{
+        val arrStr:Array[String] = arg.split(",")
+  
+        Some((arrStr(0), arrStr(1)))
+      }
+    }
+    */
+  
+    def unapplySeq(arg:String):Option[Seq[String]] = {
+      if(arg == None){
+        None
+      }else{
+        Some(arg.split(","))
+      }
+    }
+  }
+  
+  ```
+  
+  ###  5. for 表达式中的模式
+  
+  可以在 for 推到式中使用带变量的模式。对每一个遍历到的值，这些变量都会被绑定。
+  
+  - 在 for 推到式中，失败的匹配将会被安静的忽略。
+  
+  ```
+  object ForAdvanced {  
+    def main(args: Array[String]): Unit = {  
+      // for 调用的foreach方法  
+      for (i <- List(1, 2, 3, 4, 5)) {  
+        // 执行结果：1、2、3、4、5、  
+        print(i + "、");  
+      }  
+      println();  
+        
+      // 变量绑定，用index绑定Flink，给Flink设置别名  
+      for(index@"Flink" <- List("Hadoop","Spark","Flink")){  
+        // 执行结果：Flink  
+        println(index);  
+      }  
+        
+      // 条件表达格=>模式匹配，匹配value值为Hadoop的元素  
+      for((language,"Hadoop") <- Set("Scala" -> "Spark","Java" -> "Hadoop")){  
+        // 执行结果：Java  
+        println(language);  
+      }  
+        
+      // 条件表达格式=》模式匹配，value的类型为Int类型的  
+      for((k,v:Int) <-List(("Spark" -> 5),("Hadoop"->"BigData"))){  
+          // 执行结果：Spark  
+          println(k)  
+      }  
+    }  
+  }
+  ```
+  
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-03T11:49:26.418Z"
-updatedAt: "2017-10-08T06:23:38.798Z"
+updatedAt: "2017-10-08T09:16:29.961Z"
