@@ -1,0 +1,61 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "5-Mysql 数据类型介绍"
+content: '''
+  ### 5-Mysql 数据类型介绍
+  ---
+  ##### 整形
+  
+  ```
+  tinyint         1 字节
+  smallint        2 字节
+  mediumint       3 字节
+  int             4 字节
+  bigint          8 字节
+  
+  help data types;
+  ```
+  ##### 浮点型
+  
+  ```
+  float           4 字节
+  double          8 字节
+  ```
+  
+  ##### 日期型
+  
+  ```
+  data            4 字节      yyyy-mm-dd
+  datatime        8 字节      yyyy-mm-dd hh-hm-ss
+  time            3 字节      hh-mm-ss
+  ```
+  
+  ##### 字符串型
+  
+  ```
+  char(M)                         长度范围 : 0-255(定长)
+  varchar(M)                      长度范围 : 0-65535(变长)
+  
+  text                            0-65535字节 值得长度加2字节
+  longtext                        大字符串文本 值得长度加 4 字节
+  ```
+  
+  > Mysql 支持在数据类型后面指定宽度
+  
+  ```
+  数据类型 (显示宽度)
+  ```
+  
+  #### 二进制类型
+  
+  ```
+  binary(M)       字节数为 M , 允许长度为 0-M 的定长二进制字符串
+  varbinary(M)                允许字节数为 M 的变长二进制字符串
+  BLOB            存储二进制大对象， 最大为 2^24-1 字节
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-28T05:45:15.219Z"
+updatedAt: "2017-08-28T05:45:31.235Z"

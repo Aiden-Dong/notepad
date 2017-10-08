@@ -1,0 +1,109 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "6-文件处理"
+content: '''
+  ### 6-文件处理
+  
+  ---
+  
+  #### 1.Source
+  
+  scala.io.Source , scala 中有一个从源中获取文本内容的类.
+  
+  > 源:
+  
+  ```
+  Source.fromFile()          // 从文件中获取
+  Source.fromString()        // 从字符串中获取
+  Source.fromInputStream()   // 从输入流中获取
+  Source.fromURL()           // 从URL中获取
+  ```
+  > 常用的方法:
+  
+  ```
+  # 按行获取
+  getLines()              // 获取迭代器  --toArray 转数组
+  mkString                // 以字符形式返回所有的内容
+  
+  # 字符遍历
+  for(v_char <- source)   // 单个字符遍历
+  
+  # 读取字符
+  val iter = source.buffered
+  
+  while(iter.hasNext){
+    if(iter.head  是符合预期的){
+       处理  iter.next
+    }
+  }
+  ```
+  
+  
+  > 实例 :
+  
+  ```
+  import scala.io.Source
+  
+  /**
+    * Created by saligia on 17-9-20.
+    */
+  object SourceObj {
+    // fileGetdataplatform
+  
+    // 遍历文件
+    def getFileContext():Unit = {
+  
+       val file = Source.fromFile("/home/saligia/tmp/passwd")
+  
+      for (v_line <- file.getLines()){
+        println(v_line)
+      }
+    }
+    // 打印成一行
+    def getFileContextOnline():Unit = {
+      val file = Source.fromFile("/home/saligia/tmp/task.json")
+  
+      println(file.mkString)
+    }
+    // 字符遍历
+    def getFileChar():Unit = {
+      var file = Source.fromFile("/home/saligia/tmp/task.json")
+  
+      for(v_char <- file if !v_char.equals(' ') && !v_char.equals('\\n')){
+        print(v_char)
+      }
+    }
+  
+    // 查看字符
+  
+    def watchContext():Unit={
+  
+      val file = Source.fromFile("/home/saligia/tmp/task.json")
+      val iter = file.buffered
+  
+      while(iter.hasNext){
+        if(!iter.head.equals(' ') && !iter.head.equals('\\n')){
+          print(iter.next())
+        }else{
+          iter.next()
+        }
+      }
+  
+    }
+  
+    // 网页摘取
+    def getUrlMessage():Unit={
+      val message = Source.fromURL("https://www.zhihu.com/explore")
+  
+      for(v_line <- message.getLines()){
+        println(v_line)
+      }
+    }
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T04:42:27.323Z"
+updatedAt: "2017-09-21T08:52:25.393Z"

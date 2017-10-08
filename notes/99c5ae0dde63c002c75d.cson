@@ -1,0 +1,220 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "3-控制语句"
+content: '''
+  ### 3-控制语句
+  ---
+  
+  ```		
+  if 判断:
+  		--------------------------------------
+  		if [ condition1 ]; then
+  				statement1
+  		elif [ condition2 ]; then
+  				statement2
+  		else
+  				statement3
+  		fi
+  		---------------------------------------
+  
+   利用case ... esca 判断
+     -----------------------------------------		
+  	case $VarName in
+  	"varlue1")
+  			statement1
+  			;;
+  	"varlue2")
+  			statement2
+  			;;
+  	*)
+  			statement3
+  			;;
+  	esac
+  	-------------------------------------------
+  循环:
+  
+   while 语句
+  	-------------------------------------------
+  	whlie [ condition ]; do
+  		statement
+  	done
+  	------------------------------------------
+  
+   until 语句
+  	-------------------------------------------
+  	until [ condition ]; do
+  		statement
+  	done;
+  	------------------------------------------
+  
+   for 语句
+  	------------------------------------------
+  		for var in con1 con2 con3 ...
+  		do
+  			statement
+  		done
+  		
+  		for ((初始值; 限制值; 执行步长))
+  		do
+  				statement
+  		done
+  	------------------------------------------					
+  ```
+  
+  ## if 语句
+  
+  ### 比较字符：
+    
+  ```
+  利用 test || [] 命令来测试
+  
+  --------------------------- 文件类型测试 ------------------test -e filename----------------
+  
+  -e 	// 判断该文件名是否存在
+  -f 	// 判断该文件名是否存在且为文件
+  -d	// 判断该文件是否存在且为目录
+  -b | -c | -S | -p | -L
+  
+  --------------------------  文件权限测试-------------------test -r filename-----------------
+  
+  -r | -w | -x | -u | -g | -k | -s |
+  -s // 文件是否存在且为非空
+  
+  ------------ 两个文件之间的比较-----test f ile1 -nt file2-------------
+  
+  -nt     // 测试第一个文件是否比第二个文件新
+  -ot     // 测试第一个文件是否比第二个文件旧
+  -ef     // 测试第一个文件是否与第二个文件相等
+  
+  ------------ 整数的比较 ---------test num1 -lt num2 ----------
+  
+  -eq     // 两整数值相等
+  -ne     // 两整数值不相等
+  -lt     // 小于
+  -le     // 小于等于
+  -gt     // 大于
+  -ge     // 大于等于
+  
+    --------- 字符串数据 ----------test -z string -------
+    
+    -z      // 判断字符串是否为空
+    -n      // 判断字符串是否为非空
+    =       // 判断字符串是否相等
+    !=      // 判断字符串是否不想等
+    
+    ----------逻辑测试 ---------- test -r filename -a -x filename
+    
+    -a      // 与逻辑
+    -o      // 或逻辑
+    !       // 非逻辑
+    ```
+  
+    ```
+    #!bin/bash
+    
+    for((i=1;i<10;i++))
+    do
+    	if (($i == 5))
+    	then
+    		echo "$i == 5"
+    	fi
+    	
+    	if (($i > 5)) 
+    	then
+    		echo "$i > 5"
+    	fi
+    
+    	if [ $i -ge 5 ] 		
+    	then
+    		echo "$i => 5"
+    	fi
+    
+    	if [ $i -lt 5 ]
+    	then
+    		echo "$i < 5"
+    	fi
+    
+    	if [ $i -le 5 ]
+    	then
+    		echo "$i <= 5"
+    	fi
+    done
+  ```
+      
+  ### for 循环
+  
+  ```
+  #!/bin/bash
+  
+  value=$@
+  
+  for val in $value 
+  do
+  	echo "val = $val"
+  	sleep 1
+  done
+  exit 0
+  ```
+  ### while 循环
+  
+  ```
+  #!/bin/bash
+  
+  while read line
+  do
+  	echo $line
+  done
+  exit 0
+  ```
+  　
+  这里顺便提供两种按行读取文件的方式,我们需要借助　read 来读取一行数据，配合　while 来使用
+  
+  ```
+  #!/bin/bash
+  ## 获取到文件名，然后通过管道将cat 的输出对接到read 的输入流
+  ## 然后　read 从输入流中接收到文件的内容，每次read 以此读取
+  
+  cat fileName | while read line
+  do
+   echo ${line}
+  done
+  ```
+  
+  ```
+  #!/bin/bash
+  
+  ## 这种方式与第一种本质时相同的
+  ##　这里只是用 重定义了　read 的输入流的方式对接到文件中
+  
+  while read strLine 
+  do
+  	echo ${strLine}
+  done < fileName
+  ```
+  ### case 
+  
+  ```
+  #!/bin/bash
+  
+  read name
+  
+  case "$name" in
+  	mary|roland|"jack")
+  		echo "welcome back"
+  		echo "long time no to see"
+  		echo "how do you do"
+  	;;
+  	may|joe)
+  		echo "welcome ...."
+  		echo "what do you want to do"
+  	;;
+  esac
+  
+  exit 0
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T09:55:03.246Z"
+updatedAt: "2017-09-19T09:55:24.093Z"

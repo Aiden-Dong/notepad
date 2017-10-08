@@ -1,0 +1,803 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "5-HDFS API"
+content: '''
+  ### 5-HDFS API
+  ---
+  
+  #### 1-读取文件
+  
+  ```
+  import java.io.BufferedReader;
+  import java.io.IOException;
+  import java.io.InputStream;
+  import java.io.InputStreamReader;
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.IOUtils;
+  
+  public class ReadFile {
+  
+  	public static void main(String[] args) throws IOException{
+  
+  		String uri = "hdfs://localhost:9000/user/saligia/input/mac";
+  
+  		Configuration  conf = new Configuration();
+  		FileSystem fs = FileSystem.get(URI.create(uri), conf);
+  
+  		InputStream in = null;
+  
+  		try{
+  			in = fs.open(new Path(uri));
+                          // open 的是一个 FSDataInputStream 对象， 这个对象继承自 DataInputStream
+                          /*
+                          *   public class FSDataINputStream extends DataINputStream
+                          *     implements Seekable, PositionedReadable{
+                          *
+                          *   }
+                          */
+  
+  			IOUtils.copyBytes(in, System.out, 4096, false);
+  			BufferedReader readText = new BufferedReader(new InputStreamReader(in));
+  
+  			while(readText.ready()){
+  				System.out.println(readText.readLine());
+  			}
+  
+  
+  		}catch(IOException e){
+  			//e.printStackTrace();
+  		}
+  
+  	}
+  }
+  
+  ```
+  
+  #### 2-文件写入
+  
+  ```
+  import java.io.BufferedReader;
+  import java.io.BufferedWriter;
+  import java.io.IOException;
+  import java.io.InputStream;
+  import java.io.InputStreamReader;
+  import java.io.OutputStream;
+  import java.io.OutputStreamWriter;
+  import java.net.URI;
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.util.Progressable;
+  
+  public class WriteFile {
+  
+  	public static void main(String[] args) throws IOException {
+  		// TODO Auto-generated method stub
+  
+  		String  uriHdfs = "hdfs://localhost:9000/user/saligia/input/writejava";
+  		String uriLocal = "./WriteFile.java";
+  
+  
+  		Configuration conf = new Configuration();											      // 配置文件
+  
+  		FileSystem hdfs = FileSystem.get(URI.create(uriHdfs), conf);			  // 打开 HDFS
+  		FileSystem lofile = FileSystem.get(URI.create(uriLocal), conf);		   // 打开本地文件
+  
+  
+  		InputStream fin = lofile.open(new Path(uriLocal));																						// 打开本地文件读
+  		OutputStream fout = hdfs.create(new Path(uriHdfs), new Progressable(){					              // 打开 HDFS 写
+  			public void progress(){
+  				System.out.print(".");
+  			}
+  		});
+  
+      /*
+  		 * 	create 返回的时 FSDataOutputStream
+  		 * 		public class FSDataOutputStream extends DataOutputStream implements Syncable{
+  		 * 		}
+  		 *
+  		 * 		HDFS 只允许对一个对以打开的文件顺序写入
+  		 * 		  	在现有文件末尾追加数据
+  		 */
+       
+  		BufferedReader fread = new BufferedReader(new InputStreamReader(fin));
+  		BufferedWriter fwrite = new BufferedWriter(new OutputStreamWriter(fout));
+  
+  		try{
+  			while(fread.ready()){
+  				fwrite.write(fread.readLine());
+          fwrite.write("\\n");
+  			}
+  		}catch(IOException e){
+  			//e.printStackTrace();
+  		}finally{
+  			fread.close();
+  			fwrite.close();
+  		}
+  	}
+  }
+  
+  ```
+  
+  #### 3-创建目录
+  
+  ```
+  import java.io.IOException;
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  
+  public class MakeDir {
+  
+  	public static void main(String[] args) throws IOException {
+  		// TODO Auto-generated method stub
+  		String dirUri = "hdfs://localhost:9000/user/saligia/tmp";
+  
+  		Configuration conf = new Configuration();
+  		FileSystem file = FileSystem.get(URI.create(dirUri), conf);
+  
+      // 创建目录
+  		System.out.println(file.mkdirs(new Path(dirUri)));
+  	}
+  
+  }
+  ```
+  
+  #### 4- 文件属性
+  
+  ```
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileStatus;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  
+  public class ShowFileStatus {
+  
+  	public static void main(String[] args) throws IOException {
+  		// TODO Auto-generated method stub
+  
+  		String fileUri = "hdfs://localhost:9000/user/saligia/input/mac";
+  
+  		Configuration conf = new Configuration();
+  		FileSystem file = FileSystem.get(URI.create(fileUri), conf);
+  
+  		FileStatus stat = file.getFileStatus(new Path(fileUri));
+  
+  		// 获取路径
+  		System.out.println("Path : " + stat.getPath());
+  		// 判断是否时目录
+  		System.out.println("isDir : " + stat.isDir());
+  		// 判断长度
+  		System.out.println("Len : " + stat.getLen());
+  		// 判断块大小
+  		System.out.println("Blocksize :" + stat.getBlockSize());
+  		// 所有者
+  		System.out.println("Owner : " + stat.getOwner());
+  		// 返回权限
+  		System.out.println("Permission : " + stat.getPermission());
+  
+                  if(stat.isDir()){
+                    FileStatus[] list = file.listStatus(new Path(fileUri));
+              			for (FileStatus it : list){
+              				System.out.println(it.getPath());
+              			}
+                  }
+  	}
+  
+  }
+  ```
+  
+  #### 5-删除文件
+  
+  ```
+  import java.io.IOException;
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  
+  public class DeleteFile {
+  	public static void main(String[] args) throws IOException{
+  		String fileUri = "hdfs://localhost:9000/user/saligia/tmp";
+  		
+  		Configuration conf = new Configuration();
+  		
+  		FileSystem file = FileSystem.get(URI.create(fileUri), conf);
+  		
+  		file.delete(new Path(fileUri), true);
+  	}
+  }
+  
+  ```
+  
+  ####  6-数据完整性
+  
+  - datanode 负责在收到数据后存储该数据及其验证校验和.
+    他在收到客户端的数据或复制其他datanode 时， 将执行这个操作
+  
+  - 正在写数据的的客户端将数据及检验和发送到由一些列datanode 组成的管线
+    最后一个 datanode 将验证这个检验和
+  
+  > 每个 datanode 后台运行一个 DataBlockScanner 线程， 从而定期验证存储在这个 datanode 上的所有数据块
+  
+  
+  > 客户端读取数据时检测到错误:
+  
+  ```
+  1. 向namenode 即 正在读取的这个datanode 报告以损坏的数据块.
+  2. 抛出 ChecksumException 异常。
+  3. namenode 将这个数据块副本标记为已损坏， 因此他不会将请求发送到这个节点或者将这个节点的副本复制到另一个节点.
+  4. 安排这个数据块的一个副本复制到另一个节点， 维护副本平衡.
+  5  删除这个数据块。
+  ```
+  
+  >  LocalFileSystem
+  
+  ```
+  - Hadoop LocalFileSystem是客户端校验的类。
+  
+  - 在使用LocalFileSystem写文件时，会透明的创建一个.filename.crc的文件。
+  
+  - 校验文件大小的字节数由io.bytes.per.checksum属性设置，默认是512bytes,即每512字节就生成一个CRC-32校验和。
+  
+  - .filename.crc文件会存 io.bytes.per.checksum的信息。在读取的时候，会根据此文件进行校验。
+  
+  -  事实上LocalFileSystem是通过继承ChecksumFileSystem实现校验的工作。
+  ```
+  
+  - ##### 生成本地校验文件
+  
+  ```
+  package check;
+  
+  import java.io.IOException;
+  import java.net.URI;
+  import java.net.URISyntaxException;
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FSDataOutputStream;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.LocalFileSystem;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.fs.RawLocalFileSystem;
+  import org.apache.hadoop.hdfs.DFSOutputStream;
+  import org.apache.hadoop.util.Progressable;
+  
+  public class LocalFileCheck {
+  	
+  	public static void main(String[] args) throws IOException, URISyntaxException{
+  		
+  		String filePath = "file:///home/saligia/tmp/checkfile";
+  		
+  		Configuration conf = new Configuration();
+  		FileSystem fs = new LocalFileSystem(new RawLocalFileSystem());
+  		
+  		fs.initialize(URI.create(filePath), conf);
+  		
+  		FSDataOutputStream fout = null;
+  		try{
+  			fout = fs.create(new Path(filePath), new Progressable(){
+  				@Override
+  				public void progress() {
+  						System.out.print(" . ");
+  				}
+  			});
+  			
+  			for(int i = 0; i < 10; i++){
+  				fout.write(i);
+  			}
+  		}catch(IOException e){
+  			e.printStackTrace();
+  		}finally{
+  			if(fout != null){
+  				fout.close();
+  			}
+  			if(fs != null){
+  				fs.close();
+  			}
+  		}
+  	}
+  }
+  ```
+  
+  - ##### 本地校验文件的上传
+  
+  ```
+  package check;
+  
+  import java.io.IOException;
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FSDataInputStream;
+  import org.apache.hadoop.fs.FSDataOutputStream;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.LocalFileSystem;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.fs.RawLocalFileSystem;
+  import org.apache.hadoop.util.Progressable;
+  
+  public class CheackReadFile {
+  	public static void main(String[] args) throws IOException{
+  		byte[] buffer = new byte[128];
+  		int readLen = 0;
+  		String fileInPath = "file:///home/saligia/tmp/checkfile";
+  		String fileOutPath = "hdfs://localhost:9000/user/saligia/InputFile/checkfile";
+  		
+  		Configuration conf = new Configuration();
+  		
+  		FileSystem fsOut = FileSystem.get(URI.create(fileOutPath), conf);
+  		FileSystem fsIn =new LocalFileSystem(new RawLocalFileSystem());
+  		fsIn.initialize(URI.create(fileInPath), conf);
+  		
+  		FSDataInputStream fin = null;
+  		FSDataOutputStream fout = null;
+  		
+  		try{
+  			fin = fsIn.open(new Path(fileInPath));
+  			fout = fsOut.create(new Path(fileOutPath), new Progressable(){
+  				@Override
+  				public void progress() {
+  					System.out.print(" . ");
+  				}
+  			});
+  			
+  			while((readLen = fin.read(buffer)) > 0){
+  				
+  				fout.write(buffer, 0, readLen);
+  			}
+  		}catch(IOException e){
+  			e.printStackTrace();
+  		}finally{
+  			if(fin != null){
+  				fin.close();
+  			}
+  			if(fout != null){
+  				fout.close();
+  			}
+  			if(fsOut != null){
+  				fsOut.close();
+  			}
+  			if(fsIn != null){
+  				fsIn.close();
+  			}
+  		}
+  	}
+  }
+  
+  ```
+  
+  #### 7-压缩
+  
+  ##### - Codec
+  
+  > **通过 CompressionCodec 对数据流进行压缩和解压缩**
+  
+  - 对写入数据进行压缩：
+  
+      >可用 createOutputStream(OutputStream out)方法在底层的数据流中对需要以压缩格式写入在此之前尚未压缩的数据新建一   个 **CompressionOutputStream**  对象。
+  - 读取压缩文件：
+      > 对输入数据流中读取的数据进行解压缩的时候，则调用 createInputStream(InputStream in) 获取 **CompressionInputStream** 可通过该方法从底层数据流读取解压缩文件
+  - 两种获得 CompressionCodec 的方式
+      1. 通过 直接 new 其子类的方法
+      2. 通过 CompressionCodecFactory 的getCodec 方法
+  
+  - 数据的压缩
+  ```
+  import java.io.IOException;
+  import java.io.InputStream;
+  import java.io.OutputStream;
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.compress.CompressionCodec;
+  import org.apache.hadoop.io.compress.CompressionOutputStream;
+  import org.apache.hadoop.io.compress.GzipCodec;
+  import org.apache.hadoop.util.Progressable;
+  
+  public class CompressionInFile {
+  
+  	public static void main(String[] args) throws IOException{
+  		String readFile= "hdfs://localhost:9000/user/saligia/tmp/Example.java";	// 需要读入的文件
+  		String writeFile = "hdfs://localhost:9000/user/saligia/tmp/Example.gz";	// 需要生成的文件
+  		
+  		int readLen;
+  		byte[] buffer = new byte[128];
+  		
+  		FileSystem fread = null;										// 输入文件系统
+  		FileSystem fwrite = null;									// 输出文件系统
+  		
+  		InputStream fin = null;										// 文件的输入流
+  		CompressionOutputStream fout = null;				// 文件的输出流 -- 压缩格式
+  		
+  		Configuration conf = new Configuration();
+  		
+  		
+  			try {
+  				/*
+  				 *  步骤 1 ： 打开要输入输出的文件流
+  				 */
+  				fread = FileSystem.get(URI.create(readFile), conf);
+  				fwrite = FileSystem.get(URI.create(writeFile), conf);
+  				
+  				/*
+  				 *  步骤 2 ： 创建文件的输入输出流
+  				 */
+  				fin = fread.open(new Path(readFile));		// 打开文件并进行读取
+  				
+  				CompressionCodec codec = new GzipCodec();	// 打开文件并写入压缩格式
+  				fout = codec.createOutputStream(fwrite.create(new Path(writeFile), new Progressable(){
+  					@Override
+  					public void progress() {
+  						System.out.print(".");
+  						
+  					}
+  				}));
+  				
+  				while((readLen = fin.read(buffer, 0, buffer.length)) > 0){
+  					fout.write(buffer, 0, buffer.length);
+  				}
+  				
+  			} catch (IOException e) {
+  				// TODO Auto-generated catch block
+  				e.printStackTrace();
+  			}finally{
+  				fin.close();
+  				fout.close();
+  				fread.close();
+  				fwrite.close();
+  			}
+  		
+  	}
+  }
+  
+  ```
+  - 通过 CompressionCodecFactory 推断 CompressionCodec
+  ```
+  import java.io.IOException;
+  import java.io.OutputStream;
+  import java.net.URI;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.FileSystem;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.compress.CompressionCodec;
+  import org.apache.hadoop.io.compress.CompressionCodecFactory;
+  import org.apache.hadoop.io.compress.CompressionInputStream;
+  import org.apache.hadoop.util.Progressable;
+  
+  public class FactoryFile {
+  
+  	public static void main(String[] args) throws IOException{
+  		
+  		String readPath = "hdfs://localhost:9000/user/saligia/tmp/Example.gz";
+  		String writePath = "file:///home/saligia/tmp/Example.java";
+  		int readLen;
+  		byte[] buffer = new byte[128];
+  		
+  		Configuration conf = new Configuration();
+  		
+  		FileSystem fin = null;
+  		FileSystem fout = null;
+  		
+  		OutputStream fwrite = null;
+  		CompressionInputStream fread = null;
+  		
+  		try{
+  			/*
+  			 *  步骤一 ： 加载输入输出文件系统
+  			 */
+  			fin = FileSystem.get(URI.create(readPath), conf);
+  			fout = FileSystem.get(URI.create(writePath), conf);
+  			
+  			/*
+  			 * 步骤二： 加载输入输出流
+  			 */
+  		
+  			// 输出流的加载方式
+  			fwrite = fout.create(new Path(writePath), new Progressable(){			
+  				
+  				@Override
+  				public void progress() {
+  					System.out.printf(" . ");
+  				}
+  				});
+  			
+  			// 输入流的加载方式
+  			CompressionCodecFactory factory = new CompressionCodecFactory(conf);	// 创建自动判断压缩类型的类
+  			CompressionCodec codec = factory.getCodec(new Path(readPath));
+  			fread = codec.createInputStream(fin.open(new Path(readPath)));
+  			
+  			while((readLen = fread.read(buffer, 0, buffer.length)) > 0){
+  				fwrite.write(buffer, 0, readLen);
+  			}
+  			
+  			
+  		}catch(IOException e){
+  			e.printStackTrace();
+  		}finally{
+  			fread.close();
+  			fwrite.close();
+  			fin.close();
+  			fout.close();
+  		}
+  	}
+  }
+  
+  
+  ```
+  
+  #### 7- 序列化
+  - ##### Writable 接口
+  > Writable 接口定义了两个方法：
+  >- Write : 将其状态写到 DataOutput 二进制状态
+  > - Read : 从 DataOutput中读取状态
+  ```
+  public interface Writable{
+    void write(DataOutput out) throws IOException;
+    void readFields(DataInput in) throws IOException;
+  }
+  
+  ```
+  
+  ```
+  import java.io.*;
+  
+  import org.apache.hadoop.io.IntWritable;
+  
+  public class WritableInterface {
+  public static void main(String[] args) throws IOException{
+  	String filepath = "/home/saligia/tmp/one";
+  
+  	DataOutputStream fout = new DataOutputStream(new FileOutputStream(filepath));
+  	DataInputStream fin = new DataInputStream(new FileInputStream(filepath));
+  
+  	IntWritable th1 = new IntWritable();
+  	IntWritable th2 = new IntWritable();
+  
+  	th1.set(100);
+  
+  	th1.write(fout);
+  	th2.readFields(fin);
+  	System.out.println(th2.get());
+  }
+  }
+  
+  ```
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f8891hhx1uj20fm00n741.jpg)
+  
+  > - 对于 MapReduce 来说 类型比较非常重要，因为中间有个 **基于键的排序字段**
+  > - Hadoop 提供的一个优化接口是继承自 Java Comparator 的 **RawComparator** 接口
+  
+  ```
+  package org.apache.hadoop.io;
+  
+  public interface Writable<T> extends Writable, Comparable<T>{
+  
+  }
+  
+  package.org.apache.haddo.io;
+  import java.util.Comparator;
+  
+  public interface RawComparator<T> extends Comparator<T>{
+    public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2);
+  }
+  
+  RawComparator<IntWritable> comparator = WritableComparator.get(IntWritable.class);
+  ```
+  
+  > 该接口允许其实现直接比较数据流中的记录， 无须先把数据流反序列化为对象， 这样便避免了新建对象的过程。
+  
+  > - **WritableComparator** 是对继承自 **WritableComparable** 类的 **RawComparator** 类的一个通用实现。
+  > - 他提供了两个主要的功能。 第一， 它提供了对原始 compare() 方法的默认实现,该方法能够反序列化将在流中进行进行比较的对象，并调用该对象的compare() 方法。
+  > - 第二： 他充当的是 RawComparator 实例的工厂
+  ```
+  为了获得 RawComparator 实例， 我们可：
+  RawComparator<IntWritable> comparator = WritableComparator.get(IntWritable.class);
+  ```
+  
+  ```
+  import java.io.ByteArrayOutputStream;
+  import java.io.DataOutputStream;
+  import java.io.FileInputStream;
+  import java.io.FileNotFoundException;
+  import java.io.IOException;
+  
+  import org.apache.hadoop.io.IntWritable;
+  import org.apache.hadoop.io.RawComparator;
+  import org.apache.hadoop.io.WritableComparator;
+  
+  public class ComparatorTest {
+  public static void main(String[] args) throws IOException{
+  	RawComparator<IntWritable> comparator = WritableComparator.get(IntWritable.class);
+  
+  	/*
+  	 *  直接比较两个对象
+  	 */
+  	IntWritable one = new IntWritable(12),			// 12
+  			two = new IntWritable(13);							// 13
+  
+  	System.out.println(comparator.compare(one, two));		// -1
+  
+  	/*
+  	 *  比较两个序列化对象
+  	 */
+  
+  	byte[] byteOne = new byte[32];
+  	byte[] byteTwo = new byte[32];
+  
+  	FileInputStream file1 = new FileInputStream("/home/saligia/tmp/one"); // 100
+  	FileInputStream file2 = new FileInputStream("/home/saligia/tmp/two"); // 101
+  
+  	int length1 = file1.read(byteOne, 0, byteOne.length);
+  	int length2 = file2.read(byteTwo, 0, byteOne.length);
+  
+  	System.out.println(comparator.compare(byteTwo, 0, length2,byteOne, 0, length1)); // 1
+  }
+  }
+  
+  ```
+  
+  - ##### Writable 类
+  > Java 基本类型的封装类
+  ```
+  -- 继承自 WritableComparable 接口
+    [BooleanWritable | ByteWritable | IntWritable | VIntWritable | FloatWritable | LongWritable | VLongWritable | DoubleWritable]
+    ->  NullWritable : // 序列化长度为 0 ， 他并不能从数据流中读取数据， 也不能写入数据。它充当一个占位符。
+    ->  BytesWritable ： //二进制数据数组的封装
+    -> ObjectWritable : // java 基本类型的封装
+  -- Writable 集合类
+    -> ArrayWritable  | TwoDArrayWritable 是对 Writable 的数组和而为ie数组的是心阿
+        // 所有元素必须是同一实例的实现
+        ArrayWritable array = new ArrayWRitable(Text.class);
+  ```
+  
+  - Text 测试：
+  ```
+  import java.io.UnsupportedEncodingException;
+  
+  import org.apache.hadoop.io.*;
+  
+  public class TextTest {
+  
+  // 测试 String 的编码格式
+  public static void String() throws UnsupportedEncodingException{
+  	String s = "\\u0041\\u00DF\\u6771\\uD801\\uDC00";			// Unicode-16 的编码格式
+  						// 41 c3 9f e6 9d b1 f0 90 90 80
+  	byte[] array ;
+  
+  	System.out.println(s);
+  	System.out.println("String 数组的长度 ： " + s.length());
+  	System.out.println("String 的字节长度 ： " + s.getBytes("utf-8").length);
+  	array = s.getBytes("utf-8");
+  
+  	for(int i = 0; i < array.length; i++){
+  		System.out.printf("%x ", array[i]);
+  	}
+  	System.out.println();
+  
+  }
+  
+  // 测试 Test 的编码方式
+  public static void Text(){
+  	Text t = new Text("\\u0041\\u00DF\\u6771\\uD801\\uDC00");
+  	System.out.println(t.toString());
+  	System.out.println(t.getLength());
+  }
+  public static void main(String[] args) throws UnsupportedEncodingException {
+  	// TODO Auto-generated method stub
+  	TextTest.String();
+  	TextTest.Text();
+  }
+  
+  }
+  
+  ```
+  
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f88g9h8y3mj20fs04nglw.jpg)
+  
+  ```
+  import org.apache.hadoop.io.ArrayWritable;
+  import org.apache.hadoop.io.IntWritable;
+  import org.apache.hadoop.io.NullWritable;
+  
+  public class NullWritableTest {
+  public static void main(String[] args){
+  	ArrayWritable writable = new ArrayWritable(IntWritable.class);
+  	IntWritable[] array = new IntWritable[]{
+  			new IntWritable(20),
+  			new IntWritable(30)
+  	};
+  
+  	writable.set(array);
+  
+  	for(IntWritable it : (IntWritable[])writable.toArray()){
+  		System.out.println(it.get());
+  	}
+  }
+  }
+  
+  ```
+  
+  - ##### 序列化框架
+  
+  > -  Hadoop 有一个正对可替换序列化框架的API (实现对每个类型进行类型与二进制的转换)
+  > - 序列化框架使用一个 Serialization 实现来表示。 例如 Writable 类型的 Serialization实现 WritalbeSerialization
+  
+  > Serialization 对象定义了从类型到 **Serializer**  实例（将对象转换成字节流）和 **Deserializer**   实例 （将字节流转化成对象的）映射方式
+  
+  ```
+  
+  import java.io.DataInputStream;
+  import java.io.DataOutputStream;
+  import java.io.FileInputStream;
+  import java.io.FileNotFoundException;
+  import java.io.FileOutputStream;
+  import java.io.IOException;
+  
+  import org.apache.hadoop.io.IntWritable;
+  import org.apache.hadoop.io.Writable;
+  import org.apache.hadoop.io.serializer.*;
+  
+  public class SerializationTest {
+  public static void main(String[] args) throws IOException{
+  	/*
+  	 *
+  	 *  Writable 的序列化框架 -- WritableSerialization
+  	 */
+  
+  
+  	IntWritable testobj = new IntWritable(12);
+  	IntWritable setobj = new IntWritable();
+  
+  	DataOutputStream out = new DataOutputStream(new FileOutputStream("/home/saligia/tmp/testojb"));
+  	DataInputStream in = new DataInputStream(new FileInputStream("/home/saligia/tmp/testojb"));
+  
+  	/*
+  	 *  步骤一 ： 声明一个 WritableSerialization 的对象
+  	 *  步骤二 ： 创建一个用于序列化或反序列化的对象
+  	 *  步骤三 ： 通过对象与输入输出流相关联
+  	 *  步骤四 ： 进行序列化，或反序列化操作
+  	 */
+  
+  	WritableSerialization one = new WritableSerialization();
+  
+  	/*
+  	 *  序列化方法
+  	 */
+  
+  	Serializer seria = one.getSerializer((Class<Writable>) testobj.getClass());
+  	seria.open(out);
+  	seria.serialize(testobj);
+  
+  	/*
+  	 * 反序列化方法
+  	 */
+  	Deserializer desc = one.getDeserializer((Class<Writable>) testobj.getClass());
+  	desc.open(in);
+  	desc.deserialize(setobj);
+  
+  	System.out.println(setobj.get());
+  
+  }
+  }
+  
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T10:20:35.945Z"
+updatedAt: "2017-09-20T10:51:21.203Z"

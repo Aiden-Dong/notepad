@@ -1,0 +1,48 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "2- Scala 基础篇"
+content: '''
+  ### 2- Scala 基础篇
+  ---
+  ### 1. 变量
+  
+  #### 基本变量类型
+  
+  类型 | 变量
+  -- | --
+  整形 | **Byte**, **Short**, **Int**, **Long** 
+  浮点型 | **Float**, **Double**
+  布尔型 | **Boolean**
+  字符串 | **Char**, **String**
+  无值 | **Unit**
+  空值 | **Null**
+  其他类型 | **Nothing**(所有其他类型的子类型), **Any**(所有其他类型的超类)， **AnyRef**(Scala 所有引用类的基类)
+  
+  #### 声明变量关键字
+  
+  ```
+  var : 声明变量
+  val : 声明常亮
+  ```
+  
+  声明变量时可以不指定变量的类型，这个信息可以从初始化的信息中推断出来
+  ```
+  val age = 20
+  ```
+  也可以在声明中指定变量的类型
+  ```
+  var name:String = "saligia"
+  ```
+  
+  > 说明:
+  
+  1. scala 的基本变量都属于类
+  2. 变量定义时都需要初始化
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-02T11:02:10.784Z"
+updatedAt: "2017-09-06T09:45:32.958Z"

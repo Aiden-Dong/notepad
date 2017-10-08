@@ -1,0 +1,78 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "4- Mysql 存储引擎介绍"
+content: '''
+  ### 4- Mysql 存储引擎介绍
+  ---
+  #### 存储引擎简介
+  
+  > 简而言之， **存储引擎**就是表的类型， 数据库的存储引擎决定了表在计算机中的存储方式
+  
+  查看数据库支持的存储引擎:
+  
+  ```
+  MySQL [(none)]> show engines \\G
+  *************************** 1. row ***************************
+        Engine: InnoDB
+       Support: DEFAULT
+       Comment: Supports transactions, row-level locking, and foreign keys
+  Transactions: YES
+            XA: YES
+    Savepoints: YES
+  *************************** 2. row ***************************
+        Engine: CSV
+       Support: YES
+       Comment: CSV storage engine
+  Transactions: NO
+            XA: NO
+    Savepoints: NO
+  *************************** 3. row ***************************
+        Engine: PERFORMANCE_SCHEMA
+       Support: YES
+       Comment: Performance Schema
+  Transactions: NO
+            XA: NO
+    Savepoints: NO
+  ```
+  
+  #### InnoDB 存储引擎
+  
+  > InnoDB 是 Mysql 的默认搜索引擎。 InnoDB 给Mysql 的表提供了事物， 回滚， 崩溃修复能力和多版本并发控制的事物安全
+  
+  **特点：**
+  
+  1. InnoDB 支持自动增长列 auto_increment
+  ```
+  - 自动增长列的值不能为空且必须唯一.
+  - Mysql 中规定自增列必须为主键.
+  - 在插值时
+      > 如果自动增长列不能输入值， 则插入自动增长后的值.
+      > 如果输入的值为0或为空， 则也为自动增长的值。
+      > 如果插入的值前面没有出现过， 则可以直接插入
+  ```
+  
+  2. InnoDB 支持外键(foreign key)
+  
+  ```
+  - 外键所在表为子表， 外键所依赖的表为主表
+  - 父表中外键所关联的字段必须为主键
+  - 当删除， 更新父表的某条信息时， 响应的子表也会发生变化
+  ```
+  
+  3. InnoDB 存储引擎中， 创建的表结构存储在 .frm 中。
+  
+  ```
+  数据和索引存储在 innodb_data_home_dir 和 innodb_data_file_path定义的表空间中.
+  ```
+  **说明：**
+  
+  ```
+  优点 : 良好的事务管理， 崩溃修复能力和并发控制。
+  缺点 : 读写效率稍差， 占用的数据空间相对比较大.
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-28T05:44:39.141Z"
+updatedAt: "2017-08-28T05:44:53.635Z"

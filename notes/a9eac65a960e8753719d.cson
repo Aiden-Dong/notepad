@@ -1,0 +1,68 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "12 - 集合"
+content: '''
+  ### 12 - 集合
+  
+  ---
+  
+  - 所有集合扩展都扩展自 Iterable 特质。
+  - 集合有三大类， 分为序列， 集和映射。
+  - 对于所有集合类， scala 都同时提供了可变的和不可变的版本。
+  
+  ![](http://img.my.csdn.net/uploads/201709/30/1506760338_1153.png)
+  
+  ### 1. 列表
+  
+  - scala 列表集成自 `Seq` 特质
+  - 列表的不可变版本有 : Vector, Range, List, Stream, Stack, Queue
+  - 列表的可变版本有 : ArrayBuffer, Stack, Queue, PriorityQueue, LinkedList, DoubleLinkedList 
+  
+  #### 列表的不可变版本
+  
+  - Vector
+  
+  Vector 是 ArrayBuffer 的不可变版本 : 一个带下标的序列，支持快速的随机访问。
+  
+  向量是以属性结构实现的，每个节点可以有不超过 32 个子节点。
+  
+  ```
+  def getVectory():Unit = {
+    val vector:Vector[String] = Vector[String]("one", "two", "three")
+  
+    println(vector(1))
+  }
+  ```
+  
+  - Range
+  
+  Range 对象并不存储所有值而只是起始值，结束值和增值
+  
+  ```
+  val range = new Range(1, 10, 2)   // Range 保留其实位置和结束位置，还有步条
+  ```
+  
+  - List
+  
+  在 Scala 中，列表要么是 Nil，要么是一个 head 元素加上一个 tail, 而tail 又是一个列表。
+  
+  ```
+  def getList():Unit = {
+    var list:List[Int] = List(5,8)
+  
+    // 添加元素
+    list = 8::list
+  
+    print(list)
+  }
+  ```
+  
+  #### 可变序列
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-30T07:53:27.501Z"
+updatedAt: "2017-10-03T03:08:19.432Z"

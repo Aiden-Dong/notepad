@@ -1,0 +1,67 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "6-Mysql 索引"
+content: '''
+  ### 6-Mysql 索引
+  ---
+  #### 1 索引的设计原则：
+  
+  ```
+  1. 选择唯一性索引
+  2. 为经常需要排序， 分组和联合的字段建立索引
+  3. 限制索引的数目.
+  4. 尽量使用数量少的索引
+  5. 为经常作为查询条件的字段建立索引。
+  6. 尽量使用前缀来索引
+  ```
+  
+  #### 2. 索引的分类:
+  
+  ```
+  1. 普通索引     index
+  2. 唯一性索引   unique index(限制索引的值必须唯一)
+  3. 全文索引     fulltext(限制的列属性必须为 test 等类型)
+  ```
+  
+  #### 3. 创建索引
+  
+  ##### 3.1 新建表时创建索引
+  
+  ```
+  MySQL [saligia]> create table two(id int primary key, name varchar(11), unique index (id));
+  Query OK, 0 rows affected (0.36 sec)
+  
+  ```
+  
+  ##### 3.2 在已经存在的表上创建索引
+  
+  ```
+  MySQL [saligia]> create index test_index on test(test_id);
+  Query OK, 0 rows affected (0.20 sec)
+  Records: 0  Duplicates: 0  Warnings: 0
+  
+  MySQL [saligia]> create unique index usermsg_index on usermsg (user_id);
+  Query OK, 0 rows affected (0.47 sec)
+  Records: 0  Duplicates: 0  Warnings: 0
+  ```
+  
+  ##### 3.3 用 ALTER TABLE 语句来创建索引：
+  
+  ```
+  MySQL [saligia]> alter table test add unique index (test_id);
+  Query OK, 0 rows affected (0.43 sec)
+  Records: 0  Duplicates: 0  Warnings: 0
+  
+  ```
+  
+  #### 3.4 删除索引：
+  
+  ```
+  drop index index_name on table_name;
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-28T05:45:45.147Z"
+updatedAt: "2017-08-28T05:45:58.050Z"

@@ -1,0 +1,104 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "10- 操作符"
+content: '''
+  ### 10- 操作符
+  
+  ---
+  
+  #### 1. 中值操作符
+  
+  ```
+  a 标识符 b
+  ```
+  
+  > 这样实际是调用的　`a.标识符(b)`　的调用
+  
+  
+  #### 2. 一元操作符
+  
+  - 后置操作符
+  
+  ```
+  a 标识符
+  ```
+  
+  > 这样如果调用 `a.标识符()`
+  
+  - 前置操作符
+  
+  ```
+  标识符a
+  ```
+  
+  > 这样如同调用 `a.unary_操作符()`
+  
+  
+  #### 3. apply 和 update 方法
+  
+  - apply : 
+  
+  `f(arg1,arg2,..)` **<==>** `f.apply(arg1,arg2,..)`
+  
+  - update
+  
+  `f(arg1,arg2,..) = value` **<==>** `f.update(arg1,arg2,...,value)`
+  
+  ```
+  def update(name:String,value:String):Unit = {
+    println(name+ ":" + value)
+  }
+  
+  def apply(name: String): Unit={
+    println("name : " + name)
+  }
+  ```
+  
+  #### 4. 提取器
+  
+  提取器相当于 `apply` 的反操作， 我们调用 `val obj = Object(args)` ， 是调用单例对象的 `apply` 方法，
+  
+  同样 `val Object(param) = obj` ， 是调用提取器方法。
+  
+  - unapply 方法:
+  
+  通常而言 `unapply` 方法返回的是一个 Option, 它包含一个元组， 每个匹配到的值都有一个变量与之对应。
+  
+  ```
+  class Currency(val value: Double, val unit: String) {
+  
+  }
+  
+  object Currency{
+  
+    def apply(value: Double, unit: String): Currency = new Currency(value, unit)
+  
+    def unapply(currency: Currency): Option[(Double, String)] = {
+      if (currency == null){
+        None
+      }
+      else{
+        Some(currency.value, currency.unit)
+      }
+    }
+  }
+  ```
+  
+  - unapplySeq 方法:
+  
+  要返回任意长度的值的序列。
+  
+  ```
+  object Names {
+    def unapplySeq(str: String): Option[Seq[String]] = {
+      if (str.contains(",")) Some(str.split(","))
+      else None
+    }
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-23T14:41:15.797Z"
+updatedAt: "2017-10-08T06:23:57.353Z"

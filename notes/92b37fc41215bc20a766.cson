@@ -1,0 +1,369 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "7-awk 操作篇"
+content: '''
+  ### 7-awk 操作篇
+  ---
+  ## 1. 简介
+  
+  awk 是一个强大的文本分析工具， 相对于 grep 的查找, sed 的编辑, awk 在其对数据分析并生成报告时，显得尤为强大。
+  
+  简单的来说 awk 就是把文件逐行的读入， 以空格为默认分隔将每行切片，切开的部分在进行各种分析处理。
+  
+  awk 有三种不同的版本 : awk, nawk，gawk ， 未做特殊说明时， 一般指 gawk , gawk 是 awk 的 GUN 版本。
+  
+  
+  ## 2. 使用方法
+  
+  ```
+  awk '{pattern + action}' {filenames}
+  ```
+  
+  - pattern : awk 在数据数据中查找的内容 ， 他是要表示的正则表达式， 用斜杠括起来。
+  - action : 在找到匹配内容时所执行的一系列命令。
+  - 花括号不需要在程序中始终出现，但它们用于根据特定的模式对一系列指令进行分组。
+  
+  awk 语言的最基本功能是在文件或字符串中基于指定规则浏览和抽取信息，awk 抽取信息后,才能进行其他文本操作。 完整的awk 脚本通常用来格式化文本文件中的信息。通常， awk 是以文件的一行为处理单位的。awk 每接受文件的一行，然后执行相应的命令，来处理文件。
+  
+  
+  ### 2.1 调用 awk
+  
+  **命令行方式：**
+  
+  ```
+  awk [-F field-separator] 'commands' input-file(s)
+  ```
+  
+  其中， commands 是真正 awk 命令， [-F 域分隔符] 是可选的。 input-file(s) 是待处理的文件。
+  
+  在 awk 中， 文件每一行中， 由域分隔符分开的每一项称为一个域。 通常，在不指定 -F 域分隔符的情况下，默认的域分隔符是空格。
+  
+  **Shell 脚本方式 :**
+  
+  ```
+  #! /bin/awk
+  ```
+  
+  将所有的 awk 命令插入一个文件， 并使用 awk 程序即可， 然后 awk 命令解释器作为脚本首行， 一遍通过键入脚本名称来调用。
+  
+  
+  **将所有的 awk 命令插入一个单独文件， 然后调用**
+  
+  ```
+  awk -f awk-script-file input-file(s)
+  ```
+  
+  其中， -f 选项加载 awk-script-file 中 awk 脚本， input-file(s) 跟上面一样处理
+  
+  
+  ### 2.2 初步入门：
+  
+  #### 2.2.1 指定分隔符打印并输出：
+  
+  ```
+  $ head -n 2 all_data_update
+  
+  0000CF20-AC84-4E22-9687-6074D1311C6C	0	idfa	ios
+  00023ba3-ab46-6d0e-2af5-58b7a9bc9078	0	gaid	android
+  
+  $ head -n 2 all_data_update | awk -F '\\t' '{print $1}'
+  
+  0000CF20-AC84-4E22-9687-6074D1311C6C
+  00023ba3-ab46-6d0e-2af5-58b7a9bc9078\\
+  ```
+  
+  #### 2.2.2 可以添加首行和尾行
+  
+  ```
+  $ head -n 3 all_data_update | awk -F '\\t' 'BEGIN{print "gid,system"} {print $1","$4} END{print
+  "========================"}'
+  
+  gid,system
+  0000CF20-AC84-4E22-9687-6074D1311C6C,ios
+  00023ba3-ab46-6d0e-2af5-58b7a9bc9078,android
+  00030BFB-52A1-454D-B2FF-60D4AECC5139,ios
+  ========================
+  ```
+  
+  #### 2.2.3. 搜索行
+  
+  ```
+  ## 搜索含有 Mysql 的指定的行
+  
+  $ awk '/mysql/' /etc/passwd
+  
+  mysql:x:50:1001::/usr/local/share/mysql:/sbin/nologin
+  
+  ## 搜索含有mysql 的行并打印出指定的字段
+  
+  $ awk -F ':' '/mysql/{print $3}' /etc/passwd
+  
+  50
+  ```
+  
+  ### 2.3 内置变量信息
+  
+  
+  ```
+  ARGC               命令行参数个数
+  ARGV               命令行参数排列
+  ENVIRON            支持队列中系统环境变量的使用
+  FILENAME           awk浏览的文件名
+  FNR                浏览文件的记录数                         --已经读取的记录数
+  FS                 设置输入域分隔符，等价于命令行 -F选项
+  NF                 浏览记录的域的个数                       -- 此列分割出来的字段数
+  NR                 已读的记录数                             -- 与 FNR 貌似差异不大
+  OFS                输出域分隔符
+  ORS                输出记录分隔符
+  RS                 控制记录分隔符
+  ```
+  
+  示例：
+  
+  ```
+  $ awk -F: '{print NR ":" $1}' /etc/passwd
+  
+  1:root
+  2:daemon
+  3:bin
+  4:sys
+  ```
+  
+  ###　2.4 print 和 printf
+  
+  print 和 printf 的功能都是用来打印， 而且用法类似于 java
+  
+  printf 有时候能够使语句更简洁规范
+  
+  ```
+  $ awk -F: '{printf("第%d行:%s\\n"), NR ,$1}' /etc/passwd
+  
+  第1行:root
+  第2行:daemon
+  第3行:bin
+  第4行:sys
+  ```
+  
+  
+  ### 2.5 awk 编程
+  
+  #### 2.5.1 变量和赋值
+  
+  ```
+  ## 基本用法
+  
+  $ head -n 3 /etc/passwd | awk -F: '{count++; print $1} END {print "count :" count}'
+  
+  root
+  daemon
+  bin
+  count :3
+  
+  ## 统计文件夹下所有文件的总大小
+  
+  $ ll | awk 'BEGIN {size=0} {size  += $5} END {print "size :" size}'
+  
+  size :3.34285e+09
+  ```
+  
+  #### 2.5.2 条件判断语句
+  
+  awk中的条件语句是从C语言中借鉴来的，见如下声明方式：
+  
+  ```
+  if (expression) {
+    statement;
+    statement;
+    ... ...
+  }
+  
+  if (expression) {
+    statement;
+  } else {
+    statement2;
+  }
+  
+  if (expression) {
+    statement1;
+  } else if (expression1) {
+    statement2;
+  } else {
+    statement3;
+  }
+  ```
+  
+  使用实例:
+  
+  ```
+  $ ll
+  
+  总用量 20
+  drwxr-xr-x 3 saligia saligia 4096 12月 21 17:18 1-DataCheck
+  -rw-r--r-- 1 saligia saligia 4147 12月 21 17:18 process
+  -rw-r--r-- 1 saligia saligia 4174 12月 21 17:18 结果分析
+  
+  $ ll | awk '{if($3 == "saligia"){print "OK"}}'
+  
+  OK
+  OK
+  OK
+  ```
+  
+  #### 2.5.3 循环语句
+  
+  **for 循环**
+  
+  ```
+  $ ll | awk '{for(i = 1; i <= NF; i++){printf("%s ", $i);}; printf("\\n")}'
+  
+  总用量 20
+  drwxr-xr-x 3 saligia saligia 4096 12月 21 17:18 1-DataCheck
+  -rw-r--r-- 1 saligia saligia 4147 12月 21 17:18 process
+  -rw-r--r-- 1 saligia saligia 4174 12月 21 17:18 结果分析
+  ```
+  
+  **while 循环**
+  
+  ```
+  $ ll | awk '{i = 1; while(i <= NF){printf("%s ", $i); i++} printf("\\n")}'
+  
+  总用量 20
+  drwxr-xr-x 3 saligia saligia 4096 12月 21 17:18 1-DataCheck
+  -rw-r--r-- 1 saligia saligia 4147 12月 21 17:18 process
+  -rw-r--r-- 1 saligia saligia 4174 12月 21 17:18 结果分析
+  ```
+  
+  数组形式
+  
+  ```
+  $ cat /etc/passwd | awk -F: 'BEGIN {count = 0} {name[count++] = $1} END {for(i=0; i<count; i++){print name[i]}}'
+  root
+  daemon
+  bin
+  sys
+  sync
+  games
+  man
+  lp
+  ```
+  
+  ### 2.6 正则表达式
+  
+  #### 2.6.1 正则表达式查询:
+  
+  ```
+  awk '/REG/{action}'
+  ```
+  REG 为正则表达式， 满足条件后把 $0 载入 action
+  
+  #### 2.6.2 在函数中使用正则表达式
+  
+  在　if 比较中可以使用正则比较符: ~ , !~
+  
+  ```
+  $ ll
+  
+  总用量 20
+  drwxr-xr-x 3 saligia saligia 4096 12月 21 17:18 1-DataCheck
+  -rw-r--r-- 1 saligia saligia 4147 12月 21 17:18 process
+  -rw-r--r-- 1 saligia saligia 4174 12月 21 17:18 结果分析
+  
+  $ ll | awk '{if($1 ~ /^d.*/){print $0}}'
+  drwxr-xr-x 3 saligia saligia 4096 12月 21 17:18 1-DataCheck
+  ```
+  
+  ### 2.7 函数篇：
+  
+  **字符串函数**
+  
+  #### 2.7.1 : sub/gsub :
+  
+  > 功能 : 替换字符串中的部分内容
+  
+  使用:
+  
+  sub(old[REG/str],newStr, strLin);
+  
+  sub/gsub 支持正则表达式，使用old[reg,str] 来匹配strLin, 如果匹配到后便将匹配到的内容替换为　newStr.
+  
+  ```
+  awk 'BEGIN{strLine="hello world123";sub(/[0-9]+/, "!", strLine);print strLine;}'
+  ```
+  
+  #### 2.7.2 index:
+  
+  > 功能:　索引字符串位置
+  
+  使用：
+  
+  index(strline, str);
+  
+  index, 可以从　strline 字符串中查找　str 的所在位置，　如果存在范围位置下标，否则返回0
+  
+  ```
+  awk 'BEGIN{print index("hello world", "world")}'
+  ```
+  
+  #### 2.7.3 length:
+  
+  > 功能: 获取字符串的长度
+  
+  使用:
+  
+  length(str);
+  
+  使用　length 可以返回　str 字符串的长度．
+  
+  ```
+  awk 'BEGIN{print length("hello world")}'
+  ```
+  
+  #### 2.7.4 substr:
+  
+  > 功能　: 截取字符串
+  
+  使用:
+  
+  substr(str, n1, n2);
+  
+  返回 str 字符串 [n1,n2] 所包含区间的子字符串.
+  
+  ```
+  awk 'BEGIN{print substr("hello world", 1, 3)}'
+  ```
+  
+  #### 2.7.5 split :
+  
+  > 功能　: 分割字符串
+  
+  使用 :
+  
+  split(strLine, param, str/REG);
+  
+  使用split 可以将　strLine 字符串分割开，分隔符可以为str或者REG,分割后的数组赋值给　param 变量．
+  
+  ```
+  awk 'BEGIN{split("hello world", strArr, /\\s/); print length(strArr); for(key in strArr){printf("%d is %s\\n", key, strArr[key])}}'
+  ```
+  
+  
+  #### 2.7.6 match:
+  
+  > 功能: 匹配字符串
+  
+  使用:
+  
+  match(strLine, str/REG);
+  
+  match 的匹配方式属于部分匹配，及如果strLine 中有部分数据符合匹配结果，则范围true,否则为false;
+  
+  ```
+  cat segment.sql | awk '{print match($0, /NOT/)?$0:"no found";}'
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T09:58:31.431Z"
+updatedAt: "2017-09-19T10:00:46.372Z"

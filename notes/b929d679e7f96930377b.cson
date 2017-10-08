@@ -1,0 +1,434 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "7-MapReduce 输入与输出"
+content: '''
+  #### 7-MapReduce 输入与输出
+  
+  ---
+  
+  #### 1-TextInputFormat
+  
+  ```
+  import java.io.IOException;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.conf.Configured;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.*;
+  import org.apache.hadoop.mapreduce.Job;
+  import org.apache.hadoop.mapreduce.Mapper;
+  import org.apache.hadoop.mapreduce.Reducer;
+  import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+  import org.apache.hadoop.util.Tool;
+  import org.apache.hadoop.util.ToolRunner;
+  
+  public class TextMapReduce extends Configured implements Tool{
+  
+  	// Mapper
+  	public static class Map extends Mapper<LongWritable, Text, FloatWritable, Text>{
+  
+  		@Override
+  		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, FloatWritable, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  			
+  			String origStr = value.toString();
+  			
+  			if(origStr.length() < 13)
+  				return;
+  			String paramStr = origStr.substring(1, 13);
+  			String valueStr = origStr.substring(14).trim();
+  			
+  			Float paramSet = Float.parseFloat(paramStr);
+  			
+  			context.write(new FloatWritable(paramSet), new Text(paramStr));
+  		}
+  		
+  	}
+  	
+  	// Reduce 
+  	public static class Reduce extends Reducer<FloatWritable, Text, FloatWritable, Text>{
+  
+  		@Override
+  		protected void reduce(FloatWritable key, Iterable<Text> value,
+  				Reducer<FloatWritable, Text, FloatWritable, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  			String valueContext = "";
+  			
+  			for(Text it:value){
+  				valueContext = value.toString() + "|";
+  			}
+  			context.write(key, new Text(valueContext));
+  		}
+  		
+  	}
+  	
+  	@Override
+  	public int run(String[] args) throws Exception {
+  		
+  		if(args.length != 2){
+  			System.err.println("Exec <input> <output>");
+  			System.exit(-1);
+  		}
+  		
+  		Configuration conf = new Configuration();
+  		Job job = new Job(conf, "TextMapReduce");
+  		
+  		job.setJarByClass(TextMapReduce.class);									// 设置任务的类
+  		
+  		TextInputFormat.addInputPath(job, new Path(args[0]));			// 设置输入格式 -- Map
+  		TextOutputFormat.setOutputPath(job, new Path(args[1]));		// 设置输出格式	-- Reduce
+  		
+  		job.setMapperClass(Map.class); 													// 设置 Map的调用类
+  		job.setMapOutputKeyClass(FloatWritable.class);
+  		job.setMapOutputValueClass(Text.class);
+  		
+  		job.setReducerClass(Reduce.class); 											// 设置Reduce的调用类
+  		
+  		job.setOutputKeyClass(FloatWritable.class);							// 设置输出的key格式
+  		job.setOutputValueClass(Text.class);										// 设置输出的value格式
+  		
+  		return job.waitForCompletion(true) ? 1 : 0;
+  	}
+  	
+  	public static void main(String[] args) throws Exception{
+  		if(args.length != 2){
+  			System.err.println("Exec <input> <output>");
+  			System.exit(-1);
+  		}
+  		
+  		int exeRes = ToolRunner.run(new TextMapReduce(), args);
+  		System.exit(exeRes);
+  		
+  	}
+  	
+  }
+  
+  ```
+  
+  #### 2-KeyValueInputFormat
+  
+  ```
+  import java.io.IOException;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.conf.Configured;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.*;
+  import org.apache.hadoop.mapreduce.Job;
+  import org.apache.hadoop.mapreduce.Mapper;
+  import org.apache.hadoop.mapreduce.Reducer;
+  import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+  import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+  import org.apache.hadoop.util.Tool;
+  import org.apache.hadoop.util.ToolRunner;
+  
+  public class KeyValueTextMapReduce extends Configured implements Tool{
+  
+  	public static class Map extends Mapper<Text, Text, Text, Text>{
+  		/*
+  		 * Map 处理
+  		 */
+  		@Override
+  		protected void map(Text key, Text value, Mapper<Text, Text, Text, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  			System.out.println(key + "###" + value);
+  		}
+  		
+  	}
+  	
+  	/*
+  	 *  Reduce 处理
+  	 */
+  	public static class Reduce extends Reducer<Text, Text, Text, Text>{
+  
+  		@Override
+  		protected void reduce(Text key, Iterable<Text> value, Reducer<Text, Text, Text, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  		}
+  		
+  	}
+  	@Override
+  	public int run(String[] args) throws Exception {
+  		
+  		Configuration conf = new Configuration();
+  		conf.set("mapreduce.input.keyvaluelinerecordreader.key.value.separator", "]");		// 设置 key value 的分隔符
+  		Job job = new Job(conf, "KeyValueTextMapReduce");
+  		
+  		job.setJarByClass(KeyValueTextMapReduce.class); 
+  		
+  		job.setInputFormatClass(KeyValueTextInputFormat.class);
+  		
+  		KeyValueTextInputFormat.setInputPaths(job, args[0]);
+  		TextOutputFormat.setOutputPath(job, new Path(args[1]));
+  		
+  		job.setMapperClass(Map.class);
+  		job.setMapOutputKeyClass(Text.class);
+  		job.setMapOutputValueClass(Text.class);
+  		
+  		job.setReducerClass(Reduce.class);
+  		job.setOutputKeyClass(Text.class);
+  		job.setOutputValueClass(Text.class);
+  		
+  		return job.waitForCompletion(true)? 1 : 0;
+  		
+  	}
+  	
+  	public static void main(String[] args) throws Exception{
+  		int status = ToolRunner.run(new KeyValueTextMapReduce(), args);
+  		
+  		System.exit(status);
+  	}
+  
+  }
+  
+  ```
+  
+  #### 3-NLineInputFormat
+  
+  ```
+  import java.io.IOException;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.conf.Configured;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.LongWritable;
+  import org.apache.hadoop.io.Text;
+  import org.apache.hadoop.mapreduce.Job;
+  import org.apache.hadoop.mapreduce.Mapper;
+  import org.apache.hadoop.mapreduce.Reducer;
+  import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+  import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+  import org.apache.hadoop.mapreduce.lib.input.NLineInputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+  import org.apache.hadoop.util.Tool;
+  import org.apache.hadoop.util.ToolRunner;
+  
+  public class NLineMapReduce extends Configured implements Tool{
+  
+  	public static class Map extends Mapper<LongWritable, Text, Text, Text>{
+  		/*
+  		 * Map 处理
+  		 */
+  		@Override
+  		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, Text, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			FileSplit splitMess = (FileSplit)context.getInputSplit();
+  			//InputSplit splitMess = context.getInputSplit();
+  
+  			System.out.println(key + "###" + value);
+  		}
+  		
+  	}
+  	
+  	/*
+  	 *  Reduce 处理
+  	 */
+  	public static class Reduce extends Reducer<Text, Text, Text, Text>{
+  
+  		@Override
+  		protected void reduce(Text key, Iterable<Text> value, Reducer<Text, Text, Text, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  		}
+  		
+  	}
+  	@Override
+  	public int run(String[] args) throws Exception {
+  		
+  		Configuration conf = new Configuration();
+  		conf.set("mapreduce.input.lineinputformat.linespermap", "10");		// 设置 key value 的分隔符
+  		Job job = new Job(conf, "NLMapReduce");
+  		
+  		job.setJarByClass(NLineMapReduce.class); 
+  		
+  		//KeyValueTextInputFormat.addInputPath(job, new Path(args[0]));		-- 不可以这样使用
+  		
+  		job.setInputFormatClass(NLineInputFormat.class);
+  		NLineInputFormat.setInputPaths(job, args[0]);
+  		TextOutputFormat.setOutputPath(job, new Path(args[1]));
+  		
+  		job.setMapperClass(Map.class);
+  		job.setMapOutputKeyClass(Text.class);
+  		job.setMapOutputValueClass(Text.class);
+  		
+  		job.setReducerClass(Reduce.class);
+  		job.setOutputKeyClass(Text.class);
+  		job.setOutputValueClass(Text.class);
+  		
+  		return job.waitForCompletion(true)? 1 : 0;
+  		
+  	}
+  	
+  	public static void main(String[] args) throws Exception{
+  		int status = ToolRunner.run(new NLineMapReduce(), args);
+  		
+  		System.exit(status);
+  	}
+  
+  
+  }
+  
+  ```
+  
+  #### 4-二进制的输入
+  
+  ```
+  import java.io.IOException;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.conf.Configured;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.*;
+  import org.apache.hadoop.mapreduce.Job;
+  import org.apache.hadoop.mapreduce.Mapper;
+  import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+  import org.apache.hadoop.util.Tool;
+  import org.apache.hadoop.util.ToolRunner;
+  
+  public class SequenceInMapReduce extends Configured implements Tool{
+  
+  	public static class Map extends Mapper<FloatWritable, Text, NullWritable, Text>{
+  
+  		@Override
+  		protected void map(FloatWritable key, Text value, Mapper<FloatWritable, Text, NullWritable, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  			System.out.println(key + " : " + value);
+  		}
+  		
+  	}
+  	@Override
+  	public int run(String[] args) throws Exception {
+  		
+  		Configuration conf = new Configuration();
+  		Job job = new Job(conf, "SequenceInMapReduce");
+  		job.setJarByClass(SequenceInMapReduce.class);
+  		job.setInputFormatClass(SequenceFileInputFormat.class);
+  		SequenceFileInputFormat.addInputPath(job, new Path(args[0]));
+  		TextOutputFormat.setOutputPath(job, new Path(args[1]));
+  		
+  		job.setMapperClass(Map.class);
+  		job.setMapOutputKeyClass(NullWritable.class);
+  		job.setOutputKeyClass(Text.class);
+  		job.setOutputValueClass(Text.class);
+  		
+  		
+  		return job.waitForCompletion(true)?1:0;
+  	}
+  
+  	public static void main(String[] args) throws Exception{
+  		int status = ToolRunner.run(new SequenceInMapReduce(), args);
+  		System.exit(status);
+  	}
+  }
+  
+  ```
+  
+  #### 5- 二进制的输出
+  
+  ```
+  import java.io.IOException;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.conf.Configured;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.FloatWritable;
+  import org.apache.hadoop.io.LongWritable;
+  import org.apache.hadoop.io.Text;
+  import org.apache.hadoop.mapreduce.Job;
+  import org.apache.hadoop.mapreduce.Mapper;
+  import org.apache.hadoop.mapreduce.Reducer;
+  import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+  import org.apache.hadoop.util.Tool;
+  import org.apache.hadoop.util.ToolRunner;
+  
+  public class SequenceMapReduce extends Configured implements Tool{
+  
+  	// Mapper
+  	public static class Map extends Mapper<LongWritable, Text, FloatWritable, Text>{
+  
+  		@Override
+  		protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, FloatWritable, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  			
+  			String origStr = value.toString();
+  			
+  			if(origStr.length() < 13)
+  				return;
+  			String paramStr = origStr.substring(1, 13);
+  			String valueStr = origStr.substring(14).trim();
+  			
+  			Float paramSet = Float.parseFloat(paramStr);
+  			
+  			context.write(new FloatWritable(paramSet), new Text(paramStr));
+  		}
+  		
+  	}
+  	
+  	// Reduce 
+  	public static class Reduce extends Reducer<FloatWritable, Text, FloatWritable, Text>{
+  
+  		@Override
+  		protected void reduce(FloatWritable key, Iterable<Text> value,
+  				Reducer<FloatWritable, Text, FloatWritable, Text>.Context context)
+  				throws IOException, InterruptedException {
+  			
+  			String valueContext = "";
+  			
+  			for(Text it:value){
+  				valueContext = value.toString();
+  			}
+  			context.write(key, new Text(valueContext));
+  		}
+  		
+  	}
+  	
+  
+  	@Override
+  	public int run(String[] args) throws Exception {
+  	
+  		Configuration conf = new Configuration();
+  		Job job = new Job(conf, "SequenceMapReduce");
+  		
+  		TextInputFormat.addInputPath(job, new Path(args[0]));
+  		//FileOutputFormat.setOutputPath(job, new Path(args[1]));
+  		//job.setOutputFormatClass(SequenceFileOutputFormat.class);
+  		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+  		SequenceFileOutputFormat.setOutputPath(job, new Path(args[1]));
+  		
+  		job.setMapperClass(Map.class);
+  		job.setMapOutputKeyClass(FloatWritable.class);
+  		job.setOutputValueClass(Text.class);
+  		
+  		job.setReducerClass(Reduce.class);
+  		job.setOutputKeyClass(FloatWritable.class);
+  		job.setOutputValueClass(Text.class);
+  		
+  		return job.waitForCompletion(true)?1:0;
+  	}
+  
+  	public static void main(String[] args) throws Exception{
+  		int status = ToolRunner.run(new SequenceMapReduce(), args);
+  		System.exit(status);
+  	}
+  }
+  
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T10:59:11.053Z"
+updatedAt: "2017-09-20T11:07:12.894Z"

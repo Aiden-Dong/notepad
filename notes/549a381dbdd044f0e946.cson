@@ -1,0 +1,158 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "1- hadoop 简介 :"
+content: '''
+  ### 1- hadoop 简介 :
+  ---
+  - **说明 ：**
+  
+  > - NameNode 需要使用更多的内存， 在这种情况下 NameNode 和 jobtracker 最好放在不同的机器中.
+  > - SecoundNameNode 可以和 Namenode 一起运行在同一个机器中， 但是同样由于内存使用的原因（SecoundName 和 NameNode 的内存需求相同）， 两者最好放在独立的硬件上.
+  
+  - ##### 网络拓扑
+  
+  > Hadoop 配置需要通过一个 Java 接口 DNSToSwitchMapping 来指定地址和网络位置之间的映射关系
+  
+  ```
+  public interface DNSToSwitchMapping{
+      public List<String> resolv(List<String> names);
+  }
+  ```
+  resolv() 函数的输入参数 names 描述 IP 地址列表, 返回响应的我那个落位置字符串列表
+  
+  
+  - #### Hadoop 架构
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f7z8j80pl2j20hg07qgmg.jpg)
+  - **NameNode**
+  
+  ```
+  - 默认端口 50070
+  - HDFS 的守护进程
+  - 记录文件是如何被分割成数据块的，以及这些数据块被存储在存储到哪些节点上
+  - 对内存和I/O进行集中管理
+  - 是个单点，发生故障使集群崩溃
+  ```
+  - **SecondaryNamenode**
+  
+  ```
+  - 默认端口 : 50090
+  - 监控HDFS状态的辅助后台程序
+  - 每个集群都有一个
+  - 与 NameNode 进行通信，定期保存 HDFS元数据的快照
+  - 当 NameNode 故障时可以作为备用 NameNode 使用
+  ```
+  - **DataNode**
+  
+  ```
+  - 9000
+  - 每台从服务器都运行一个
+  - 负责把HDFS数据块读写到本地文件系统
+  ```
+  
+  - **JobTracker**
+  
+  ```
+  - 默认端口 50030
+  - 用于处理作业（用户提交代码）的后台程序
+  - 决定有哪些文件参与处理然后切割task并分配节点
+  - 监控task,重启失败的task(与不同的节点)
+  - 每个集群只有唯一一个JobTracker,位于Master节点
+  ```
+  
+  - **TaskTracker**
+  ```
+  - 默认端口 50060
+  - 位于 slave 节点上， 与 datanode 结合（代码与数据结合的原则）
+  - 管理各自节点上的task（由jobtracker分配）
+  - 每个节点只有一个tasktracker,但一个tasktracer可以启用多个JVM,用于并行执行map或reduce任务
+  - 与 jobtracker 交互
+  ```
+  
+  - #### 日常管理过程
+  - 元数据备份
+  ```
+   最直接的方法是：利用脚本文件定期的将 secondsNamenode 的内容放到异地站点。
+  ```
+  - 数据备份
+  - 文件系统检查（fsck）
+  - 文件系统均衡器
+  
+  - #### 委任和解除节点
+  - 委任新节点
+  
+  > - 被允许连接到 namenode 的所有 datanode 节点放在一个文件中， 文件名有 **dfs.hosts** 属性指定。
+  > - 连接到 jobtracker 的所有 tasktracker 节点放在一个文件中， 文件名由 **mapred.hosts**属性指定。
+  
+  **步骤:**
+  
+  ```
+  1> 将进节点的网络地址添加到 include 文件中.
+  2> 运行一下指令， 将经过审核的一系列 datanode 结合更新至namenode 信息
+      hadoop dfsadmin -refreshNodes
+  3> 运行以下指令， 将经过审核的一些列 tasktracker 信息更新至 jobtracker 信息
+      hadoop mradmin -refreshNodes
+  4> 以新节点更新 slaves 文件。这样的话， Hadoop 控制脚本会将新的节点包括在未来的操作中
+  5> 启动新的 datanode 和 tasktracker
+  6> 检查新的 datanode 和 tasktracker 是否都出现在网页页面中.
+  ```
+  - 解除旧节点
+  
+  ```
+  1> 若待解除的节点的网络地址添加到 exclude 文件中， 不更新 include 文件.
+  2> 执行以下指令， 使用一组新的 审核过的 datanode 来更新 namenode 设置：
+      hadoop dfsadmin -refreshNodes
+  3> 使用一组新的审核过的 datanode 来更新 jobtracker 设置.
+      hadoop mradmin -refreshNodes
+  4> 转到网页界面， 查看待解除 datanode 的管理状态是否转变为 "正在解除"， 因为此时相关的 datanode 正在被解除过程中。
+      这些 datanode 会把它们的块复制到其他 datanode 中
+  5> 当所有 datanode 的状态变为 "解除完毕" 时， 表明所有的块都已经复制完成.关闭已经解除的节点.
+  6> 刷新节点
+      hadoop dfsadmin -refreshNodes
+      hadoop mradmin -refreshNodes
+  7> 从 slaves 文件中移除节点
+  ```
+  - #### 升级
+  
+  > 如果文件系统的布局并未改变, 在集群上安装新的HDFS 和 MapReduce ， 关闭旧的守护进程, 升级配置文件， 启动新的守护进程， 令客户端使用新的库。
+  
+  清理动作:
+  ```
+  1. 从集群中移除旧的安装和配置文件
+  2. 在代码和配置文件中针对 "被丢弃" 警告信息进行修复
+  ```
+  
+  > 布局发生变化， 则需要采用下述步骤进行升级
+  
+  ```
+  1> 在执行升级任务之前， 确保前一升级已经定妥
+  2> 关闭 MapReduce, 终止tasktracker 上运行的任何孤儿任务
+  3> 关闭 HDFS ,并备份 namenode 目录
+  4> 在集群上和客户端上安装新版本的 Hadoop HDFS 和 MapReduce 。
+  5> 使用 -upgrade 选项启动 HDFS
+  6> 等待指代升级完成。
+  7> 验证 HDFS 是否运行正常。
+  8> 启动 MapReduce.
+  9> 回滚或定妥升级任务.
+  ```
+  > 参数
+  
+  name  | value
+  ---|---
+  io.sort.spill.percent | 开始 spill 的内存比例预制， 对mapreduce 都有效
+  dfs.block.size | hdfs 上的 block 的大小
+  io.sort.mb  | map 使用的缓存， 影响 spill 次数
+  mapred.map.child.java.opts| map 的 jvm 参数
+  mapred.reduce.child.java.opts | reduce 的 jvm 参数
+  map.sort.class | 对 map 的输出 key 的排序方法
+  io.compression.codecs | 压缩算法
+  mapred.map.output.compression.codec | map输出是否压缩
+  mapred.compress.map.output | 指定 map 的输出是否压缩, 有助于减少数据量，减少io 压力。
+  mapred.output.compression | reduce 输出是否压缩
+  mapred.output.compression.codec | 控制mapred的输出压缩方式
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T09:43:49.514Z"
+updatedAt: "2017-09-20T10:13:19.613Z"

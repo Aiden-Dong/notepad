@@ -1,0 +1,308 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "4-HDFS 操作"
+content: '''
+  ### 4-HDFS 操作
+  
+  ---
+  
+  
+  ### HDFS 操作的方式
+  
+  - **命令行方式**
+  - **API 方式**
+  
+  - ##### HDFS 普通命令
+  1. **hadoop fs <args>**
+  
+  ```
+  URL 格式 : scheme://authority/path
+  - 对于HDFS 文件系统， scheme 是 HDFS
+  - 对于 本地文件系统， scheme 是 file
+  - 未加指定的 scheme 和 autoority 参数就会使用用户Hadoop客户端conf下配置中core-site.xml文件中 fs.default.name 属性的指定值。
+  ```
+  
+  - **cat**: 查看文件
+  
+  ```
+  hadoop fs -cat URL
+  
+  # hadoop fs -cat input/test1.txt
+  hello world
+  # hadoop fs -cat hdfs://localhost:9000/user/root/input/test1.txt
+  hello world
+  # hadoop fs -cat file:///home/hadoop/input/test1.txt 
+  hello world
+  ```
+  
+  - **ls：** : 查看目录信息
+  
+  > Hadoop 没有当前目录的概念， 也就没有 cd 的概念
+  
+  ```
+  # hadoop fs -ls /
+  
+  Found 2 items
+  drwxr-xr-x   - root supergroup          0 2016-09-20 13:42 /input
+  drwxr-xr-x   - root supergroup          0 2016-09-20 12:25 /usr
+  ```
+  
+  > 注意 : 
+  > 1. *ls: Cannot access .: No such file or directory.* 问题 大多数是因为当前用户目录下为空的问题， 当用户在当前用户目录中创建了文件或文件夹时， 此问题解决
+  
+  ```
+  # hadoop dfs -mkdir input
+  # hadoop dfs -ls
+  Found 1 items
+  drwxr-xr-x   - root supergroup          0 2016-09-20 13:52 /user/root/input
+  ```
+  
+  - **mkdir** ：创建目录
+  
+  > 如果不加绝对路径则默认从**用户目录**开始
+  
+  ```
+  # hadoop dfs -mkdir input
+  ```
+  - **rmr**　：　递归删除目录
+  ```
+  # hadoop dfs -rmr /input
+  Deleted hdfs://localhost:9000/input
+  ```
+  > 删除数据时， 对应的 **block块** 同时被释放
+  
+  - **put**　：　上传数据
+  ```
+  # hadoop dfs -put ./input/* input
+  ```
+  > 文件内容被放置在 dfs.data.dir的配置目录下
+  
+  - **get**　：　下载数据
+  ```
+  # hadoop dfs -get input ./one
+  ```
+  - **chgrp**　：更改所属用户组
+  
+  ```
+  # hadoop fs -chgrp root input
+  ```
+  
+  - **chown** ： 更改用户：用户组
+  ```
+  # hadoop fs -chown root:root input
+  ```
+  - **copyFromLocal** : 上传文件
+  ```
+  # hadoop fs -copyFromLocal ./*.class input
+  # hadoop fs -copyFromLocal ./*.class file:///home/hadoop/
+  ```
+  - **copyToLocal** ： 下载文件
+  ```
+  # hadoop fs -copyToLocal input/HdfsPut.class ./
+  # hadoop fs -copyToLocal file:///home/hadoop/1-java_hdfs/HdfsPut.class ..
+  ```
+  - **cp :** 复制文件
+  ```
+  # hadoop fs -cp input/*.class one/
+  ```
+  - **du :** 显示所有文件的大小
+  ```
+  # hadoop fs -du input 
+  Found 4 items
+  867         hdfs://localhost:9000/user/root/input/HdfsCreate.class
+  1539        hdfs://localhost:9000/user/root/input/HdfsPut.class
+  12          hdfs://localhost:9000/user/root/input/test1.txt
+  13          hdfs://localhost:9000/user/root/input/test2.txt
+  ```
+  - **dus :** 显示所有文件的总大小
+  ```
+  # hadoop fs -dus input
+  hdfs://localhost:9000/user/root/input   2431
+  ```
+  - **expunge :** 清空回收站
+  ```
+  # hadoop fs -expunge
+  ```
+  - **getmerge :** : 将源目录中的所有文件作为输入链接到本地文件
+  ```
+  # hadoop fs -getmerge input .
+  ```
+  - **rm :** 删除指定的文件
+  ```
+  # hadoop fs -rm input/*.class
+  Deleted hdfs://localhost:9000/user/root/input/HdfsCreate.class
+  Deleted hdfs://localhost:9000/user/root/input/HdfsPut.class
+  ```
+  - **mv**
+  ```
+  # hadoop fs -mv input/*.class one/
+  ```
+  - **setrep :** 改变一个文件的副本系数
+  ```
+  # hadoop fs -setrep 3 input/test1.txt
+  Replication 3 set: hdfs://localhost:9000/user/root/input/test1.txt
+  ```
+  - **stat :** 返回指定文件的信息
+  ```
+  # hadoop fs -stat input/test1.txt 
+  2016-09-20 09:07:05
+  ```
+  - **tail :**  返回文件尾部内容
+  ```
+  # hadoop fs -tail input/test1.txt
+  ```
+  - **test :**  测试文件
+  ```
+  # hadoop fs -test -e input/test.txt
+  # hadoop fs -test -d input/test.txt
+  # hadoop fs -test -z input/one
+  ```
+  - **text :**  以源码形式显示文件
+  ```
+  # hadoop fs -text input/test1.txt
+  ```
+  - **touchz :**  创建文件
+  ```
+  # hadoop fs -touchz input/one
+  ```
+  2. **archive**:
+  
+  > - **archive**(Hadoop 归档文件) **Hadoop archive 对应于一个文件系统目录**
+  > - Hadoop archive  的扩展名为 **.har**
+  > - Hadoop archive 中包含**元数据**(形式 **_index** 和 **_masterindex** ) 和   数据(part-*) 文件。
+  > - **_index** 文件包含了档案文件的文件名和位置信息
+  
+  1. **archive 的创建**
+  ```
+  hadoop archive  -archiveName NAME -p <parent path> <src>* <dst>
+  
+  -- archiveName          // 指定要创建的档案的名字
+  -- p                    // 路径中的各级父目录
+  -- src                  // 需要归档的源目录，可以含正则表达式的一样 多个文件目录用空格隔开
+  -- dst                  // 保存归档文件的目标目录
+  
+  # hadoop archive -archiveName one.har -p /user/root dat input .
+  
+  Found 3 items
+  1539        hdfs://localhost:9000/user/root/data
+  1287        hdfs://localhost:9000/user/root/input
+  1603        hdfs://localhost:9000/user/root/one.har
+  ```
+  2. **archive 查看 :**
+  ```
+  archive 作为文件系统暴漏给外界， 因此所有的fs shell 命令都能在 archive 上运行。
+  archive 是不可改变的， 所以重命名，删除，和创建都会返回错误信息
+  访问 archive 要使用 URL ： har://scheme:port/archivepath/fileinarchive
+  
+  # hadoop fs -ls har:///user/root/two.har
+  Found 2 items
+  drwxr-xr-x   - root supergroup          0 2016-09-20 20:48 /user/root/two.har/input
+  drwxr-xr-x   - root supergroup          0 2016-09-20 20:55 /user/root/two.har/data
+  # hadoop fs -lsr har:///user/root/two.har
+  drwxr-xr-x   - root supergroup          0 2016-09-20 20:48 /user/root/two.har/input
+  -rw-r--r--   1 root supergroup        422 2016-09-20 20:48 /user/root/two.har/input/HdfsCreate.java
+  -rw-r--r--   1 root supergroup        865 2016-09-20 20:48 /user/root/two.har/input/HdfsPut.java
+  drwxr-xr-x   - root supergroup          0 2016-09-20 20:55 /user/root/two.har/data
+  -rw-r--r--   1 root supergroup       1539 2016-09-20 20:55 /user/root/two.har/data/HdfsPut.class
+  
+  # hadoop fs -ls har:///user/root/two.har/input
+  Found 2 items
+  -rw-r--r--   1 root supergroup        422 2016-09-20 20:48 /user/root/two.har/input/HdfsCreate.java
+  -rw-r--r--   1 root supergroup        865 2016-09-20 20:48 /user/root/two.har/input/HdfsPut.java
+  # hadoop fs -cat har:///user/root/two.har/input/HdfsCreate.java
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.fs.*;
+  
+  public class HdfsCreate{
+          public static void main(String[] args)throws Exception{
+                  Configuration conf = new Configuration();
+                  byte[] buff = "Hello world".getBytes();
+                  FileSystem hdfs = FileSystem.get(conf);
+  
+                  Path dfs = new Path("test");
+                  FSDataOutputStream outputStream = hdfs.create(dfs);
+                  outputStream.write(buff, 0, buff.length);
+          }
+  }
+  ```
+  3. **distcp :**
+  
+  ```
+  - distcp 是 Hadoop 的分布式复制命令，是大规模集群内部和集群之间进行复制的工具。
+  - 他使用 MapReduce 实现文件分发， 错误处理和恢复，以及生成报告。
+  - 其把文件和目录的列表作为Map任务的输入，每个任务会完成源列表中部分文件的复制。
+  
+  hadoop distcp <options> <srcurl>* <desturl> 
+  ```
+  - **Hadoop 集群间复制数据 ：**
+  ```
+  hadoop distcp hdfs://NN1:9000/data/logs hdfs://NN2:9000/data/logs
+  ```
+  > 分布式复制需要注意的问题
+  
+  ```
+  - Map 的数来功能问题。 distcp 会尝试均分需要复制的数据， 这样每个 Map 复制差不多大小的内容
+  - 因为文件是最小的复制粒度，所以配置增加同时复制的数目不一定会增加实际同时复制数目以及总吞吐量
+  - 不同版本之间复制应该使用 HftpFileSystem 
+  - 分布式复制的负效应问题
+  ```
+  
+  4. **fsck** 
+  ```
+  fsck 是HDFS 文件系统的检查工具。
+  
+  hadoop fsck <path>
+  ```
+  - ##### HDFS 管理操作
+  
+  - **查看基本统计信息**
+  ```
+  # hadoop dfsadmin -report
+  Configured Capacity: 26288123904 (24.48 GB)
+  Present Capacity: 20490678319 (19.08 GB)
+  DFS Remaining: 20490637312 (19.08 GB)
+  DFS Used: 41007 (40.05 KB)
+  DFS Used%: 0%
+  Under replicated blocks: 0
+  Blocks with corrupt replicas: 0
+  Missing blocks: 0
+  
+  -------------------------------------------------
+  Datanodes available: 1 (1 total, 0 dead)
+  
+  Name: 127.0.0.1:50010
+  Decommission Status : Normal
+  Configured Capacity: 26288123904 (24.48 GB)
+  DFS Used: 41007 (40.05 KB)
+  Non DFS Used: 5797445585 (5.4 GB)
+  DFS Remaining: 20490637312(19.08 GB)
+  DFS Used%: 0%
+  DFS Remaining%: 77.95%
+  Last contact: Tue Sep 20 14:14:46 CST 2016
+  ```
+  
+  - **安全模式操作**
+  ```
+  # hadoop dfsadmin -safemode enter
+  Safe mode is ON
+  # hadoop dfsadmin -safemode leave
+  Safe mode is OFF
+  ```
+  
+  - 在已有集群中添加新节点
+  
+  ```
+  - 在新节点安装好hadoop
+  - 把namenode的相关配置文件复制到该节点
+  - 修改 masters 和 slavas 文件， 增加该节点
+  - 设置 ssh 免密码进出该节点
+  - 单独在该节点上的 datanode 和 tasktracker (hadoop-daemon.sh startdatano/tasetracker)
+  - 运行 start-balancer.sh 进行数据均衡
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T10:16:05.992Z"
+updatedAt: "2017-09-20T10:20:03.160Z"

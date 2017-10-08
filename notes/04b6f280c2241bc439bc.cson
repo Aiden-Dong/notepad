@@ -1,0 +1,71 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "8-正则表达式"
+content: '''
+  ### 8-正则表达式
+  
+  ---
+  
+  Scala 正则表达式可以使用 `scala.util.matching.Regex`类让这件事变得简单.
+  
+  
+  > 构造 :
+  
+  ```
+  val pattarn = "[0-9]+".r
+  
+  var pattern = """\\s+[0-9]+\\s""".r
+  ```
+  
+  > 匹配:
+  
+  ```
+  pattern.findAllIn(String)     // 获取所有匹配到的字符串 迭代器 
+  pattern.findFirstIn(String)   // 获取匹配到的第一个字符串 Option[String]
+  ```
+  
+  
+  >  替代:
+  
+  ```
+  pattern.replaceAllIn(String,newStr)    // 替代所有字符串
+  pattern.replaceFirstIn(String, newStr) // 替代第一个匹配到的字符船
+  ```
+  
+  > 正则表达式组:
+  
+  ```
+  val pngReg = """<a class="question_link".*?>(.*?)</a>""".r
+  
+  pngReg(context) = pngReg.findAllIn(String) 
+  // context 为 pngReg 匹配到的组
+  ```
+  
+  
+  > 实例 :
+  
+  ```
+  // 网页摘取
+  def getUrlMessage():Unit={
+    val message = Source.fromURL("https://www.zhihu.com/explore")
+  
+    var pageMessage = ""
+    for(v_line <- message.getLines()){
+      pageMessage = pageMessage + v_line
+    }
+  
+    val pngReg = """<a class="question_link".*?>(.*?)</a>""".r
+  
+    for(pngReg(context) <- pngReg.findAllIn(pageMessage)){
+      println(context)
+    }
+  
+  }
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-21T09:43:58.557Z"
+updatedAt: "2017-09-21T10:23:42.792Z"

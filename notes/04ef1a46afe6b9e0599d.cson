@@ -1,0 +1,133 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "9- 特质"
+content: '''
+  ### 9- 特质
+  
+  ---
+  > 说明 :
+  
+  与java接口相比, Scala 特质可以给出这些特质的缺省实现
+  
+  - 类可以实现任意数量的特质.
+  - 特质可以要求实现它们的类具有特定的字段,方法或者超类.
+  - 和java接口不同, scala 特质可以提供方法和字段和实现.
+  - 当你将多个特质叠加在一起,顺序很重要 -- 其方法先被执行的特质排在更后面.
+  - 特质可以同时拥有抽象方法和具体方法.
+  
+  > 举例 :
+  
+  ```
+  trait ConsoleLogger{
+      def log (msg : String){
+          println(msg)
+      }
+  }
+  
+  class SavingAccount extends Account with ConsoleLogger{
+      def withdraw(amount : Double){
+          if(amount > balance) log("Insufficient funds")
+          else balance -= amount
+      }       
+  }
+  ```
+  > 说明 :
+  
+  在第一个特质前面使用 **extends** 在后面的所有特质前面使用 **with**. 在scala 中,类似 `extends Account with ConsoleLogger` 被 scala 当做一个整体来解读.
+  
+  #### 1. 叠加在一起的特质.
+  
+  ```
+  trait Logged{
+      def log(msg : String){}
+  }
+  
+  trait ConsoleLogger extends Logged{
+      def log (msg : String){
+          println(msg)
+      }
+  }
+  
+  class SavingAccount extends Account with Logged{
+      def withdraw(amount : Double){
+          if(amount > balance) log("Insufficient funds")
+          else balance -= amount
+      }       
+  }
+  //现在什么都不会被记录到日志。但你可以在构造具体对象时混入更好的日志记录器。
+  
+  val acct1 = new SavingAccount with ConsoleLogger
+  ```
+  > 说明 :
+  
+  在 ConsoleLogger 与 Logged具有相同的父类特质, 但是我们在 SavingAccount 这个类中继承了 Logged 并且在 acct 中同时 with 了ConsoleLogger.
+  这在scala 中将会调用 位于右边第一个遇到的特质方法.
+  
+  但是如果在特之中调用了 `super` 方式:
+  
+  ```
+  trait Logged{
+      def log(msg : String){}
+  }
+  
+  trait TimestampLogger extends Logged{
+      override def log (msg : String){
+          super.log(new java.util.Date()+" "+ msg)
+      }
+  }
+  
+  trait TimestampLogger extends Logged{
+      val maxLength = 15 
+      override def log (msg : String){
+          super.log(
+          if (msg.length <= maxLength) msg 
+          else msg.substring(0,maxLength -3)+"...")
+      }
+  }
+  
+  val acct1 = new SavingAccount with ConsoleLogger with TimestampLogger with ShortLogger
+  ```
+  
+  > 特质构造顺序
+  
+  
+  - 首先调用超类构造器
+  - 特质从左到右被构造
+  - 父特质被首先构造
+  - 如果多个特质有一个父特质,父特质只被构造一次
+  - 构造的特质与类的线性化反方向.
+  
+  
+  类似这样, 当调用了 `ShortLogger`的log 方法后,由于在`ShortLogger`中遇到了super.log, 他将继续从右向左查找从Logged集成的具有log方法的特质
+  
+  #### 2. 在特质中重写抽象方法
+  
+  ```
+  trait Logger{
+  def log(msg: String)
+  }
+  
+  trait TimestampLogger extends Logger{
+      override def log (msg : String){
+          super.log(new java.util.Date()+" "+ msg)
+      }
+  }
+  
+  //编译器会将super.log标记为错误，因为super.log并没实现。scala认为TimestampLogger依旧是抽象的，它需要混入一个具体的log方法，因此，你必须为方法打上abstract关键字和override关键字：
+  
+  abstract override def log (msg : String){
+      super.log(new java.util.Date()+" "+ msg)
+  }
+  ```
+  
+  #### 3. 特质中的具体字段
+  
+  - 这些字段不是被继承 : 他们只是被简单的加到子类中.
+  - 特质不能有构造器参数,每个特质有个无参构造器.
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-21T10:31:34.908Z"
+updatedAt: "2017-09-21T12:38:08.373Z"

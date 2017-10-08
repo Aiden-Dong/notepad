@@ -1,0 +1,141 @@
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "2- hive 表的操作"
+content: '''
+  ### 2- hive 表的操作
+  ---
+  
+  #### 1. 数据的导出:
+  
+  > 数据导出到本地文件系统
+  
+  ```
+  hive> select * from message;
+  OK
+  1	{"name":"jack","age":20}
+  2	{"name":"saligia","age":21}
+  3	{"name":"smil","age":20}
+  4	{"name":"wailk","age":18}
+  5	{"name":"carkdr","age":19}
+  
+  hive> INSERT OVERWRITE LOCAL DIRECTORY '/home/saligia/tmp/output/'ac
+      > SELECT * FROM message;
+  
+  $ pwd
+  /home/saligia/tmp/output
+  $ ll
+  总用量 4ac
+  -rw-r--r-- 1 EVA root 56 10月 29 21:44 000000_0
+  
+  1^Ajack^B20
+  2^Asaligia^B21
+  3^Asmil^B20
+  4^Awailk^B18
+  5^Acarkdr^B19
+  ```
+  
+  > 数据导出到 hdfs
+  
+  ```
+  hive> insert overwrite directory '/user/saligia/input'
+      > select * from wyp;
+  ```
+  
+  #### 2. hive 表的导入
+  
+  ##### LOAD DATA 操作：
+  
+  > 通过把文件复制或移动到表的目录中， 从而把数据导入 Hive 表(或分区)中去。
+  
+  - **从 hdfs 中导入数据**
+  
+  ```
+  hive> LOAD DATA INPATH '/user/saligia/input/message' INTO TABLE message;
+  Loading data to table saligia.message
+  OK
+  ```
+  - **从 本地导入数据**
+  ```
+  hive> LOAD DATA LOCAL INPATH '/home/saligia/tmp/message' INTO TABLE message;
+  Loading data to table saligia.message
+  OK
+  Time taken: 0.378 seconds
+  ```
+  
+  ##### INSERT 语句
+  
+  > 把数据从一个 Hive 表 填充到另一个表中。
+  
+  ```
+  hive> INSERT OVERWRITE TABLE test_2
+  > PARTITION (name='one')
+  > SELECT * FROM test;
+  ```
+  
+  ##### 多表插入
+  
+  ```
+  hive> FROM test
+  > INSERT OVERWRITE TABLE id
+  > SELECT id
+  > INSERT OVERWRITE TABLE context
+  > select context;
+  ```
+  
+  ##### CREATE TABLE ... AS SELECT 语句
+  
+  ```
+  hive> CREATE TABLE context
+  > AS
+  > SELECT context FROM test;
+  ```
+  ##### CREATE TABLE ... LIKE 语句
+  
+  ```
+  hive> CREATE TABLE text like message;
+  ```
+  
+  #### 3- 表的修改
+  
+  > 由于Hive 使用"读时模式"， 所以在创建表以后， 他非常灵活的支持对表的修改.
+  
+  ##### 重命名表
+  
+  > - 除更新表的元数据以外， ALTER TABLE 语句还把表的目录移到新名称所对应的目录下。
+  > - 对于外部表， 这个操作只更新元数据， 而不移动目录。
+  
+  ```
+  hive> ALTER TABLE test RENAME TO one;
+  OK
+  Time taken: 0.17 seconds
+  ```
+  
+  ##### 增加新列
+  
+  > - 新增加的列在已有的列后面， 数据文件并没有被更新， 因此新添加的列返回空值， 
+  > - Hive 不允许更新已有的记录， 所以需要使用其他机制来更新底层的文件。
+  > - 更常见的做法是创建一个定义了新列的新表， 然后使用 SELECT 语句把数据填充进去。
+  
+  ```
+  hive> ALTER TABLE one ADD COLUMNS (mon STRING);
+  ```
+  
+  ##### 表的丢弃
+  
+  1. 删除表
+  
+  ```
+  hive> DROP TABLE context;
+  ```
+  2. 清空表
+  ```
+  hadoop fs -rm /user/hive/warehouse/one/test
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-25T03:05:57.265Z"
+updatedAt: "2017-09-25T03:09:03.271Z"

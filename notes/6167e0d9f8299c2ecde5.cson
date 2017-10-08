@@ -1,0 +1,35 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "5-函数篇"
+content: '''
+  ### 5-函数篇
+  ---
+  ```
+  #!/bin/bash
+  
+  FUNC ()
+  {
+  	if [ $# -ne 0 ] ; then
+  		echo "The Parameter num is : $#"
+  		
+  		for param in $@
+  		do
+  			echo "$param"
+  		done
+  	fi
+  }
+  
+  FUNC one two three 
+  
+  FUNC $@
+  
+  FUNC hello world
+  
+  exit 0
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T09:56:17.935Z"
+updatedAt: "2017-09-19T09:56:36.417Z"

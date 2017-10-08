@@ -1,0 +1,319 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "6- MapReduce 基础"
+content: '''
+  ### 6- MapReduce 基础
+  
+  ---
+  
+  > - Map 主要负责 “分”， 即把复杂的任务分解为若干个“简单的任务”执行
+  > - Reduce 对 map 阶段的结果进行汇总
+      
+  ```
+  - Reduce 的数目由mapred-site.xml 配置文件里的项目mapred.reduce.tasks决定。 
+  - 缺省值为 1 
+  ```
+  > Shuffler 是在 mapper 和 reduce 中间的一个步骤
+  ```
+  - 可以把 mapper 的输出按照某种 key 值重新切分和组合成n份， 把 key 值符合某种范围的输出送到特定的reduce那里去处理
+  - 可以简化 reduce 过程
+  ```
+  
+  ### 执行机制
+  
+  - #### MapReduce 1
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f817axh53tj20jr0e3dgt.jpg)
+  -  ##### 工作实体：
+  
+  > - **客户端:**  提交 MapReduce 作业。
+  > - **jobtracker :** 协调作业的运行。
+  > - **tasktracker :** 运行作业划分后的任务。
+  > - **HDFS :** 用来在其他实体间共享作业文件。
+  
+  - ##### 作业的运行机制：
+  
+  1. 作业的提交
+  
+  ```
+  1. 客户端向 jobtracker 请求一个新的作业 ID
+  2. 检查作业的输出说明   // 如果没有指定的目录或者文件已经存在， 则不提交， 错误抛出给 MapReduce 程序。
+  3. 计算作业的输入分片。 // 如果分片无法计算， 作业就不提交， 错误抛出给 MapReduce 程序。
+  4. 将作业运行所需要的资源(JAR 文件， 配置文件， 计算所得的输入分片)复制到一个以作业 ID 命名的目录下的jobtracker 的文件系统中。
+  5. 告知 jobtracker 作业准备执行
+  ```
+  2. 作业的初始化。
+  
+  ```
+  1. jobtracker 收到客户端提交的作业后， 会把此调用放到一个内部队列中，交由作业调度去进行调度
+      并对其进行初始化， 初始化包括创建一个正在运行作业的对象， 用于封装和记录信息， 以便跟踪任务的状态和进程
+  2. 为了创建任务的运行列表。 作业调度器从共享内存中获取客户端已经计算好的作业分片。
+     然后为每个分片创建一个 map 任务，然后根据配置创建指定数量的 reduce 任务
+  3. 除了 Map 任务和 Reduce 任务， 还会创建两个任务 : 作业创建和作业清理
+  ```
+  3. 任务的分配：
+  
+  ```
+  1. tasktracker 运行一个简单的循环来定期向 jobtracker 发送 “心跳”.
+      "心跳"用来指明tasktracker 存活，同时还指明自己是否已经准备好运行新的任务
+  2. jobtracker 为 tasktracker 选择任务(Map-Reduce)之前， jobtracker 必须先选定任务所在的作业.
+     一旦选好了作业， jobtracker 就可以为该作业选定一个任务。
+  3. 对于 map 任务 和 reduce 任务， tasktracker 有固定数量的任务槽， 两者独立设置。
+     默认调度器在处理 reduce 任务槽之前， 会填满空闲的 map 任务槽。
+     如果 tasktracker 至少有一个 map任务槽， jobtracker 会为他选择一个 map 任务， 否则选择一个 reduce 任务。
+  
+   4. 为了选择 reduce 任务 jobtracker 会从待运行的 reduce 任务列表中去下一个来执行， 用不着考虑数据本地化。
+      对于 map 任务应该尽可能的考虑数据数据本地化。
+  ```
+  4. 任务的执行：
+  
+  ```
+  现在， tasktracker 已经被分配到了一个任务， 下一步是执行这个任务
+  
+  1. 通过 HDFS 把作业的 JAR 文件复制到 tasktracker 所在的文件系统，从而实现作业的 JAR 文件本地化。
+  2. tasktracker 将应用程序所需要的全部文件从分布式缓存中复制到本地磁盘。
+  3. tasktracker 为任务新建一个本地工作目录， 并把 JAR 文件重点内容解压到这个文件夹下。
+  4. tasktracker 新建一个 Runnable 实例来运行这个任务
+  ```
+  5. 进度和状态的更新:
+  6. 作业的完成：
+  
+  ```
+  当 jobtracker 收到作业的最后一个任务的完成通知时， 便把作业设置为成功。
+  ```
+  
+  - #### YARN (MapReduce 2)
+  
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f8fe7wrycyj20ww0wm0yn.jpg)
+  
+  - ##### YARN 的工作实体：
+  ```
+  YARN 分为两个独立的守护进程 ：
+  1. 管理集群上资源使用的 ResourceManager
+  2. 管理集群上运行任务生命周期的 NodeManager
+  
+  -- ResourceManager 与 NodeManager 协商使用集群的计算资源 ： Container
+  -- Container由集群节点上运行的 NodeManager 监视， 确保应用程序使用的资源不会超过分配给他的资源
+  -- 与 jobtracker 不同， 每一个MapReduce 实例都有一个与之对应的 Application Master.
+  
+  YARN 上的 MapReduce 包含的工作实体：
+  - 提交 MapReduce 作业的客户端
+  - YARN ResourceManager  // 负责协调集群上计算资源的分配
+  - YARN NodeManager      // 负责启动和见识集群上的计算Container
+  - MRAppMaster           // 负责协调运行MapReduce 作业的任务。 他和 MapReduce 任务在Container中执行， 这些Container由 ResourceManager 分配并有 NodeManager 执行
+  - HDFS 分布式文件系统
+  ```
+  
+  1. ##### 作业提交
+  ```
+  提交的过程与 MR 1 十分相似:
+  1. 从 ResourceManager 获取 APP ID
+  2. 作业客户端检查作业的输出说明
+  3. 作业客户端计算输入分片
+  4. 将作业资源复制到 HDFS (JAR , 配置信息， 分片信息)
+  ```
+  2. ##### 作业初始化
+  
+  ```
+  1. ResourceManager 收到他作业的提交消息后， 便将请求传递给调度器。
+     调度器分配一个Container，然后 ResourceManager 在 NodeManager 的管理下启动 MRAppMaster进程。
+  2. MRAppMaster 进程对作业进行初始化： 创建多个 bookkeeping 对象以保持对作业进度的跟踪（他将接受来自任务的进度和完成报告）
+  3. MRAppMaster 进程接受来自 HDFS 的客户端作业 的输入分片， 对每一个分片创建一个 map 任务对象以及由配置文件设置的 reduce 任务对象
+  4. 由 MRAppMaster 进程决定如何运行构成 MapReduce 作业的各个任务， 如果作业很小(unized 作业)，MRAppMaster 进程就选择其在自己的JVM上运行（uber task 作业运行方式）。
+  ```
+  3. ##### 任务分配
+  ```
+  1. 如果作业不适合作为 uber task 作业运行方式， 那么 MRAppMaser 就为该作业的所有 Map Reduce 任务向 ResourceManager 请求 Container.
+  2. 这些请求信息通过心跳来传输的， 包括每个 map 任务的数据位置， 每个任务的内存需求
+  3. YARN 的内存分配方式与MapReduce 1 方式不同， 他实现了更细的粒度。可以在最大值与最小值之间（必须是最小值的倍数）。
+  ```
+  4. ##### 任务的执行
+  ```
+  1. 一旦 ResourceManager 的调度器为任务分配了 Container 。 MRAppMaster 进程就通过与NodeManager通信来启用 Container.
+  2. 首先将任务需要的资源本地化， 包括作业的配置， JAR， 跟来自HDFS的作业。
+  ```
+  5. ##### 进度和状态更新
+  ```
+  1. 在 YARN 下运行时， 任务每三秒钟通过 umbitlical 接口向 MRAppMaster 汇报进度和状态信息
+  2. 客户端每秒查询一次 MRAppMaster 以接受进度的更新。
+  ```
+  6. ##### 作业完成
+  ```
+  作业完成后， MRAppMaster 和任务Container清理其工作状态。
+  ```
+  
+  #### 任务失败
+  
+  - #### MapReduce 1 任务的失败
+  1. ##### 任务运行的失败
+  ```
+  1. Map/Reduce 任务抛出异常  // tasktracker 将次次任务标记为 failed ， 释放任务槽运行另外一个任务。
+  2. JVM 异常导致退出         // tasktracker 注意到进程已经退出， 并将此次任务尝试标记为 failed
+  3. 任务的挂起时间过长       // 一旦 tasktracker 注意到已经有一段时间没有收到进度的更新， 便会将任务标记为 failed .在此之后 JVM 子进程将会被 杀死
+  
+  -- jobtracker 被告知一个任务尝试失败后(通过 tasktracker 的心跳)，将重新调用该任务的执行
+  -- 对于 map/reduce 任务， 运行任务的尝试重启次数有配置文件设置， 默认为 4
+  ```
+  2. ##### tasktracker 失败
+  ```
+  1. 如果 tasktracker 由于崩溃或运行过于缓慢而失败， 会停止向 jobtracker 发送"心跳"
+  // jobtracker 注意到长时间没有收到心跳的 tasktracker ， 将它从等待的tasktracker 池中移除
+  // 如果有未完成的作业， jobtracker 会安排此 tasktracker 上已经运行成功完成的 map 任务重新运行， 因为 reduce 任务无法访问中间结果
+  // 任何正在进行的任务都会被重新调度
+  2. 即使 tasktrakcer 没有失败， 也有可能被 jobtracker 列入黑名单。 如果一个特定的 tasktracker 运行同一个作业的任务超过 4 个失败了
+  则此 tasktracker 会被加入黑名单
+  ```
+  3. ##### jobtracker 失败
+  ```
+  jobtracker 失败是最为严重的， 目前无法解决
+  ```
+  
+  - #### YARN 中的失败
+  1. ##### 任务运行失败
+  ```
+  与 MR 1 情况类似
+  ```
+  2. ##### MRAppMaster 进程运行失败
+  
+  ```
+  1. YARN 中的 Application 在运行失败的时候有几次尝试的机会， 默认是失败一次就被标记为失败
+  2. MRAppMaster 向 ResourceManager 发送周期性的心跳。
+  当MRAppMaster 发生故障时， ResourceManager 将检测该故障并在一个新的容器中开始一个新的 Master 实例
+  MRAppMaster 可以恢复应用程序所运行任务的所有状态， 使其不必重新运行， 默认不能恢复
+  
+  3. 客户端向 MRAppMaster 轮询进度报告， 如果他的 MRAppMaster 运行失败，客户端就需要定位新的实例。
+  ```
+  3. ##### NodeManager 运行失败
+  ```
+  1. 如果 NodeManager 失败， 就会停止向 ResourceManager 发送心跳信息并被移除可用节点资源管理器池。
+  2. 在故障 NodeManager 运行的所有任务或 MRAppMaster 都由上述方法进行恢复.
+  3. 如果应用程序的运行失败次数过高， 那么节点管理器可能会被拉黑
+  ```
+  4. ##### ResourceManager 运行失败
+  ```
+  1. ResourceManager 失败是非常严重的问题， 没有ResourceManager， 作业和任务 Container 无法启动.
+  2. ResourceManager 失败后， 由管理员启动一个新的ResourceManager 实例并恢复到保存状态
+  ```
+  
+  #### 作业调度
+  
+  - #### 公平调度器
+  ```
+  公平调度器支持抢占机制， 所以， 如果一个池在特定的时间未能公平共享资源， 
+  就会终止运行池中的得到过多的资源任务， 把空出来的任务槽让给运行资源不足的作业池。
+  ```
+  - #### 容量调度器
+  ```
+  集群由很多队列组成， 这些队列可能是层次结构的， 每个队列分配有一定的容量。
+  容量调度器允许用户或组织为每个用户或组织模拟出一个使用 FIFO 调度策略的独立集群
+  ```
+  
+  #### shuffe
+  
+  > - MapReduce 确保每个 reduce 的输入都是按键排序的。 
+  > - 系统执行排序的过程成为 shuffle . shuffle 属于不断被优化和改进的一部分。
+  > - shuffle 是 MapReduce 的 "心脏"
+  
+  
+  ![image](http://ww4.sinaimg.cn/mw1024/e91aafadjw1f817ay1q8sj20mv0ao0ts.jpg)
+  - **Map端：** 
+  
+  1.  每个输入分片会让一个map任务来处理
+  ```
+  - 默认情况下，以HDFS的一个块的大小（默认为64M）为一个分片，当然我们也可以设置块的大小。
+  
+  - map输出的结果会暂且放在一个环形内存缓冲区中（该缓冲区的大小默认为100M，由io.sort.mb属性控制），
+  
+  - 当该缓冲区快要溢出时（默认为缓冲区大小的80%，由io.sort.spill.percent属性控制），会在本地文件系统中创建一个溢出文件，将该缓冲区中的数据写入这个文件。
+  ```
+  2. 在写入磁盘之前，线程首先根据reduce任务的数目将数据划分为相同数目的分区，也就是一个reduce任务对应一个分区的数据。
+  ```
+  - 这样做是为了避免有些reduce任务分配到大量数据，而有些reduce任务却分到很少数据，甚至没有分到数据的尴尬局面。
+  
+  - 其实分区就是对数据进行hash的过程。然后对每个分区中的数据进行排序，如果此时设置了Combiner，将排序后的结果进行Combia操作，
+  这样做的目的是让尽可能少的数据写入到磁盘。
+  ```
+  
+  3. 当map任务输出最后一个记录时，可能会有很多的溢出文件，这时需要将这些文件合并。
+  ```
+  - 合并的过程中会不断地进行排序和combia操作，目的有两个：
+  
+  1.尽量减少每次写入磁盘的数据量；
+  
+  2.尽量减少下一复制阶段网络传输的数据量。
+  
+  - 最后合并成了一个已分区且已排序的文件。
+  
+  - 为了减少网络传输的数据量，这里可以将数据压缩，只要将mapred.compress.map.out设置为true就可以了。
+  ```
+  4. 将分区中的数据拷贝给相对应的reduce任务。
+  ```
+  - 有人可能会问：分区中的数据怎么知道它对应的reduce是哪个呢？
+  
+  - 其实map任务一直和其父 TaskTracker 保持联系，而TaskTracker又一直和JobTracker保持心跳。所以JobTracker中保存了整个集群中的宏观信息。
+  
+  - 只要reduce任务向JobTracker获取对应的map输出位置就ok了。
+  ```
+  - **Shuffer 端：**
+  ```
+  Shuffle的中文意思是“洗牌”，如果我们这样看：一个map产生的数据，结果通过hash过程分区却分配给了不同的reduce任务。
+  ```
+  - **Reduce端 :**
+  1. Reduce会接收到不同map任务传来的数据，
+  ```
+  - 每个map传来的数据都是有序的。
+  
+  - 如果reduce端接受的数据量相当小，则直接存储在内存中（缓冲区大小由mapred.job.shuffle.input.buffer.percent属性控制，表示用作此用途的堆空间的百分比)
+  
+  - 如果数据量超过了该缓冲区大小的一定比例（由mapred.job.shuffle.merge.percent决定），则对数据合并后溢写到磁盘中。
+  ```
+  2. 随着溢写文件的增多，后台线程会将它们合并成一个更大的有序的文件.
+  ```
+  - 这样做是为了给后面的合并节省时间。其实不管在map端还是reduce端.
+  
+  - MapReduce都是反复地执行排序，合并操作，现在终于明白了有些人为什么会说：排序是hadoop的灵魂。
+  ```
+  
+  
+  #### 任务的执行
+  
+  - #### 推测执行
+  ```
+  1. Hadoop 不会尝试诊断或修复执行慢的任务， 相反， 在一个任务运行比与其慢的时候，
+  他会尽量检测， 并启用另一个相同的任务作为备份。 -- 推测执行
+  2. 一个任务成功执行完成后， 任何正在运行的重复的任务都被终止， 因为已经不再被需要
+  3. 默认情况下， 推测任务是启用的
+  4. 推测任务的目的是减少任务执行的时间， 代价是付出集群的效率
+  5. 关于 Reduce 任务， 关闭推测执行是有益的， 因为任意重复的 reduce 任务都必须将取得 map 输出作为最先的任务
+  ```
+  - #### 关于 OutputCommitters
+  
+  ```
+  Hadoop MapReduce 使用一个提交协议来确保作业和任务都完成成功或失败, 这种行为是通过对作业使用 OutputCommitters 来实现。
+  
+  OutputCommitter OutuptFormat.getOUtputCommitter();
+  
+  - commitJob()       // 当作业成功时调用， 在默认的实现中， 用于删除历史的工作空间并在输出中创建一个名为 _SUCESS 的隐藏文件
+  - abortJob()        // 当作业失败时， 当调用 abortJob(); 删除临时的工作空间
+  - setupTask()       // 任务执行前调用， 默认不做任何事
+  - needsTaskCommit() // 任务的提交阶段调用
+  - commitTask()      // 任务成功时调用
+  - abortTask()       // 任务失败时调用
+  ```
+  
+  - #### 任务 JVM 重用
+  ```
+  启用任务重用 JVM 后， 任务不会同时运行在一个 JVM 上， JVM 顺序运行各个任务
+  计算密集型任务可以使用 JVM 重用功能
+  ```
+  - #### 跳过坏的记录
+  ```
+  - 启用 skipping mode 后， 任务将在处理的记录报告给 tasktracker.
+  - 任务失败时.tasktracker 重新运行该任务， 跳过导致任务失败的记录
+  - 默认情况下 skipping mode 是关闭的
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T10:51:54.671Z"
+updatedAt: "2017-09-20T10:57:59.577Z"

@@ -1,0 +1,111 @@
+type: "MARKDOWN_NOTE"
+folder: "e6c9bd1f0c13e9eccb37"
+title: "7- python 异常处理"
+content: '''
+  ### 7- python 异常处理
+  ---
+  
+  语法　:
+  
+  ```
+  try:
+    <语句>                    # 运行别的代码
+  except <名字>：
+    <语句>                    # 如果在try部份引发了'name'异常
+    raise                     # 抛出一个新的异常
+  except <名字>，<数据>:
+    <语句>                    # 如果引发了'name'异常，获得附加的数据
+  finally:
+    <语句>                    # 无论是否发生异常都要执行的语句
+  ```
+  
+  
+  - 普通异常测试 :
+  
+  ```
+  #!/usr/bin/env python
+  # -*- coding: UTF-8 -*-
+  
+  try:
+      fh = open("testfile", "w")
+      try:
+          fh.write("这是一个测试文件，用于测试异常!!")
+      finally:
+          print "关闭文件"
+          fh.close()
+  except IOError:
+      print "Error: 没有找到文件或读取文件失败"
+  ```
+  
+  - 得到异常信息　:
+  
+  ```
+  #!/usr/bin/env python
+  import sys
+  def main():
+      v_value = sys.stdin.read();
+  
+      try:
+          print(v_value)
+          v_num = int(v_value)
+      except ValueError,e:
+          print(e)
+      finally:
+          print "stop"
+  
+  if __name__ == '__main__':
+      main()
+  ```
+  - 触发异常:
+  ```
+  #!/usr/bin/env python
+  import sys
+  def main():
+      v_value = sys.stdin.read();
+  
+      try:
+          print(v_value)
+          v_num = int(v_value)
+      except ValueError,e:
+          raise TypeError(e)
+      finally:
+          print "stop"
+  
+  if __name__ == '__main__':
+      main()
+  
+  ```
+  
+  ### 用户自定义异常 :
+  
+  ```
+  #!/usr/bin/env python
+  import sys
+  
+  class IllegnalError(BaseException):
+      def __init__(self, args):
+          self.args = args
+  
+  def main():
+      v_value = sys.stdin.read();
+  
+      try:
+          print(v_value)
+          v_num = int(v_value)
+      except ValueError,e:
+          raise IllegnalError(e)
+      finally:
+          print "stop"
+  
+  if __name__ == '__main__':
+      main()
+  
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-29T10:27:09.989Z"
+updatedAt: "2017-08-29T10:49:43.040Z"

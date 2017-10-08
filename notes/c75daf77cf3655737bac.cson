@@ -1,0 +1,243 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "8-MapReduce 分片信息"
+content: '''
+  ### 8-MapReduce 分片信息
+  
+  ---
+  
+  ```
+  package base;
+  
+  import java.io.IOException;
+  
+  import org.apache.hadoop.conf.Configuration;
+  import org.apache.hadoop.conf.Configured;
+  import org.apache.hadoop.fs.Path;
+  import org.apache.hadoop.io.FloatWritable;
+  import org.apache.hadoop.io.LongWritable;
+  import org.apache.hadoop.io.Text;
+  import org.apache.hadoop.mapreduce.Job;
+  import org.apache.hadoop.mapreduce.Mapper;
+  import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+  import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+  import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+  import org.apache.hadoop.util.Tool;
+  import org.apache.hadoop.util.ToolRunner;
+  
+  
+  /*
+  *  每一个map操作一个输入分片, 每个分片被划分为若干记录。 输入分片和记录都是逻辑概念， 不必将他们对应到文件
+  *  - 处理 文件输入分片的 mapper 可以从作业配置对象的某些特定属性中读取分片的相应信息
+  *  - 可以调用 Mapper 的Context对象上的getInputSplit() 方法来实现
+  *  - 当输入源自 FileInuputFormat 时， 该方法返回的 InputSplit 可以强制转换为 FileSplit
+  */
+  
+  public class SplitMessage extends Configured implements Tool{
+  
+  // Mapper
+  public static class Map extends Mapper<LongWritable, Text, FloatWritable, Text>{
+  
+    @Override
+    protected void map(LongWritable key, Text value, Mapper<LongWritable, Text, FloatWritable, Text>.Context context)
+        throws IOException, InterruptedException {
+  
+      FileSplit splitMess = (FileSplit)context.getInputSplit();
+      //InputSplit splitMess = context.getInputSplit();
+      System.out.println("Path :" + splitMess.getPath().toString());
+      System.out.println("Start : " + splitMess.getStart());
+      System.out.println("Length : " + splitMess.getLength());
+  
+      String origStr = value.toString();
+  
+      if(origStr.length() < 13)
+        return;
+      String paramStr = origStr.substring(1, 13);
+      String valueStr = origStr.substring(14).trim();
+  
+      System.out.println(paramStr + " : " + valueStr);
+  
+    }
+  }
+  
+  @Override
+  public int run(String[] args) throws Exception {
+  Configuration conf = new Configuration();
+  Job job = new Job(conf, "SplitMessage");
+  
+  TextInputFormat.addInputPath(job, new Path(args[0]));
+  TextOutputFormat.setOutputPath(job, new Path(args[1]));
+  
+  job.setMapperClass(Map.class); 													// 设置 Map的调用类
+  job.setMapOutputKeyClass(FloatWritable.class);
+  job.setMapOutputValueClass(Text.class);
+  
+  
+  job.setOutputKeyClass(FloatWritable.class);							// 设置输出的key格式
+  job.setOutputValueClass(Text.class);										// 设置输出的value格式
+  
+  
+  
+  return job.waitForCompletion(true)?1:0;
+  }
+  
+  public static void main(String[] args) throws Exception{
+  int status = ToolRunner.run(new SplitMessage(), args);
+  System.exit(status);
+  }
+  }
+  
+  ```
+  
+  
+  - 把整个文件作为一条语句输出
+  
+  - ##### 自定义核心的 RecordReader
+  
+  ```
+  class MyFileRecordReader extends RecordReader<NullWritable, BytesWritable>{
+  
+    private FileSplit fileSplit;													// 获取分片信息
+    private Configuration conf;													// 获取配置信息
+    private BytesWritable value = new BytesWritable();
+    private boolean processed = false;
+  
+    // 信息初始化
+    @Override
+    public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+      this.fileSplit= (FileSplit)split;
+      this.conf = context.getConfiguration();
+    }
+  
+    // 获取当前 key
+    @Override
+    public NullWritable getCurrentKey() throws IOException, InterruptedException {
+      return NullWritable.get();
+    }
+  
+    // 获取 当前 value
+    @Override
+    public BytesWritable getCurrentValue() throws IOException, InterruptedException {
+      return value;
+    }
+  
+    // 返回当前进度
+    @Override
+    public float getProgress() throws IOException, InterruptedException {
+  
+      return this.processed ? 1.0f : 0.0f;
+    }
+  
+    @Override
+    public boolean nextKeyValue() throws IOException, InterruptedException {
+  
+      if(!this.processed){
+        byte[] context = new byte[(int)fileSplit.getLength()];		// 创建指定长度的输入
+        Path file = fileSplit.getPath();												// 获取文件的位置
+        FileSystem fs = FileSystem.get(URI.create(file.toString()), conf);										// 获取文件系统
+  
+        FSDataInputStream fin = null;
+  
+        try{
+          fin=fs.open(file);																	// 读取文件
+          fin.read(context, 0, context.length);
+          value.set(context, 0, context.length);								// 将对象传入 value
+        }catch(IOException e){
+          e.printStackTrace();
+        }finally{
+          if(fin != null){
+            fin.close();
+          }
+          this.processed = true;
+        }
+  
+        return true;
+      }
+  
+      return false;
+    }
+  
+    @Override
+    public void close() throws IOException {
+    }
+  
+  }
+  ```
+  
+  - ##### 自定义一个文件输入器
+  
+  ```
+  class MyInputFormat extends FileInputFormat<NullWritable, BytesWritable>{
+  
+    // 重写分片信息
+    @Override
+    protected boolean isSplitable(JobContext context, Path file) {
+      return false;
+    }
+  
+    // 执行读写记录
+    @Override
+    public RecordReader<NullWritable, BytesWritable> createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+      MyFileRecordReader reader = new MyFileRecordReader();
+      reader.initialize(split, context);
+      return reader;
+    }
+  }
+  
+  ```
+  
+  - ##### 实现 MapReduce
+  
+  ```
+  
+  public class TheCodeMess extends Configured implements Tool{
+  
+    // Mapper
+  public static class Map extends Mapper<NullWritable, BytesWritable, NullWritable, Text>{
+  
+    @Override
+    protected void map(NullWritable key, BytesWritable value, Mapper<NullWritable, BytesWritable, NullWritable, Text>.Context context)
+        throws IOException, InterruptedException {
+  
+      byte[] buffer = value.getBytes();
+  
+      System.out.println("===================================================");
+      System.out.println(new String(buffer, 0, buffer.length));
+      System.out.println("===================================================");
+    }
+  
+  }
+  
+    @Override
+    public int run(String[] args) throws Exception {
+  
+      Configuration conf = new Configuration();
+      Job job = new Job(conf, "TheCodeMess");
+  
+      job.setJarByClass(TheCodeMess.class);
+  
+      job.setInputFormatClass(MyInputFormat.class);
+      MyInputFormat.addInputPath(job, new Path(args[0]));
+      TextOutputFormat.setOutputPath(job, new Path(args[1]));
+  
+      job.setMapperClass(Map.class);
+  
+      job.setOutputKeyClass(NullWritable.class);
+      job.setOutputValueClass(Text.class);
+  
+      return job.waitForCompletion(true) ? 1 : 0;
+    }
+  
+    public static void main(String[] args) throws Exception{
+      int status = ToolRunner.run(new TheCodeMess(), args);
+      System.exit(status);
+    }
+  }
+  
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T11:07:25.674Z"
+updatedAt: "2017-09-20T11:08:29.860Z"

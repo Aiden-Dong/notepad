@@ -1,0 +1,36 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "7-进程控制"
+content: '''
+  ### 7-进程控制
+  
+  ---
+  
+  > 引入工具 : `sys.process._`
+  
+  > 符号 :
+  
+  ```
+  !            // 执行并在终端打印执行结果
+  !!           // 执行并将结果返回给变量
+  
+  #|           // 管道
+  #>  #>> #<   // 重定向到文件
+  ```
+  
+  
+  sys.process 包含一个从字符串到ProcessBuilder的隐式转换. ! 操作符执行的就是这个 ProcessBuilder 对象.
+  
+  如果需要在不同的目录下运行进程,或者使用不同的环境变量,可以使用Process的apply方法来构造 ProcessBuilder ,给出命令和起始目录,以及一串(名称,值)对偶来设置环境变量.
+  
+  ```
+  val p = Process(cmd, new File(dirname),("LANG", "en_US"))
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-21T08:52:35.968Z"
+updatedAt: "2017-09-21T09:16:46.945Z"

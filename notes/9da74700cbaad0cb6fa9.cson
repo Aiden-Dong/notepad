@@ -1,0 +1,310 @@
+type: "MARKDOWN_NOTE"
+folder: "e6c9bd1f0c13e9eccb37"
+title: "4-python 面向对象篇"
+content: '''
+  ## 4-python 面向对象篇
+  ---
+  
+  ## 1. 对象的基本属性 :
+  
+  ```
+  class Person(object):
+      def setName(self, name):
+          self.name = name;
+      def getName(self):
+          print (self.name);
+  ```
+  
+  ### 1.1 成员方法 :
+  
+  如上所示 定义在 Person 中的函数就叫做 `成员方法`， 成员方法在定义时候必须要绑定实例对象 `self`.
+  
+  ### 1.2 类变量跟成员变量
+  
+  在方法中声明的变量使用实例名绑定的变量称作 **实例变量** ， 实例变量是对象层次的，及对象都有自己的成员变量。
+  
+  声明方式类似 :
+  
+  ```
+  def setName(self, name):
+      self.name = name;
+  ```
+  
+  而类变量是建立在类层次的，即这个类的所有对象都共享一个  **类变量** ，类变量可以在对象中直接声明，也可以通过类名绑定的方式去声明。
+  
+  ```
+  class Person(object):
+      __title="title";
+  
+      def setTitle(self, title):
+          Person.__title=title;
+      def getTitle(self):
+          print Person.__title;
+  ```
+  
+  如上便可以声明和访问类变量。
+  
+  ### 1.3 访问权限
+  
+  python 对象有两种访问权限，与 java 相比， 它的变量跟对象有公共的跟私有的两种访问权限。
+  
+  python 中的变量或方法的私有权限设置方式是在变量或者方法的开始使用 `__` 开头 ： `__name`
+  
+  这样外界不能直接访问了，但还可以通过 `_${ClassName}__name` 的形式来访问。
+  
+  ## 2. 继承和多态
+  
+  ```
+  class Person:
+      __title="body";
+  
+      def setTitle(self, title):
+          Person.__title=title;
+  
+      def getTitle(self):
+          print(Person.__title);
+  
+      def setName(self, name):
+          self.__name = name;
+  
+      def getMessage(self):
+          print("name : " + self.__name);
+  
+  class Boy(Person):
+  
+      def setSex(self, sex):
+          self.__sex = sex;
+      def getMessage(self):
+          Person.getMessage(self);
+          print("sex : " +  self.__sex);
+  ```
+  
+  ### 2.1 继承方式 :
+  
+  继承是面向对象的一个重要的特点 : 通过如上 : `class Boy(Person)` 的方式便可以实现类的继承
+  
+  python 允许多重继承。即集成多个类的方式：`class Boy(Person, Student)`
+  
+  注意的是　: 基类的私有方法对派生类仍不可见。
+  
+  ### 2.3 多态 :
+  
+  多态是在继承的过程中， 调用的方法可以根据具体实例动态发生改变
+  
+  ```
+  def getMessage(person) :
+  
+      if(isinstance(person, Person)) :
+          person.getMessage();
+      else :
+          raise TypeError("this argument is not Person  object");
+  ```
+  
+  如上我们可以创建一个调用接口， 来动态的根据 Person(包括其子类)的具体实例，来动态的调用执行。
+  
+  ## 3. 定制类
+  
+  python 类里面有几个特殊的方法：
+  
+  * `__init__`
+  
+  `__init__` 是类的构造函数, 在类创建实例对象的时候首先调用。
+  
+  ```
+  class Person(object):
+      """docstring for Person."""
+      def __init__(self, name, age=0):
+          self.name = name;
+          self.age = age;
+      def getMessage(self):
+          print("name : "  + self.name + "\\n" +
+                "age : " +  str(self.age));
+  
+  
+  if __name__ == '__main__':
+      person = Person('one', 12);
+      person.getMessage();
+  ```
+  
+  在类的 **继承** 关系中， 我们也需要在派生类中定义基类的构造方式。
+  
+  ```
+  class Person(object):
+      """docstring for Person."""
+      def __init__(self, name, age=0):
+          self.name = name;
+          self.age = age;
+      def getMessage(self):
+          print("name : "  + self.name + "\\n" +
+                "age : " +  str(self.age));
+  
+  class Student(Person):
+      def __init__(self, name, age, className, grade):
+          Person.__init__(self, name,  age);
+          self.className = className;
+          self.grade = grade;
+      def getMessage(self):
+          Person.getMessage(self);
+          print("className : " + self.className + "\\n" +
+                "grade : " + self.grade);
+  
+  if __name__ == '__main__':
+      student = Student('one', 12, '3', '98');
+      student.getMessage();
+  ```
+  
+  * `__str__`
+  
+  `__str__` 相当于 java 中的 `toString` 方法， 主要用来打印对象信息 :
+  
+  ```
+  class Person(object):
+      def __init__(self, name, age=0):
+          self.name = name;
+          self.age = age;
+      def getMessage(self):
+          print(self.__str__());
+      def __str__(self):
+          return "name : "  + self.name + "\\n" + "age : " +  str(self.age);
+  
+  if __name__ == '__main__':
+      person = Person('saligia', 20);
+      print(person);
+  ```
+  
+  * `__repr__`
+  
+  `__repr__` 属于调试服务函数，是为调试开发者使用 (使用廖雪峰例子)
+  
+  ```
+  class Student(object):
+      def __init__(self, name):
+          self.name = name
+      def __repr__(self):
+          return 'Student object (name=%s)' % self.name
+  
+  >>> s = Student('Michael')
+  >>> s
+  Student object (name=Michael)；
+  ```
+  
+  * `__iter__`
+  
+  
+  `__iter__` 用于迭代遍历操作， 如果一个类想被用于 for ... in 循环，类似list或tuple那样，就必须实现一个__iter__()方法。
+  该方法返回一个迭代对象，然后，Python的for循环就会不断调用该迭代对象的 `__next__()` 方法拿到循环的下一个值，
+  直到遇到 `StopIteration` 错误时退出循环。
+  
+  ```
+  class List(object):
+      def __init__(self, num=0):
+          self.__list = [];
+          self.__index = 0;
+          for i in range(num) :
+              self.__list.append(i);
+      def __iter__(self) :
+          return self;
+  
+      def __next__(self) :
+          if self.__index < len(self.__list):
+              index = self.__index;
+              self.__index += 1;
+              return self.__list[index];
+          else :
+              self.__index = 0;
+              raise StopIteration;
+  
+  
+  if __name__ == '__main__':
+      list = List(10);
+      for num in list :
+          print(str(num));
+  ```
+  
+  * `__getitem__` :
+  
+  `__getitem__` 用来实现类似与数组元素根据索引获取数据的功能。
+  
+  取值 :
+  
+  ```
+  class List(object):
+      def __init__(self, num=0):
+          self.__list = [];
+          self.__index = 0;
+          for i in range(num) :
+              self.__list.append(i);
+      def __getitem__(self, n) :
+          if n < len(self.__list) :
+              return self.__list[n];
+          else :
+              raise IndexError;
+  
+  if __name__ == '__main__':
+      list = List(10);
+      print(list[7]);
+  ```
+  
+  切片 :
+  
+  ```
+  class List(object):
+      def __init__(self, num=0):
+          self.__list = [];
+          self.__index = 0;
+          for i in range(num) :
+              self.__list.append(i);
+  
+      def __getitem__(self, n) :
+          if isinstance(n, int):
+              if n < len(self.__list) :
+                  return self.__list[n];
+              else :
+                  raise IndexError;
+          if isinstance(n, slice):
+              start = n.start;
+              stop = n.stop;
+              step = n.step;
+  
+              if(n.start is None):
+                  start = 0;
+              if(n.stop is None):
+                  stop = len(self.__list);
+  
+              if (step is None):
+                  if start <= stop:
+                      step = 1;
+                  else:
+                      step = -1;
+  
+              arr = [];
+              for i in range(start, stop, step):
+                  arr.append(self.__list[i]);
+              return arr;
+  
+  if __name__ == '__main__':
+      list = List(10);
+      print(list[8:1]);
+  ```
+  
+  * `__call__`
+  
+  `__call__` 用来当对象自身直接调用时， 将调用这个方法:
+  
+  ```
+  class Person(object):
+      def __init__(self, name):
+          self.__name = name;
+      def __call__(self):
+          print("name : " + self.__name);
+  
+  if __name__ == '__main__':
+      person = Person("test");
+      person();
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-25T14:52:09.692Z"
+updatedAt: "2017-08-26T11:58:25.653Z"

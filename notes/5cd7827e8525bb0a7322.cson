@@ -1,0 +1,46 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "7-Mysql 视图"
+content: '''
+  ### 7-Mysql 视图
+  ---
+  #### 1. 创建视图
+  
+  ```
+  create [ALGORITHM {UNIDEFINED | MERGE | TEMPTABLE}]
+          view view_name [(属性清单)]
+          AS select 语句
+          [with [CASCADE | LOCAL] CHECK OPTION]
+  ```
+  
+  ```
+  MySQL [saligia]> create view test_view as select * from test;
+  Query OK, 0 rows affected (0.32 sec)
+  
+  ```
+  
+  #### 2. 查看视图的基本信息
+  
+  ```
+  MySQL [saligia]> describe test_view;
+  +-----------+-------------+------+-----+---------+-------+
+  | Field     | Type        | Null | Key | Default | Extra |
+  +-----------+-------------+------+-----+---------+-------+
+  | test_id   | int(11)     | NO   |     | 0       |       |
+  | test_name | varchar(11) | NO   |     | NULL    |       |
+  +-----------+-------------+------+-----+---------+-------+
+  2 rows in set (0.00 sec)
+  ```
+  
+  #### 3. 删除视图
+  
+  ```
+  MySQL [saligia]> drop view test_view;
+  Query OK, 0 rows affected (0.00 sec)
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-28T05:46:07.138Z"
+updatedAt: "2017-08-28T05:46:22.770Z"

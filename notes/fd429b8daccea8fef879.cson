@@ -1,0 +1,66 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "2- 算数篇"
+content: '''
+  ### 2- 算数篇
+  
+  ---
+  
+  > 基本算术操作
+  
+  ```
+  #!/bin/bash
+  
+  
+  y=4
+  
+  echo $((x+y))
+  # 4
+  echo
+  
+  b=4
+  # :- 如果变量定义则使用变量,否则以指定值作为默认值
+  echo $((${a:-3}+6))
+  # 9
+  echo $((${b:-3}+6))
+  # 10
+  echo
+  
+  exit 0
+  ```
+  
+  使用expr 计算
+  
+  ```
+  #!/bin/bash
+  
+  i=`expr 3 + 6`
+  
+  echo "6+3=$i"
+  echo
+  
+  j=`expr $j + 1`
+  
+  echo "j+1=$j"
+  echo
+  
+  x=3
+  y=6
+  var=`expr $x = $y`
+  echo "var=$var"
+  exit 0
+  
+  ```
+  
+  
+  
+  
+  
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T09:54:11.661Z"
+updatedAt: "2017-09-19T09:54:40.383Z"

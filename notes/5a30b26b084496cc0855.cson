@@ -1,0 +1,151 @@
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "1-hive 表"
+content: '''
+  ### 1-hive 表
+  ---
+  - Hive 的表分为 **外部表** 和 **托管表** 
+  - HIVE 的表在逻辑上由 **存储的数据** 和 **描述表中数据类型的相关元数据** 组成。
+  - Hive 提供的不同物理存储格式以及如何导入这些不同格式的数据。
+  - 加载操作就是文件系统中的 **文件移动** 或 **重命名**， 因此他的执行速度更快。
+  
+      
+  ```
+  - 在Hive 中创建表时， 默认情况下 Hive 负责管理数据， 这意味着 Hive 把数据移到它的 "目录仓库中"。
+  
+  - 另一种选择是创建一个 "外部表" , 这会让 Hive 到仓库目录以外位置访问数据。
+  ```
+  #### 托管表
+  
+  1. 创建一个托管表:
+  ```
+  hive> CREATE TABLE pin_table (context STRING);
+  OK
+  Time taken: 1.182 seconds
+  hive> show tables;
+  OK
+  pin_table
+  Time taken: 0.091 seconds, Fetched: 1 row(s)
+  ```
+  2. 上传文件 到 hdfs 中：
+  ```
+  $ hadoop fs -put ./pinyin input/
+  $ hadoop fs -ls input/
+  Found 1 items
+  -rw-r--r--   1 saligia saligia       2185 2016-10-24 10:56 input/pinyin
+  ```
+  3. 将文件信息导入到托管表中
+  ```
+  hive> LOAD DATA INPATH "/user/saligia/input/pinyin" INTO TABLE pin_table;
+  Loading data to table default.pin_table
+  Table default.pin_table stats: [numFiles=1, totalSize=2185]
+  OK
+  Time taken: 1.16 seconds
+  hive> select * from pin_table;
+  ```
+  4. 查看 hdfs 中的文件已经不存在
+  ```
+  $ hadoop fs -ls input/
+  ```
+  5. 托管表的删除：
+  
+  删除表， 包括它的元数据和数据， 会一起被删除。
+  ```
+  hive> DROP TABLE pin_table;
+  OK
+  Time taken: 2.945 seconds
+  ```
+  
+  > 说明：
+  
+  ```
+  最初的 LOAD 是一个移动操作， 而 DROP 是一个删除操作， 所以数据会彻底消失。
+  ```
+  
+  #### 外部表：
+  
+  ##### 1. 接 hdfs 
+  
+  1. 创建外部表
+  ```
+  hive> CREATE EXTERNAL TABLE ex_pin_table(context STRING) LOCATION '/user/saligia/external/ex_pin_table';
+  -- 创建外部表指定外部数据的位置。
+  
+  $ hadoop fs -ls external/;
+  Found 1 items
+  drwxr-xr-x   - EVA saligia          0 2016-10-24 11:30 external/ex_pin_table
+  $ hadoop fs -ls /user/saligia/external/ex_pin_table
+  -- 刚创建是外部表的位置为空
+  ```
+  2. 向外部表中插入数据
+  ```
+  hive> LOAD DATA INPATH '/user/saligia/input/pinyin' INTO TABLE ex_pin_table;
+  
+  # hadoop fs -ls /user/saligia/external/ex_pin_table
+  Found 1 items
+  -rwxr-xr-x   1 saligia saligia       1847 2016-10-24 12:49 /user/saligia/external/ex_pin_table/pinyin
+  -- 加载动作将数据移动到指定的数据位置处。
+  ```
+  3. 删除外部表
+  ```
+  hive> DROP TABLE ex_pin_table;
+  OK
+  Time taken: 0.091 seconds
+  
+  # hadoop fs -ls /user/saligia/external/ex_pin_table
+  Found 1 items
+  -rwxr-xr-x   1 saligia saligia       1847 2016-10-24 12:49 /user/saligia/external/ex_pin_table/pinyin
+  -- 删除外部表的动作并不删除元数据， 而是仅仅删除在 /user/hive/warehouse/下的目录文件。
+  ```
+  
+  ##### 2. 外联 hbase:
+  
+  ```
+  hive (test)> create external table message (key string , context string)
+  > stored by 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+  > with serdeproperties ("hbase.columns.mapping"=":key,context:name")
+  > tblproperties ("hbase.table.name"="message");
+  
+  说明：
+  1. 在serdeproperties 属性中指定的 :key,cf:qe,cf:qe 对中 cf 是列族名， qe 是列值。
+  2. 每个行键一行数据。
+  ```
+  
+  结果：
+  
+  ```
+  hive (test)> select * from message;
+  OK
+  message.key	message.context
+  2013201311	jack
+  2013201312	ones
+  2013201313	thins
+  2013201314	lkmke
+  2013201315	jimes
+  2013201316	jkdas
+  2013201317	klads
+  2013201318	salid
+  2013201319	ldsae
+  2013201320	winer
+  2013201321	limkd
+  ```
+  
+  > hive 表的位置：
+  
+  ```
+  1. 创建托管表时， 数据的元数据和数据位置在 /user/hive/warehouse/ 目录下的以表名为目录的文件中。
+  
+  2. 对于外部表， 数据的元数据位置与 托管表相同， 而数据是在 由创建表时的 LOCATION 所指定的目录中。 
+  ```
+  > 查看表信息 ：
+  ```
+  desc formatted m_dau_request partition (year='2017', month='07', day='01');
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-14T08:47:41.478Z"
+updatedAt: "2017-09-14T08:56:33.670Z"

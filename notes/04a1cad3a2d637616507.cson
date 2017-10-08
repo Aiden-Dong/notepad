@@ -1,0 +1,133 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "1-Mysql 安装"
+content: '''
+  ## 1-Mysql 安装
+  ---
+  ### 1. 首先添加用户跟用户组
+  
+  ```
+  # groupadd mysql
+  # useradd -g mysql mysql -d /usr/local/share/mysql  -s /sbin/nologin
+  ```
+  
+  ### 2. 解压缩文件到指定目录
+  
+  ```
+  # tar -zxvf mysql-5.7.15-linux-glibc2.5-x86_64.tar.gz -C /usr/local/share/
+  ```
+  > Mysql 的主目录
+  
+  ![image](http://ww4.sinaimg.cn/mw1024/e91aafadjw1f891dym75pj20s5067jv8.jpg)
+  
+  ### 3. 配置
+  
+  > 设置Mysql目录的权限
+  
+  ```
+  [EVA@EVA share]# mv mysql-5.7.15-linux-glibc2.5-x86_64/ mysql
+  [EVA@EVA share]# cd mysql/
+  [EVA@EVA mysql]# mkdir data
+  [EVA@EVA mysql]# mkdir tmp
+  [EVA@EVA mysql]# cd ..
+  [EVA@EVA share]# chown -R mysql:mysql mysql/
+  ```
+  
+  > 拷贝配置文件
+  
+  ```
+  # cp support-files/my-default.cnf /etc/my.cnf
+  ```
+  
+  > 使用 Mysql 来初始化数据库
+  
+  ```
+  # bin/mysqld --initialize --user=mysql --basedir=/usr/local/share/mysql --datadir=/usr/local/share/mysql/data
+  
+  ```
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f894nf2twjj20s809zjz3.jpg)
+  ```
+  # bin/mysql_ssl_rsa_setup  --datadir=/usr/local/share/mysql/data
+  ```
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f894neo0tlj20tc08yjvp.jpg)
+  
+  > 设置/etc/init.d/mysqld
+  
+  ```
+  # cp support-files/mysql.server /etc/init.d/mysqld
+  
+  # vi /etc/init.d/mysqld 
+  
+  basedir=/usr/local/share/mysql
+  datadir=/usr/local/share/mysql/data
+  ```
+  
+  
+  > 设置 /etc/my.cnf
+  
+  ```
+  [mysqld]
+  
+  # Remove leading # and set to the amount of RAM for the most important data
+  # cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+  # innodb_buffer_pool_size = 128M
+  
+  # Remove leading # to turn on a very important data integrity option: logging
+  # changes to the binary log between backups.
+  # log_bin
+  
+  # These are commonly set, remove the # and set as required.
+  basedir = /usr/local/share/mysql
+  datadir = /usr/local/share/mysql/data
+  port = 3306
+  # server_id = .....
+  socket = /usr/local/share/mysql/tmp/mysql.sock
+  
+  # Remove leading # to set options mainly useful for reporting servers.
+  # The server defaults are faster for transactions and fast SELECTs.
+  # Adjust sizes as needed, experiment to find the optimal values.
+  # join_buffer_size = 128M
+  # sort_buffer_size = 2M
+  # read_rnd_buffer_size = 2M 
+  default-storage-engine=INNODB
+  character-set-server=utf8
+  collation-server=utf8_general_ci
+  
+  sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+  
+  [mysql.server]
+  user=mysql
+  basedir=/usr/local/share/mysql
+  
+  [client]
+  socket = /usr/local/share/mysql/tmp/mysql.sock
+  default-character-set=utf8
+  ```
+  
+  ### 4. 启动 Mysql服务器
+  
+  > 启动
+  
+  ```
+  [EVA@EVA mysql]# bin/mysqld_safe --user=mysql &
+  ```
+  ```
+  [EVA@EVA mysql]# bin/mysql -uroot -p
+  ```
+  
+  > 修改密码
+  
+  ```
+  mysql> set password=password('360628836989');
+  Query OK, 0 rows affected, 1 warning (0.00 sec)
+  
+  mysql> grant all privileges on *.* to root@'%' identified by '360628836989';
+  Query OK, 0 rows affected, 1 warning (0.00 sec)
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-26T01:47:48.602Z"
+updatedAt: "2017-08-26T03:15:38.288Z"

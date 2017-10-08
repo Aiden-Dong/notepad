@@ -1,0 +1,189 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "1-maven 编写　scala"
+content: '''
+  ### 1-maven 编写　scala
+  
+  ---
+  
+  使用　idea 加　maven 编写　scala 程序. 
+  
+  ### 构建过程:
+  
+  scala 的构建过程如同java一般
+  ![](http://img.my.csdn.net/uploads/201709/05/1504610776_9526.png)
+  ![](http://img.my.csdn.net/uploads/201709/05/1504610787_5328.png)
+  
+  ### 配置 maven:
+  
+  maven 中需要添加　scala 的编译插件跟依赖
+  
+  ```
+  <?xml version="1.0" encoding="UTF-8"?>
+  <project xmlns="http://maven.apache.org/POM/4.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+      <modelVersion>4.0.0</modelVersion>
+  
+      <groupId>saligia-study</groupId>
+      <artifactId>scala-start</artifactId>
+      <version>1.0</version>
+  
+      <properties>
+          <scala.version>2.12.3</scala.version>
+      </properties>
+  
+      <dependencies>
+          <!-- scala 依赖包-->
+          <dependency>
+              <groupId>org.scala-lang</groupId>
+              <artifactId>scala-library</artifactId>
+              <version>${scala.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.scala-lang</groupId>
+              <artifactId>scala-compiler</artifactId>
+              <version>${scala.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.scala-lang</groupId>
+              <artifactId>scala-reflect</artifactId>
+              <version>${scala.version}</version>
+          </dependency>
+      </dependencies>
+      <build>
+          <resources>
+              <resource>
+                  <directory>${project.basedir}/bin</directory>
+                  <filtering>true</filtering>
+                  <includes>
+                      <include>*.sh</include>
+                  </includes>
+                  <targetPath>${project.build.directory}/dist/bin</targetPath>
+              </resource>
+          </resources>
+          <plugins>
+              <!-- scala 编译工具　-->
+              <plugin>
+                  <groupId>org.scala-tools</groupId>
+                  <artifactId>maven-scala-plugin</artifactId>
+                  <version>2.15.2</version>
+                  <executions>
+                      <execution>
+                          <goals>
+                              <goal>add-source</goal>
+                              <goal>compile</goal>
+                          </goals>
+                          <configuration>
+                              <includes>**/*.scala</includes>
+                          </configuration>
+                      </execution>
+                  </executions>
+              </plugin>
+              <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-dependency-plugin</artifactId>
+                  <version>2.8</version>
+                  <executions>
+                      <execution>
+                          <id>dependency-copy</id>
+                          <phase>package</phase>
+                          <goals>
+                              <goal>copy-dependencies</goal>
+                          </goals>
+                          <configuration>
+                              <excludeArtifactIds>false</excludeArtifactIds>
+                              <stripVersion>false</stripVersion>
+                              <excludeScope>provided</excludeScope>
+                              <outputDirectory>${project.build.directory}/dist/lib</outputDirectory>
+                          </configuration>
+                      </execution>
+                  </executions>
+              </plugin>
+              <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-jar-plugin</artifactId>
+                  <version>2.4</version>
+                  <configuration>
+                      <includes>
+                          <include>**/*.class</include>
+                      </includes>
+                      <outputDirectory>${project.build.directory}/dist/lib</outputDirectory>
+                  </configuration>
+              </plugin>
+          </plugins>
+      </build>
+  </project>
+  ```
+  
+  ### Scala Hello World
+  
+  ```
+  object HelloScala {
+    def main(args: Array[String]): Unit = {
+      print("Hello world")
+    }
+  }
+  ```
+  
+  ### 执行脚本
+  
+  ```
+  #!/usr/bin/env bash
+  
+  JAR=""
+  for v_jar in $(find -name "*.jar" -print);
+  do
+     JAR=${JAR}:${v_jar}
+  done
+  java -cp ${JAR} HelloScala
+  ```
+  
+  #### 单元测试
+  
+  有时候　scala 要使用单元测试, 使用　maven 同样可以．
+  
+  我们可以在test下面创建一个`scala`的目录，　在里面写我们的scala 的单元测试类
+  ![](http://img.my.csdn.net/uploads/201709/07/1504765269_6565.png)
+  
+  我们这里使用　Junit 单元测试框架．
+  ```
+  <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+  </dependency>
+  ```
+  
+  我们可以如下编写我们的单元测试类
+  
+  ```
+  class HelloScalaTest {
+    @Test
+    def testStart():Unit={
+      HelloScala.start()
+    }
+  }
+  ```
+  
+  如果需要执行　`mvn test` 执行我们的单元测试，可以使用`surefire`插件
+  
+  ```
+  <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-surefire-plugin</artifactId>
+      <configuration>
+          <includes>
+              <include>**/*Test*.*</include>
+          </includes>
+      </configuration>
+  </plugin>
+  ```
+  这样就可以执行我们的测试程序啦．
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-05T06:52:25.070Z"
+updatedAt: "2017-09-07T06:34:14.255Z"

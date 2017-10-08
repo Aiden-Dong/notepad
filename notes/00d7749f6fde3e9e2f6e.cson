@@ -1,0 +1,33 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "9- 代理篇"
+content: '''
+  ### 9- 代理篇
+  
+  ---
+  
+  - .ssh/config
+  
+  ```
+  Host relay3.mobvista.com
+          User tao.dong
+          IdentityFile /home/saligia/.ssh/tao.dong_id_rsa
+  
+  Host 52.2.239.130
+          User tao.dong
+          ProxyCommand ssh relay3.mobvista.com exec nc %h %p 2>/dev/null
+          IdentityFile /home/saligia/.ssh/tao.dong_id_rsa
+  
+  ```
+  
+  - command
+  
+  ```
+  ssh -N -D 8085 tao.dong@52.2.239.130
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-29T05:49:17.776Z"
+updatedAt: "2017-09-29T05:50:33.082Z"

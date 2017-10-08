@@ -1,0 +1,394 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "11- MapReduce 深度分析"
+content: '''
+  ### 11- MapReduce 深度分析
+  ---
+  
+  #### 1- 综述框架
+  
+  - #### 数据流向分析
+  
+  > 1. 输入文件从 HDFS 流向到 Mapper 节点.
+  
+  ```
+  - 优先考虑数据文件本地化， 无法达到要求在考虑从最近的数据副本中传输数据
+  ```
+  
+  > 2. Mapper 输出到内存缓冲区
+  
+  ```
+  - Mapper 的输出并不是直接写到本地磁盘， 先写入一个内存环形缓冲区，当超过内存的阈值时， 溢出到本地磁盘的临时文件 。
+  - 当整个map 任务结束后， 会对这个文件产生的所有临时文件进行合并，并产生最终输出文件.
+  - patterner 就是发生在这个阶段。 
+  - 如果作业设置了 Combiner , 那么溢出写到磁盘之前就会对 Map 输出的键值对调用 Combiner 类做规约操作。
+  ```
+  
+  > 3. 从 Mapper 端的本地文件系统流向 Reduce 端。
+  
+  ```
+  - 这就是 Reduce 的 shuffle 阶段。
+  - 分成三种情况 :
+      1. 对与多个 Reduce 的情况下， 需要将Mapper 输出中的分区 Region 文件远程复制到对应的 Reduce 文件.
+      2. Mapper 节点所在的机器有 Reduce 槽， 则 Mapper 输出中的分区 Region 文件会直接写出到 Reduce 内存缓冲区。
+      3. 本机的Reduce 还会接受来自其他Mapper 输出的分区 Region 文件.
+      4. Region 文件大于这个阈值时， Reduce 将写入磁盘.
+  ```
+  
+  > 4. 从 Reduce 端内存缓冲区流向 Reduce 端的本地磁盘.
+  
+  ```
+  这就是 Reduce 端的 merge 和 sort 阶段.
+  
+  分为 内存文件的合并， 磁盘文件的合并. 以 key 为键进行最终排序
+  
+  ```
+  
+  > 5. Merge 和 sort 之后直接流向 Reduce 函数进行规约处理
+  
+  > 6. Reduce 处理完毕之后根据用户指定的输出类型写入 HDFS 中。
+  
+  - #### 处理流程分析
+  
+  > 1. 用户的应用通过JobClient 类提交到 JobTracker 。
+  
+  ```
+  JobTracker 类将用户的 Mapper , Reducer 类, 以及配置 JobConf 打包成为一个 JAR 文件并保存在 HDFS上.
+  ```
+  
+  > 2. 在 JobClient 提交 job 后， JobTracker 会创建一个 JobInProgress 来跟踪和调度这个作业， 并将其添加到调度器的作业队列中.
+  
+  > 3. JobInProgress 会根据提交的作业 JAR 文件中定义的 输入数据即创建响应的 TaskInProgress 应用监控和调度 MapTask, 同时在创建指定数目vd TaskInProgress 用于监控和调度 ReduceTask .
+  
+  > 4. JobTracker 启动任务时通过 TaskInProgress 来启动作业任务.
+  
+  ```
+  - 这时会把 Task 对象序列化写入相应的 TaskTracker 服务中。
+  ```
+  > 5. TaskTracker 收到任务后会创建相应的 TrackerInProgress, 用于监控和运行该 Task 
+  
+  > 6. 启用具体的 Task 进程， TaskTracker 通过 TaskInProgress 管理的Task.
+  
+  > 7. TaskRunner 自动装载用户作业 JAR 文件， 并设置好环境变量后重新启动一个独立的 java 子进程来执行 Task.
+  
+  ```
+  Runner 会首先调用执行 MapTask.
+  ```
+  
+  > 8. MapTask 先调用 Mapper。
+  
+  ```
+  - Mapper 会根据用户作业 JAR 中定义的输入数据集.按 <key, value> 键值对读入， 处理完成生成临时的 <key, value>
+  - 如果用户还定义 Combiner ， 那么 MapTask 会在 Mapper 完成后调用用户指定的 Combiner 以减少 Map 的输出的键值对的集合
+  ```
+  
+  > 9. 在 MapTask 任务全部完成后， TaskRunner 紧接着调用 ReduceTask 进程来启动Reduce.
+  
+  
+  #### 2-MapTask
+  
+  - #### 总逻辑分析
+  
+  > **MapTask** 类继承了 **Task** 类， 重写了 run() 方法， MapTask 正式通过调用 run() 来执行整个 Map 任务的。
+  
+  ```
+  1. MapTask 的初始化是通过调用 initialize() 方法执行。
+  2. Map 的初始化宝库奥 JobContext, TaskContext, 输出路径等 （task.initialize()）;
+  3. 初始化完成之后会依次判断作业类型，  MapTask 有三种特殊的作业 :
+              - CleanupJobTracker (清理 Map 任务)
+              - SetupJobTracker   (初始化 Map 任务)
+              - TaskCleanupTask   (清理 作业 任务)
+  ```
+  
+  **流程：**
+  
+  > 1. 创建执行 Mapper 所需要的对象。
+  
+  ```
+  - 创建的对象 : TaskAttempContext  Mapper  InputFormat InputSplit  RecordReader.
+  
+  
+  - InputSplit: 
+      输入分片在 java 中 表示为 InputSplit 接口
+      
+      public abstract class InputSplit{
+          public abstract long getLength() throw IOException,InterruptException;
+          public abstract String[] getLocations() throws IOException; // 副本
+      }
+      
+      -> 分片并不包含数据本身， 而是指向分片的引用.
+      -> InpuuSplit 由 InputFormat 创建
+      
+      
+  - InputFormat ： 
+      产生输入分片并将他们分割成记录
+      
+      public abstract class InputFormat<K, V>{
+          public abstract List<InputSplit> getSplits(JobContext context);
+          
+          public abstract RecordReader<K,V> createRecordReader(InputSplit split, TaskAttemptContext context);
+      }
+      
+      
+  - RecordReader:
+      记录读取对象
+      
+      public abstract class RecordReader<K, V>{
+          public abstract void initialize(InputSplit, TaskAttemptConText) throws IOException, InterruptedException;
+          public abstract boolean nextKeyValue() throws IOException, InterruptException;
+          public abstract <K> getCurrentKey() throws IOException, InterruptException;
+          public abstract <V> getCurrentValue() throws IOException, InterruptException;
+          public abstract float getProgress() throws IOException, InterruptException;
+      }
+  ```
+  
+  > 2. 创建所需要的输出收集器 **OutputCollector**
+  
+  ```
+  - 创建的收集器的类型根据 Reduce 任务的有无而有所不同 : 
+      -> 存在 Reduce 任务     则创建 NewOutputCollector 收集器对象。
+      -> 不存在 Reduce 任务   则创建 NewDirectOutputCollector 收集器对象。
+      
+      OutputCollector 用于收集 Mapper 的输出键值对.
+  ```
+  
+  > 3. 初始化 RecordReader
+  
+  ```
+  通过 reader.initialize(split, mapperContext)来对输入数据进行初始化
+  ```
+  
+  > 4. 执行 Mapper.
+  
+  ```
+  执行 Mapper , 通过调用 mapper.run(mapperContext)最终调用用户指定的 Mapper 类对数据进行 Map 操作处理。 
+  ```
+  
+  - #### Read 阶段
+  
+  > 1. 创建 **InputFormat** 对象实例。
+  > 2. 创建 **InputSplit** 对象， 这个对象提供了分片信息 -- InputFormat 对象负责切片。
+  > 3. 创建 RecordReader 对象， 把 InputSplit 提供的输入文件转化成 Mapper 所提供的键值对.
+  
+  - #### Map 阶段
+  
+  > - Map阶段始于 mapper.run(mapperContext) 调用
+  > - setup() 一般用来进行一些执行 map() 前的准备工作；
+  > - cleanup() 则用来执行一些清理工作.
+  > - map() 是真正执行的运行函数
+  
+  ```
+  public void setup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context);
+  public void map(KEYIN, VALUEIN, Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context);
+  public void cleanup(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context);
+  public void run(Mapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>.Context context);
+  ```
+  
+  - #### Collector 和 Partitioner 阶段
+  
+  > - Map 的结果并不是直接写入到 内存缓冲区， 而是有一个 Collector 对象进行收集。
+  > - 环形缓冲区由 NewOutputCollect 的collector.collect 创建。
+  > - Partitioner 阶段在此执行， 默认是 HashPartitioner, 他对每条记录的键进行 hash 操作以决定该记录在哪个分区.
+  
+  ```
+  - 内存缓冲区主要由 三个 环形缓冲区的数组组成， kvoffsets , kvindices , kvbuffer.
+  ```
+  
+  - #### Spill 和 Combiner 阶段
+  
+  > - Collector 和 Partition 阶段， 以 **<K,V,partition>** 格式写入内存缓冲区。
+  > - 这个阶段有两个重要的逻辑 : **sort** 和 **Combiner**
+  
+  ```
+  - kvoffsets     int[] 类型， <key, value> 偏移量数组， 也就是其在 kvindices 中的偏移量。
+  - kvindices     int[] 类型， <key, value> 键值对索引， 也就是键值对在 kvbuffer 中的位置。
+  - kvbuffer      byte[] 类型， 记录存储<key, vlaue> 键值对的内存缓冲区。
+  ```
+  
+  **spill 执行条件：**
+  
+  ```
+  1. <key, value> 达到 limit 限制
+  2. 内存缓冲区达到 limit 限制
+  3. 单条记录过长
+  ```
+  
+  **spill 执行过程：**
+  
+  > 按照 patition 的顺序对内存缓冲区的数据进行排序。 
+  
+  ```
+  1. 首先创建 SpillRecord 记录， 然后创建 Spill 文件。
+  2. 按照 patition 的顺序对内存缓冲区的数据进行排序 -- 快排算法
+  3. 以此将每个partition 写入磁盘文件.
+      
+      -> 如果没有Combiner, 则直接写入磁盘文件
+      
+      -> 否则先进行 Combiner ， 而后将结果写入文件
+          >输入格式为 <key, list<value>> | 输出格式 <key, value> 
+  4. 创建 spill index 文件， 内容实质就是 kvindices 的内容.
+  ```
+  
+  - #### Merge 阶段
+  
+  > 经过 Spill 阶段后会生成多个 **spill{spill号}.out** 文件 和 相应索引文件 **spill.out{spill号}.index**， MapTask 最终需要将这些形式的文件合并成一个大的输出文件。
+  
+  > 如果存在多个文件， 则调用 mergePart（） 函数生成一个最终文件， 最终一个文件也是按照 patition 进行排序的。
+  
+  
+  #### 3- ReduceTask
+  
+  - #### shuffle 阶段
+  
+  > 这个阶段也就是 Reduce 的 **Copy** 阶段， 运行 Reduce 的 TaskTracker 需要从各个 Mapper 节点上远程复制属于自己的一段数据。
+  
+  ```
+  - 有一个 Map 任务完成了，  ReduceTask 任务就开始复制他的输出。
+  
+  - 当 Map 完成后会通知他的 TaskTracker ， 然后 TaskTracker 通过心跳机制来告知 jobtracker任务完成的状态和结果。
+  
+  - 每一个作业执行时， jobtracker 都会保存一个 Mapper 输出 和 TaskTrackers 的映射关系表。
+  
+  - Reduce 中有一个会间歇向 JobTracker 询问 Mapper 输出的地址， 知道把所有的数据都取完。
+  
+  - 在 Reduce 取走Mapper 输出之后， TaskTracker 并不会立即删除这些数据， 而是等待任务运行结束在删除数据
+  ```
+  
+  - #### merge 阶段
+  
+  > - 在Shuffle 阶段中启动数据复制线程 MapOutputCopier 后就开始了 Merge 阶段。
+  > - Merge 包括两种情况 ：**基于内存的合并** 和 **基于磁盘的合并**
+  
+  ```
+  1. 如果磁盘的输出足够小， 他们会被复制到 Reduce TaskTraker 的内存中； 
+  2. 如果缓冲区的空间不足， 会被复制到磁盘上。
+  3. 当内存中的缓冲区达到阈值比例， 缓冲区的数据将会被 spill 到磁盘中。
+  ```
+  
+  - #### Sort 阶段
+  
+  > - 在经过 Shuffle 和 Merge , Reduce 的数据还位于 磁盘或内存中， 并不能直接作为Reduce 的输入。
+  > - 因此还需要进行 Merge 的同时多次归并并排序， 最终形成一个有序的key.
+  
+  
+  #### 4- Yarn 调度
+  
+  > 本文为 《Hadoop The Definitive Guide 4th Edition》的读书笔记，仅限交流使用。
+  
+  ### 剖析 MapReuce Job 的运行
+  我们能够在 JOb 对象上调用一个submit()方法来运行一个 MapReduce job，你也能调用 waitFormCompletion() -- 总是提交一了一个job后等待job的完成。这个方法隐藏了许多的执行细节。我们现在开看看他底层运行的步骤：
+  完整的运行流程见 Figure 7-1 ：
+  
+  * 客户端提交 MapReduce job
+  * YARN 资源管理器里，在集群里定位计算资源在哪个节点上开辟的。
+  * YARN node manager 中，运行在并且管理在集群机器上的计算容器，每一个容器有自己的nodeManager。
+  * MapReduce 应用程序管理员（master），定位 MapReduce job 的 task 手下们。应用程序 master 和 MapReduce task 运行在 并由资源管理器调度，由 node manager 管理 的 containers 中，
+  * 分布式文件系统，用于在其他实体中分享 job 文件。
+  ![figure 7-1 ](http://img0.ph.126.net/Ys4VMSthGofzvDZzTZ4wCw==/6631485580120340607.png)
+  #### Job 提交过程
+  
+  submit() 方法在 Job 上创建了一个内置的 JobSubmitter 实例化并且调用 submitJobInternal() 方法。 当调用了一个job， waitForCompletion() 将会每一秒去检测job的运行，当运行成功后，就展示出 job counters。如果因为job任务有错误而失败了，也会打印在控制台上。
+  
+  job的提交过程是通过 JobSubmitter 来实现的：
+  * 向 resource manager 请求一个新的 应用程序 ID，使用在 MapReduce job 的ID上 （第2步）。
+  * 检查job指定的输出路径，如果路径没有指定或者已经存在，job就不会被提交，并且会向 MapReduce 抛出一个 error.
+  * 计算job的 input splits 。 如果无法计算splits(比如文件不存在),job就不会被提交，并且会向 MapReduce 抛出一个 error.
+  * 拷贝 job 所需要的资源，包括job的jar包，配置文件，计算后的 input splits，送给在共享文件系统中使用job的ID来命名的目录中（第3步）。 job 的jar包会根据配置的备份数来进行备份，默认是10.这样就可以有许多的拷贝在集群中传输给 node manager去读取，好为job运行 task。
+  * 通过调用在 resource manager 上调用 submitApplication()来提交任务（第4步）。
+  
+  #### Job 初始化  
+  当 resource manager 接到了 submitApplication() 方法的调用，他就将请求转送给 YARN 调度器。调度器就分配一个容器，随后 resource manager 开始启动在nodemanager的管理下的应用程序 master的进程（5a 5b）。
+  
+  Mapreduce job的应用程序master是一个主类为 MRAPPMaster 的Java应用程序。他通过创建一些 bookkeeping（清单，账本）来初始化job，它用来追踪job的运行，也会接收从task发来的关于task 运行 和 完成 的报告（第6步）。然后，他从分享的文件系统中检索在客户端中计算好的 input splits（第7步）。然后就在每一个 split 上创建一个 map task，而 reduce task 对象的数目根据 
+  ```
+  mapreduce.job.reduces
+  ```
+  属性来设定。
+  或者
+  ```
+  setNumReduceTasks() 
+  ```
+  方法来设定。
+  
+  task的ID在此时就被给予。
+  
+  应用程序 master 必须决定怎样运行由 MapReduce 生成的 task 。如果 job 很小，应用程序 master 可能在他自己运行所在的 JVM 上运行这个 job。 这是通过比较分配和运行一个新的容器并且不得不并行运行的他们的开销和在一个node一个队列中运行他们的开销，来判断。使用这种方式运行的 task 叫 最好的（uber）task。
+  
+  少于10个mapper和只有一个reducer，并且输入数据小于块大小的job就叫做一个小job（uber），允许使用uber方式运行。这些界线可以使用下面两个属性来设置：
+  ```
+  mapreduce.job.ubertask.maxmaps
+  mapreduce.job.ubertask.maxreduces
+  mapreduce.job.ubertask.maxbytes
+  ```
+  Uber task 必须要激活，即将属性 
+  ```
+  mapreduce.job.ubertask.enable
+  ```
+  设置为 true
+  
+  最后，在任何一个 task 能够运行之前，应用程序 master 就调用OutputCommitter 的 setupJob() 方法。默认的是 FileOutputCommitter,他会为整个job创建一个不可修改的输出路径，而为task输出创建一个临时的工作目录。详细有空讲。
+  
+  
+  #### task assignment 任务分配
+  
+  如果一个 job 没有资格作为一个uber task运行，那么应用程序 master 将为一个job中所有的map和reduce task请求容器（第8步）。 
+  
+  为 map tasks 的所发出的请求会先进行，因为map tasks的优先级比 redeuce tasks 高很多，所以在 reduce 的排序阶段开始之前，必须要等他之前的 map task们 运行结束。在map tasks 完成了5%后，AppMaster 才能为 reduce task 发出资源（向 resource manager）请求。
+  
+  reduce 能运行在集群的任何地方。但是需要 应用程序master 为 map tasks 发送的请求要遵守由调度器努力维持的数据本地化约束。
+  * task是数据本地化的，即 task 和 split 在一个 node 上。
+  * task 与 split 是在同一个的机架上，但不在一个node中。
+  * 一些 task 和他的 split 也有可能是在不同的机架中。
+  
+  对于分布式的运行，通过查看job的counters，你能够查明运行在各个 本地化水平（上面三者）上的数目。
+  
+  请求也会为task指定内存需求和CPU数目。默认的每一个map和reduce任务被分配有1024MB内存个一个虚拟CPU内核。这些值当然可以设置：
+  ```
+  mapreduce.map.memory.mb
+  mapreduce.reduce.memory.mb
+  mapreduce.map.cpu.vcores
+  mapreduce.map.cpu.vcores
+  ```
+  
+  #### Task Execution 任务执行
+  一旦为一个 task 通过resource manager的调度器在分离节点上的容器上分配好了资源。应用程序 master 就开始联系 node manager，让他去启动容器（9a，9b）。task 是通过一个叫做 YarnChild 的主类Java应用程序执行的。在执行 task 之前，他会去定位 task 需要的资源，包括 job 配置文件，jar包和任何在分布式缓存中的文件（第10步）。最后，就开始运行 map task 或者 reduce task（第11步）。
+  
+  YarnChild 需要专用的 JVM，以至于由用户编写定义map和reduce上的bug，不会影响到 node manager 的运行，造成崩溃或者中止。
+  
+  ##### 流
+  
+  流运行特殊的map和reduce task 为了运行用户自己的可执行程序并且与之交互。
+  
+  流通过使用标准输入和标准输出与程序(可能使用其他程序编写的)进行交互，在执行 task 之间，Java程序将输入键值对送进额外的程序中，然后使用用户自定义的map或者reduce 方法处理输入，然后把输出键值对送回Java程序中。在 node manager 的立场上，他并不知道是一个子程序自己运行的map或reduce代码。
+  
+  ![Figure 7-2](http://img2.ph.126.net/aBeTMTdqUE7_fphIfVNuGQ==/6631478983050577853.png)
+  
+  #### 程序和状态更新
+  MapReduce job 是一个长期运行的并行批处理 job，运行时间由几秒到几小时。因为job的运行时间很重要，得到job执行时的反馈对用来说是非常重要的。一个 job 和他的每一个 task 都有一个 status(状态)，包括job或者task的执行状态（比如：正运行，成功，完成，失败），还有 map 和 reduce 的完成进度，job conunter 的值，一个状态消息或者描述（可能用户代码设置的）。这些状态在job的执行过程中会不断的变化。
+  
+  当 task 正运行，他能够保持他的进度（完成百分比）。对于 map task 来说，就是输出被处理的比例。 对于 reduce task， 就复杂了点，但是系统仍然会有输入进度的比例。他是讲整个进度分成三个部分，对应与 shuffle 的三个阶段。比如，copy 和 sort 阶段（每一个占 1/3）已经都完成，而 task 的输入阶段完成了一半，那 task 的当前完成的进度就是 5/6 （1/3 + 1/3 + 1/3 * 1/2 = 5/6）。
+  
+  task 中还会有许多的计数器（counter）去记录任务的运行情况，有些是框架中自带内建的，就像 map 输出的记录数，当然用户能够自定义一个计数器。
+  
+  当 map 和 reduce 正在运行的时候， 子进程会与他们的爸爸 AppMater 通过 umbilical 接口进行交互。 task 汇报他的完成程度和状态信息给 appMaster，然后聚合成 job 的运行视图。每三秒汇报一次。
+  
+  resourse manager 网页界面将会展示出所有正在运行的 应用程序，是通过连接界面和 应用程序master 来得到的信息。
+  
+  在Job 运行期间，客户端会通过每秒的轮询获得 应用程序master 中记录最近的状态信息（通过 mapreduce.client.progressmonitor.pollinterval来设置）。客户端也能够使用 Job 的 getStatus() 来获得包含了所有状态信息的JobStatus对象。
+  
+  ![Figure 7-3](http://img0.ph.126.net/J3JFxrUnvOXz3UgWA0iAQA==/6632169476349710472.png)
+   
+  #### Job 完成
+  
+  当 应用程序master 收到最后一个 task 发来的通知，说明最后一个 task 已经完成，他就将job的状态改为“成功”。当 Job（类）查询到这个状态，他就知道了这个 job 已经完成，然后他就打印一条信息给用户，并且返回 waitForCompletion() 方法。最后Job的统计数据与计数会打印到控制台输出。
+  
+  最后， 应用程序master 和 task容器 清理他的工作状态(所以中间文件也会被删除)，然后 OutputCommitter 的 commitJob() 方法被调用。 Job 的信息被归档在历史job服务中，以备用户去查看。
+  
+  恩，就这些。
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-20T11:52:06.218Z"
+updatedAt: "2017-09-20T11:53:58.001Z"

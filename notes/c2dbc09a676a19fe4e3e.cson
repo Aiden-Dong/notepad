@@ -1,0 +1,35 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "8-Mysql 触发器"
+content: '''
+  ### 8-Mysql 触发器
+  ---
+  #### 1. 创建触发器
+  
+  ##### 创建只有一个执行语句的触发器
+  
+  ```
+  create triger 触发器名 before|after 触发事件
+      on 表名 for each row
+      begin
+              执行语句
+      end;
+  ```
+  
+  #### 2. 查看触发器
+  
+  ```
+  show trigers;       -- 查看触发器的基本信息
+  ```
+  
+  #### 3. 删除触发器
+  
+  ```
+  drop triger triger_name;
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-08-28T05:46:32.633Z"
+updatedAt: "2017-08-28T05:46:55.283Z"

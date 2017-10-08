@@ -1,0 +1,88 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "13 模式匹配和样例类"
+content: '''
+  ### 13 模式匹配和样例类
+  
+  ---
+  
+  ### 1. Switch 语法
+  
+  - match 表达式是一个更好的switch, 不会有意外掉入到下一个分支的问题
+  - 如果没有模式能够匹配，会抛出 MatchError. 可以用 case_ 模式匹配来解决。
+  
+  
+  > 一般模式匹配的实例 :
+  
+  ```
+  val ch:Char = '+'
+  
+  // 普通的模式匹配方式
+  ch match {
+    case '+' => println("Hello world +")
+    case '-' => println("Hello world -")
+    case _ => println("None")
+  }
+  ```
+  
+  > 模式匹配跟 `if` 表达式一样也用于自己的返回值
+  
+  ```
+  val flag:Int = ch match {
+    case '+' => 0
+    case '-' => 1
+    case _ => -1
+  }
+  ```
+  
+  > 模式中可以使用变量
+  
+  ```
+  // 模式中的变量
+  ch match {
+    case c => println(">> " + c)
+    case _=> print(">> None")
+  }
+  ```
+  说明 : 变量模式可能会与常量表达式产生冲突， 例如:
+  
+  ```
+  x match {
+   case Pi => ....
+  }
+  ```
+  所以变量必须以小写字母开头。
+  
+  > 守卫
+  
+  在模式匹配中我们可以使用 `if` 配合变量添加守卫， 来达到我们的筛选的功能。
+  
+  ```
+  target match {
+    case c if (Character.isDigit(char)) => println("digit : " + c)
+    case _ => println("None")
+  }
+  ```
+  
+  ### 2. 类型模式
+  
+  - 类型模式匹配使用优于 isInstanceOf 操作
+  - 匹配发生在运行期， java 虚拟机中泛型的类型信息是被擦掉的。
+  
+  你可以对表达式的类型进行匹配， 例如 :
+  
+  ```
+  obj match {
+    case on:Int => println("obj is int")
+    case th:String => println("obj is string")
+    case _ => println("other")
+  }
+  ```
+  
+  ### 
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-03T11:49:26.418Z"
+updatedAt: "2017-10-08T06:23:38.798Z"

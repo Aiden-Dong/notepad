@@ -1,0 +1,62 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "4-文件篇"
+content: '''
+  ### 4-文件篇
+  ---
+  
+  #### 文件存在性
+  
+  ```
+  #!/bin/bash
+  
+  echo "please input file name"
+  read f_name
+  
+  if [ -z $f_name ]
+  then
+  	echo "you don't input any file name"
+  fi
+  
+  if [ -f $f_name ]
+  then
+  	echo "The file. exits $f_name"
+  else
+  	echo "No such. file"
+  fi
+  
+  exit 0
+  
+  ```
+  
+  #### 文件操作
+  
+  ```
+  #!/bin/bash
+  
+  ARGS=1
+  
+  if [ $# -ne $ARGS ]
+  then 
+  	echo "`basename $0` filename"
+  	exit 0
+  fi
+  
+  if [ ! -f $1 ]
+  then
+  	echo "No such file"
+  	exit 0
+  fi
+  
+  sed -e 's/\\.//g' -e 's/\\.//g' -e 's//\\
+  /g' "$1" | tr 'A-Z' 'a-z' | sort | uniq -c | sort -nr
+  
+  exit 0
+  
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T09:55:41.690Z"
+updatedAt: "2017-09-19T09:56:01.800Z"

@@ -1,0 +1,404 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "5-类与对象"
+content: '''
+  ### 5-类与对象
+  ---
+  
+  > 说明：
+  
+  1. 类自带有 getter 方法和 setter 方法。
+  2. 你可以用定制的 getter/setter 方法替换掉字段的定义，而不必修改使用类的客户端 -- 这就是所谓的 "统一访问原则".
+  3. 用 @BeanProperty 注解来生成 JavaBeans 的 getXxx/setXxx 方法。
+  4. 每个类都有一个主构造器，这个构造器和类定义交织在一起。 它的参数直接成为类的字段。 主构造器执行类体中所有的语句。
+  5. 辅助构造器是可选的。 他们叫做 this.
+  
+  
+  #### 字段方法作用域
+  
+  - 私有权限 :
+  
+  **private** 关键字用来声明字段或者方法为私有的,不允许子类或者其他类来访问 : `private var sex:String = "boy"`
+  
+  - 保护权限 :
+  
+  **protected** 只允许本类及其子类来访问, 不允许其他类访问. : `protected var sex:String = "boy"`
+  
+  - 包访问权限:
+  
+  scala 中没有直接的包访问权限但可以通过 : `private[本包名] var ..` 来实现.
+  
+  > 我们可以使用 `private[包名]` 来允许这个字段或方法让指定的包访问.
+   
+  - 公共权限:
+  
+  scala 不加任何修饰的字段和方法默认为公共访问字段(方法) : `var sex:String="boy"`
+  
+  #### 1. 简单类和无参方法
+  
+  ```
+  class Count {
+    /*
+    *  类字段
+     */
+    private var count = 0   
+  
+    /*
+    * 类方法
+     */
+    def increament():Unit={
+      this.count += 1
+    }
+  
+    def current = count
+  }
+  ```
+  
+  #### 2. getter 和 setter 的属性
+  
+  scala 对每个字段都默认提供一个getter和setter 方法， 举例 :
+  
+  ```
+  class Person{
+    var age = 0
+  }
+  ```
+  
+  scala 生成面向 jvm 的类， 其中有一个私有的age字段以及相应的 getter 和 setter 方法。 这两个方法是公共的。
+  
+  ```
+  class Person{
+    var age = 0
+    def age = age
+    def age_= (new_age:Int):Unit = {
+      this.age = new_age
+   }
+  }
+  ```
+  自定义 getter 和 setter 方法 :
+  
+  ```
+  class Person{
+    private var priAge = 0
+    
+    def age = priAge
+    
+    def age_= (new_age:Int):Unit ={
+      this.priAge = new_age
+    }
+  }
+  ```
+  
+  > 说明 :
+  
+  1. 如果这个字段是私有的， 则 getter 和 setter 也是私有的。
+  2. 如果字段是 val ， 则只有 getter 方法被生成
+  3. 如果不需要任何的 getter 和 setter ， 则可以将字段声明为 private[this].
+  
+  
+  #### 3. 构造器
+  
+  scala 中， 主构造器并不以this方法定义， 而是与类定义交织在一起
+  
+  > 说明 :
+  1. 主构造器直接写在类名之后
+  2. 主构造器会执行类定义中的所有语句
+  
+  类中除了有主构造器还可以有辅助构造器
+  
+  > 说明 :
+  1. 辅助构造器的名称为this
+  2. 每一个辅助构造器必须以一个先前定义的其他辅助构造器或者主构造器的调用开始
+  
+  ```
+  class Person(private val name:String, private var age:Int) {
+     /*
+     * 默认字段 ：
+     * @param : name    姓名
+     * @param : age     年龄
+      */
+  
+    var sex = "boy"
+  
+    /*
+    * 辅助构造器 : 构造类内部定义的 var 类型的变量(字段)
+    */
+    def this(name:String, age:Int, sex:String){
+      this(name, age)
+      this.sex = sex // 重定义 var 类型的值
+    }
+  
+    def getMessage():Unit = {
+      println(
+        "name = " + this.name + "\\n" +
+        "age = " + this.age + "\\n" +
+        "sex = " + this.sex
+      )
+    }
+  }
+  ```
+  
+  
+  #### 4. 单例对象
+  
+  scala 没有静态方法或者静态字段，可以使用 object 来达到相同的目的。
+  
+  > 说明 :
+  
+  1. 不能提供构造参数
+  2. 作为存放工具函数或常亮的地方
+  3. 高效的共享单个不可变的实例
+  4. 需要用单个实例来协调某个服务时
+  
+  ```
+  object Count {
+  
+    /*
+    *  类字段
+     */
+    private var count:Int = 0
+  
+    def increament():Unit={
+      this.count += 1
+    }
+  
+    def current = count
+  }
+  ```
+  
+  #### 5. 伴生对象
+  
+  当我们及需要实例方法又需要静态方法的时候我们需要创建**伴生对象**, 我们通过命名 Object 与 class 同名来实现.
+  
+  > 说明 :
+  
+  - 类和它的伴生对象可以相互访问私有特性.
+  
+  
+  ```
+  class Person(val name:String, val age:Int) {
+  
+    Person.increment()
+  
+     /*
+     * 默认字段 ：
+     * @param : name    姓名
+     * @param : age     年龄
+      */
+  
+    var sex = "boy"
+  
+    def this(name:String, age:Int, sex:String){
+      this(name, age)
+      this.sex = sex // 重定义 var 类型的值
+    }
+  
+  
+    def getMessage():Unit = {
+      println(
+        "name = " + this.name + "\\n" +
+        "age = " + this.age + "\\n" +
+        "sex = " + this.sex + "\\n" +
+        "count = " + Person.current
+      )
+    }
+  
+  }
+  
+  object Person{
+  
+    private var count = 0
+  
+  
+    def increment():Unit = {
+      count += 1
+    }
+  
+    def current = count
+  
+  }
+  ```
+  > apply 方法
+  
+  单例对象不允许拥有构造函数, 但有时需要使用形如 `Object(参数1, ..,参数 n)` 这样的形式调用.
+  
+  通常情况下使用apply是用作返回伴生类的对象.
+  
+  ```
+  object Person{
+    def apply(name:String, age:Int): Person = new Person(name, age)
+  }
+  
+  class Person(var name:String, var age:Int){
+  
+    def getName():String = name
+  
+    def setName(name:String):Unit = {
+      this.name = name
+    }
+  
+    def getAge():Int = age
+  
+    def setAge(age:Int):Unit = {
+      this.age = age
+    }
+  
+    override def toString:String ={
+      "name=" + this.name+"\\nage="+this.age
+    }
+  }
+  ```
+  
+  这样可以使用如下的方式去创建了类 :
+  
+  ```
+  def start(): Unit = {
+    val person:Person = Person("name", 20);
+    println(person)
+  }
+  ```
+  
+  #### 6. 应用程序对象
+  
+  每一个scala 程序需要从一个对象的main方法开始.
+  
+  相比于java的
+  
+  ```
+  public static void main(String[] args){
+      System.out.println("Hello world");
+  }
+  ```
+  
+  scala 可以在单例对象中使用:
+  
+  ```
+  def main(args: Array[String]): Unit = {
+    System.out.println("hello world")
+  }
+  ```
+  
+  > 除了可以每次提供自己的`main`方法意外, 我们可以扩展App特性,然后将程序代码放入构造器方法内:
+  
+  - 如果我们需要命令行参数,则可以通过`args`变量得到
+  - 如果我们想要获取运行时间,可以通过 `-Dscala.time`获取
+  
+  ```
+  class ScalaApp extends App{
+    if(args.length < 2){
+      System.out.println("you should input parm")
+    }
+    System.out.println("Hello world")
+  }
+  ```
+  
+  #### 7. 枚举类型
+  
+  scala 没有自己的枚举类型,我们需要定义一个扩展的`Enumeration`类的对象并以Value方法调用来初始化枚举类的所有值:
+  
+  ```
+  object EnumType extends Enumeration{
+    val Red, Yellow,Green = Value
+  }
+  ```
+  
+  这样相当于 
+  
+  ```
+  object EnumType extends Enumeration{
+    val Red = Value
+    val Yellow = Value
+    val Green = Value
+  }
+  ```
+  
+  等价于
+  
+  ```
+  object EnumType extends Enumeration{
+    val Red = Value(1, "Red")
+    val Yellow = Value(2, "Yellow")
+    val Green = Value(3,"Green")
+  }
+  ```
+  
+  #### 8.继承
+  
+  - scala 的继承使用 **extends** 关键字,
+  - 如果将类声明为 **final**, 则类不能被继承.如果将变量或方法声明为 **final**, 则变量不能被覆盖.
+  - 重写方法使用 **override** 修饰符
+  - 如果在重写方法中需要调用超类的方法使用**super**关键字
+  - 超类构造器需要在子类构造器的最开始调用.
+  
+  > 继承实例 :
+  
+  ```
+  class Student(name:String, age:Int, private var grade:Int) extends Person(name, age){
+  
+    def this(){
+      this("None", 0, 0)
+    }
+  
+    def getGrade():Unit = {
+      grade
+    }
+    def setGrade(grade:Int):Unit = {
+      this.grade = grade
+    }
+    override def toString():String ={
+      super.toString() + "\\ngrade:"+this.grade
+    }
+  }
+  ```
+  
+  #### 9. 匿名子类
+  
+  与java相同,我们可以通过定义,或者重写代码块的方法来创建子类
+  
+  ```
+  val student = new Person("one", 20){
+    def getMessage() :Unit = {
+      println(this.toString)
+    }
+  }
+  student.getMessage()
+  ```
+  
+  ####  10.抽象类
+  
+  与java相同,scala可以通过 **abstract**来声明抽象类
+  
+  ```
+  abstract class AbPerson {
+    def getName():String
+    def setName(name:String):Unit
+  }
+  ```
+  
+  > 实例化
+  ```
+  class Person(private var name:String, private var age:Int)extends AbPerson{
+  
+    override def getName():String = name
+  
+    override def setName(name:String):Unit = {
+      this.name = name
+    }
+  
+    def getAge():Int = age
+  
+    def setAge(age:Int):Unit = {
+      this.age = age
+    }
+  
+    override def toString:String ={
+      "name=" + this.name+"\\nage="+this.age
+    }
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-10T07:33:24.049Z"
+updatedAt: "2017-09-19T13:26:57.496Z"

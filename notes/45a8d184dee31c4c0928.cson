@@ -1,0 +1,98 @@
+type: "MARKDOWN_NOTE"
+folder: "826d02692db86deab330"
+title: "3- HttpClient"
+content: '''
+  ### 3- HttpClient
+  ---
+  
+  在介绍 java 上的 网页的获取工具之前， 这里先介绍 linux 下自带的一个好用的网页获取工具 [curl](http://blog.csdn.net/gg782112163/article/details/55193019),有兴趣的可以去详细了解下。
+  
+  ### [HttpClient](http://hc.apache.org/httpcomponents-client-ga/tutorial/html/index.html)
+  HttpClient通过提供一个高效，最新和功能丰富的软件包来实现客户端的最新HTTP标准和建议
+  
+  #### 依赖
+  
+  ```
+  <dependency>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpclient</artifactId>
+    <version>4.5.3</version>
+  </dependency>
+  ```
+  
+  #### 发送 get 请求并获取数据
+  ```
+  public static BufferedReader httpGetMethod(String uri) throws IOException {
+    // 创建客户端对象
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    // 跟据对象获取请求 -- get
+    HttpGet get = new HttpGet(uri);
+    // 接受响应对象
+    CloseableHttpResponse response = null;
+    BufferedReader buffer = null;
+  
+    try{
+        response = httpClient.execute(get);
+        String str = EntityUtils.toString(response.getEntity(), "utf-8");
+        buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(str.getBytes("utf-8"))));
+        return buffer;
+    }catch (IOException e){
+        if(buffer != null){
+            buffer.close();
+        }
+        return null;
+    }finally {
+        if(response != null){
+            response.close();
+        }
+        httpClient.close();
+    }
+  }
+  ```
+  #### 发送　post 请求
+  ```
+   public static BufferedReader httpPostMethod(String uri, Map<String,String> map , String data) throws IOException {
+          CloseableHttpClient httpClient = HttpClients.createDefault();
+          HttpPost post = new HttpPost(uri);
+          CloseableHttpResponse response = null;
+          BufferedReader buffer = null;
+  
+          if(map != null || map.size() != 0){
+              for(String key : map.keySet()){
+                  post.setHeader(key, map.get(key));
+              }
+          }
+  
+          StringEntity entity = new StringEntity(data);
+          entity.setContentType("application/json");
+          entity.setContentEncoding("utf-8");
+          post.setEntity(entity);
+  
+          try{
+              response = httpClient.execute(post);
+              String str = EntityUtils.toString(response.getEntity(), "utf-8");
+              buffer = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(str.getBytes("utf-8"))));
+              return buffer;
+          }catch (IOException e){
+              e.printStackTrace();
+              if(buffer != null){
+                  buffer.close();
+              }
+  
+              System.exit(-1);
+              return null;
+          }finally {
+              if(response != null){
+                  response.close();
+              }
+              httpClient.close();
+          }
+      }
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-08T06:32:54.134Z"
+updatedAt: "2017-09-28T13:31:29.240Z"

@@ -1,0 +1,60 @@
+type: "MARKDOWN_NOTE"
+folder: "3d96f15f77c92116ffd3"
+title: "1- azkaban 用户登录篇"
+content: '''
+  ### 1- azkaban 用户登录篇
+  
+  ## 介绍
+  
+  
+  #### 用户登录过程 :
+  
+  当用户首次进入 Azkaban 的时候, 需要首先登录系统, 登录通过 `LoginAbstractAzkabanServlet` 类来接入实现功能．`LoginAbstractAzkabanServlet` 中有一个　`handleAjaxLoginAction` 用来处理用户登录事件．
+  
+  ```
+  protected void handleAjaxLoginAction(HttpServletRequest req,
+        HttpServletResponse resp, Map<String, Object> ret)
+        throws ServletException {
+      if (hasParam(req, "username") && hasParam(req, "password")) {
+        Session session = null;
+        try {
+          session = createSession(req);  // 在createSession()方法中，　系统完成用户的认证，并创建　session.
+        } catch (UserManagerException e) {
+          ret.put("error", "Incorrect Login. " + e.getMessage());
+          return;
+        }
+  
+        Cookie cookie = new Cookie(SESSION_ID_NAME, session.getSessionId());
+        cookie.setPath("/");
+        resp.addCookie(cookie);
+        getApplication().getSessionCache().addSession(session);
+        ret.put("status", "success");
+        ret.put("session.id", session.getSessionId());
+      } else {
+        ret.put("error", "Incorrect Login.");
+      }
+    }
+  ```
+  `createSession` 中的验证方式　:
+  
+  ```
+  private Session createSession(String username, String password, String ip)
+       throws UserManagerException, ServletException {
+     UserManager manager = getApplication().getUserManager();
+     User user = manager.getUser(username, password);
+  
+     String randomUID = UUID.randomUUID().toString();
+     Session session = new Session(randomUID, user, ip);
+  
+     return session;
+   }
+  ```
+  
+  如果用户核对成功，　将给用户分配session 完成用户登录，从上面我们也可以看出，　用户信息维护在session中．
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T10:14:06.219Z"
+updatedAt: "2017-09-19T10:14:33.452Z"

@@ -1,0 +1,70 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "6-字符串篇"
+content: '''
+  ### 6-字符串篇
+  
+  #### 1. 字符串截取
+  
+  ```
+  #!/bin/bash
+  
+  hostname="cat.host_name is cat.super.com"
+  
+  string=${hostname:3}
+  echo $string
+  
+  string1=${hostname%.*}
+  string2=${hostname%%.*}
+  string3=${hostname#*.*}
+  
+  echo $string1
+  echo $string2
+  echo $string3
+  
+  exit 0
+  ```
+  
+  #### 2. 获取长度
+  
+  ```
+  #!/bin/bash
+  
+  book="This is a script's book"
+  
+  size=${#book}
+  size2=$(expr length "$book")
+  
+  echo $size
+  echo $size2
+  
+  exit 0
+  ```
+  
+  #### 3. 流重定向
+  
+  ```
+  #!/bin/bash
+  
+  FROM='from:root@cat.super.com'
+  TO='to:cat@cat.super.com'
+  SUBJECT='subject:shell script'
+  MESSAGE='This is bash shell script'
+  F_NAME='linux_shell'
+  
+  cat > $F_NAME << HERE
+  $FROM
+  $TO
+  $SUBJECT
+  $MESSAGE
+  
+  HERE
+  
+  exit 0
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-19T09:57:28.865Z"
+updatedAt: "2017-09-19T09:58:16.537Z"

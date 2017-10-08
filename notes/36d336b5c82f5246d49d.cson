@@ -1,0 +1,99 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "4-数组映射与元组"
+content: '''
+  ### 4-数组映射与元组
+  ---
+  
+  ### 1. 数组
+  
+  > 说明:
+  
+  2. 1. 若数组长度固定使用　Array, 若长度发生变化使用　ArrayBuffer
+  2. 如果提供初始值不能使用new 关键字.
+  3. 使用() 来访问元素．
+  4. 使用 for(ele <- arr) 来遍历元素
+  5. 使用 for(ele <- arr if ..) yield .. 来将原数组转型为新数组
+  6. scala 数组和　java 数组可以互操作; 用　ArrayBuffer, 使用scala.collection.JavaConversions中的转化函数
+  
+  
+  #### 1.1 定长数组 Array
+  
+  ```
+  val arr:Array[Int] = new Array[Int](10)             // 声明长度为10, 初始化为0的整形数组．
+  val names:Array[String] = Array("test1", "test2")   // 长度为２　初始化完成的数组
+  ```
+  #### 1.2 变长数组 ArrayBuffer
+  ```
+  val numArr:ArrayBuffer[Int] = new ArrayBuffer[Int]()
+  
+  numArr += 1    // 等同于 append
+  b.insert(2,6)  // 插入一个数据
+  ```
+  #### 1.3 多维数组 
+  ```
+  val dimArr = Array.ofDim[Int](2,3)  // 创建一个2行，3列的数组
+  ```
+  ### 2. 映射
+  
+  - 初始化映射
+  ```
+  /*
+  * 值不可变
+   */
+  val testMap:Map[String, Int] = Map("Alice"-> 1, "Test" -> 2, "Get"-> 3)
+  /*
+  * 值可以修改
+   */
+  val testMapTest : scala.collection.mutable.Map[String,Int] = scala.collection.mutable.Map("Alice"->1, "Test" -> 2, "Get" -> 3)
+  val hashMap:HashMap[String, Int] = new HashMap[String, Int]()
+  var treeMap:mutable.TreeMap[String, Int] = new mutable.TreeMap[String, Int]()
+  ```
+  
+  - 获取映射中的值
+  
+  ```
+  - 检查键是否存在
+  val value = if(testMap.contains("Test")) testMap("Test") else 0
+  val valus = testMap.getOrElse("Test", 0)
+  ```
+  
+  ### 3. 元组
+  
+  元组是不同类型值的聚集．元组的构建例如:
+  ```
+  val tupleTest = (1, 3.22, "hello world")
+  ```
+  
+  元组的值从1开始获取，我们可以使用如　`_1`, `_2`, `_3` 来获取其值．　
+  
+  - 赋值　:
+  ```
+  val (v_num, v_double, v_str) = tupleTest  // 批量赋值
+  val(_, _, strLne) = tupleTest  // 给某个值赋值　
+  ```
+  
+  - 拉链操作
+  
+  拉链操作可以将两个数组合并成对偶数组
+  
+  使用　`toMap`　方法可以将对偶的集合转换成映射
+  
+  ```
+  val keyArray:Array[String] = Array("one", "two", "three")
+  val valueArray:Array[Int] = Array(1, 2, 3)
+  
+  val mapArray = keyArray.zip(valueArray)
+  
+  for(one <- mapArray){
+    println(one._1 + ":" + one._2)
+  }
+  
+  println(mapArray.toMap)
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-09-07T08:15:32.869Z"
+updatedAt: "2017-09-07T12:11:40.134Z"
