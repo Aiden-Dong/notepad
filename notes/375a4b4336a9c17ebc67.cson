@@ -412,11 +412,8 @@ content: '''
   set.union(set)         # 合并两个 set 对象
   ```
 '''
-tags: [
-  "变量"
-  "python"
-]
+tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-08-25T14:41:14.221Z"
-updatedAt: "2017-08-25T14:48:35.022Z"
+updatedAt: "2017-10-09T13:26:34.152Z"
