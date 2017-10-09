@@ -1,0 +1,310 @@
+type: "MARKDOWN_NOTE"
+folder: "826d02692db86deab330"
+title: "6-java 注解"
+content: '''
+  ### 6-java 注解
+  
+  转载自 : http://blog.csdn.net/lihenair/article/details/51134716
+  
+  ---
+  
+  注解，元数据格式，提供关于程序的数据，这些数据不是程序的一部分。注解对它们注解的代码的操作不产生直接影响。
+  
+  注解有多种用途，包括： 
+  
+  - 向编译器提供信息 —— 编译器使用注解检查错误或忽略警告 
+  - 编译时和部署时处理 —— 软件工具可以处理注解信息来生成代码，XML文件等等 
+  - 运行时处理 —— 一些注解在运行时进行审查
+  
+  本课程解释哪里可以使用注解，如何使用注解，以及Java平台有哪些预定义注解类型。
+  
+  #### 1. 注解基础
+  
+  ##### 1.1 注解格式
+  
+  简单格式，注解看起来是这样的：
+  
+  ```
+  @Entity
+  ```
+  
+  `@` 指示编译器接下来是一个注解。下面的例子，注解的名字是Override:
+  
+  ```
+  @Override
+  vode mySuperMethod() {...}
+  ```
+  
+  注解可以包含元素，元素可以命名或不命名，元素可赋值：
+  
+  ```
+  @Author(
+      name = "Benjamin Franklin",
+      date = "3/27/2003"
+  )
+  class MyClass() {...}
+  ```
+  
+  或者 :
+  
+  ```
+  @SuppressWarnings(value = "unchecked")
+  void myMethod() { ... }
+  ```
+  
+  如果注解没有元素，则括号可以省略，就如前面的@Override一样。
+  
+  可给声明使用多个注解：
+  
+  ```
+  @Author(name = "Jane Doe")
+  @EBook
+  class MyClass { ... }
+  ```
+  
+  如果注解有相同类型，则这被称为重复注解：
+  ```
+  @Author(name = "Jane Doe")
+  @Author(name = "John Smith")
+  class MyClass { ... }
+  ```
+  
+  随着Java SE 8的发布，重复注解得到了支持。更多信息，详见[重复注解](https://docs.oracle.com/javase/tutorial/java/annotations/repeating.html)。
+  
+  
+  注解类型可以是Java SE API中java.lang或java.lang.annotation包中定义的类型之一。在前面的例子中，Override和SuppressWarnings是预定[义Java注解](https://docs.oracle.com/javase/tutorial/java/annotations/predefined.html)。也可以自定义注解类型。前例中的Author和Ebook注解都是自定义注解类型。
+  
+  ##### 1.2 注解用于何处:
+  
+  注解可以用在声明：声明类，域，方法和其他程序元素。当用于声明时，每个注解按照惯例都单独一行。
+  
+  随着Java SE 8的发布，注解也可以应用到类型使用。例子如下： 
+  
+  ```
+  - 类实例创建表达式： 
+  new @Interned MyObject(); 
+  
+  - 强制转换： 
+  myString = (@NonNull String) str; 
+  
+  - 实现接口： 
+  class UnmodifiableList<T> implements @Readonly List<@Readonly T> { ... } 
+  
+  - 抛出异常声明： 
+  void monitorTemperature() throws @Critical TemperatureException { ... } 
+  ```
+  这种类型的注解称为类型注解。更多详情，请查看[类型注解与可插拔类型系统](https://docs.oracle.com/javase/tutorial/java/annotations/type_annotations.html)。
+  
+  #### 2. 声明注解
+  
+  很多注解替代代码中的注释。
+  
+  假设一个软件集团通常在每个类文件的起始都会增加重要信息的注释：
+  
+  ```
+  public class Generation3List extends Generation2List {
+  
+     // Author: John Doe
+     // Date: 3/17/2002
+     // Current revision: 6
+     // Last modified: 4/12/2004
+     // By: Jane Doe
+     // Reviewers: Alice, Bill, Cindy
+     // class code goes here
+  }
+  ```
+  
+  为了使用注释增加相同的元数据，首先必须定义注解类型。语法如下：
+  
+  ```
+  @interface ClassPreamble {
+     String author();
+     String date();
+     int currentRevision() default 1;
+     String lastModified() default "N/A";
+     String lastModifiedBy() default "N/A";
+     // Note use of array
+     String[] reviewers();
+  }
+  ```
+  
+  注解类型定义看起来类似接口定义，关键字interface前增加@。注解类型是一种接口。
+  
+  前面的注解定义的主体包含注解类型元素声明，这看起来很像方法。注意，可以定义可选的默认值。
+  
+  注解类型定以后，可以使用这种注解，并填充一些值，例如：
+  
+  ```
+  @ClassPreamble (
+     author = "John Doe",
+     date = "3/17/2002",
+     currentRevision = 6,
+     lastModified = "4/12/2004",
+     lastModifiedBy = "Jane Doe",
+     // Note array notation
+     reviewers = {"Alice", "Bob", "Cindy"}
+  )
+  public class Generation3List extends Generation2List {
+  
+  // class code goes here
+  
+  }
+  ```
+  
+  #### 3. 预定义注解类型
+  
+  Java SE API预定义了一组注解类型。某些注解用于Java编译器，一些适用于其他注解。
+  
+  java.lang预定义的注解类型包括@Deprecated,，@Override，和@SuppressWarnings。
+  
+  **@Dreprecated** 注解表示标记的元素已经弃用，将来不再使用。当程序使用带@Deprecated注解的方法，类或者域时，编译器将产生警告。当一个元素弃用时，在文档中应当使用Javadoc的@deprecated标签，如下例所示。Javadoc注释和注解中使用@不是巧合：它们概念上有联系。另外，Javadoc中以小写d开通，注解以大写D开头。
+  
+  ```
+  // Javadoc comment follows
+  /**
+   * @deprecated
+   * explanation of why it was deprecated
+   */
+  @Deprecated
+  static void deprecatedMethod() { }
+  }
+  
+  ```
+  
+  **@Override** 注解通知编译器该元素冲在了超类中声明的元素。重写方法将在接口与继承中讨论。
+  
+  ```
+  // mark method as a superclass method
+  // that has been overridden
+  @Override 
+  int overriddenMethod() { }
+  ```
+  
+  然而使用这个注解重写方法不是必须的，它有助于防止错误。如果标记@Override的方法不能正确重写超类中的方法，编译器将产生一个错误。
+  
+  **@SuppressWarnings** 注解告诉编译器忽略指定的警告。下面的例子，使用了一个弃用的方法，编译器通常产生一个警告。这种情况下，使用该注解将忽略这个警告。
+  
+  ```
+  // use a deprecated method and tell 
+  // compiler not to generate a warning
+  @SuppressWarnings("deprecation")
+  void useDeprecatedMethod() {
+  // deprecation warning
+  // - suppressed
+  objectOne.deprecatedMethod();
+  }
+  ```
+  
+  **@SafeVarargs** 标注，适用于方法或构造函数，断言不对指定代码中的可变参数执行潜在的不安全操作。当使用这种注解类型时，可变参数相关的未选中警告将被忽略
+  
+  #### 4. 应用于其他注解的注解
+  
+  应用于其他注解的注解称为元注解，java.lang.annotation中定义了一些元注解。
+  
+  **@Retention** 指定标记注解的存储方式：
+  
+  - RetentionPolicy.SOURCE —— 标记注解只在代码级持有，由编译器忽略。
+  - RetentionPolicy.CLASS —— 标记注解在编译时由编译器持有，由Java虚拟机(JVM)忽略。
+  - RetentionPolicy.RUNTIME —— 标记注解又JVM持有，可在运行环境使用。
+  
+  **@Documented**注解表明使用指定注解的那些元素应当使用Javadoc工具文档化。(默认，注解不包含在Javadoc中。)更多信息，请参见Javadoc工具页。
+  
+  **@Target** 注解标记其他注解，来限制目标注解可以适用于何种Java元素。目标注解指定以下元素作为它的值： 
+  
+  - ElementType.ANNOTATION_TYPE 可以适用于注解类型 
+  - ElementType.CONSTRUCTOR 可以适用于构造器 
+  - ElementType.FIELD 可以适用于域或属性 
+  - ElementType.LOCAL_VARIABLE 可以适用于本地变量 
+  - ElementType.METHOD 可以适用于方法级注解 
+  - ElementType.PACKAGE可以适用于包注解 
+  - ElementType.PARAMETE 可以适用于方法的参数 
+  - ElementType.TYPE 可以适用于类的任何元素
+  
+  **@Inherited** 注解表明注解类型可以从超类继承。(默认为false。)当用户查询注解类型，该类没有标记这种类型的注解，将会查询父类的注解类型。这种注解只适用于类声明。
+  
+  **@Repeatable** 注解，Java SE 8引入，表明标记的注解可被重复使用相同的声明或类型。更多信息，参见[重复注解](https://docs.oracle.com/javase/tutorial/java/annotations/repeating.html)。
+  
+  #### 5. 类型注解与可插拔类型系统
+  
+  Java SE 8发布之前，注解只能用于声明。随着Java SE 8的发布，注解也适用于任何类型使用。这意味着，注解可以适用于任何使用类型的地方。类型可以使用的方式有类实例化创建表达式(new)，强制转换，接口实现和抛出异常。这种形式的注解被称为类型注解，注解基础提供了一些栗子。
+  
+  类型注解的引入是为了支持改进确保强类型检查的Java程序的方式分析。Java SE 8没提供一个类型检查框架，但是允许写(或下载)类型检查框架，该框架作为一个或多个可插拔模块用于与Java编译器结合。
+  
+  例如，你想确定程序中的一个特殊变量从不被置为null；你想避免出发NullPointerException。你可以写一个自定义插入模块来检查它。你可以修改代码来注解这个特殊的变量，指明它永不被分配为null。变量声明可能是这样：
+  
+  `@NonNull String str;`
+  
+  编译代码时，命令行包括NonNull模块，编译器如果检查到潜在的问题会打印一个警告，提醒你修改代码来避免发生错误。修改所有警告后，改特殊的错误在程序执行时将不会发生。
+  
+  可使用多类型检查模块，每个模块检查一种类型的错误。这样，可以基于Java类型系统进行构建，何时何地只要需要就可以增加指定类型的检查。
+  
+  随着明智的使用注解以及可插拔类型检查的存在，代码质量提高了，错误减少了。
+  
+  很多情况想，不需要写类型检查模块。第三方工具已经实现了。例如，可以使用华盛顿大学创造的检查框架。这个框架包括NonNull模块，还有正则表达式模块，和互斥锁模块。更多信息，查阅[检查者框架](http://types.cs.washington.edu/checker-framework/)。
+  
+  #### 6. 重复注解
+  
+  有时需要对声明或类型使用同一个注解。随着Java SE 8的发布，重复注解可以出列这个需求。
+  
+  例如，代码使用了计时器服务使得在指定之间或确定间隔执行特定方法，类似UNIX系统的cron服务。现在你想增加一个计时器来执行一个方法，doPeriodicCleanup，在每月睡会一天和每个周五的下午11点。为了启动计时器，创建一个@Schedule注解并两次使用到doPeriodicCleanup方法。第一次指定每月最后一天，第二次指定周五的下午11点，如下代码所示：
+  
+  ```
+  @Schedule(dayOfMonth="last")
+  @Schedule(dayOfWeek="Fri", hour="23")
+  public void doPeriodicCleanup() { ... }
+  ```
+  
+  前面的例子展示了想方法增加注解。你可以在任何标准注解使用的地方重复使用注解。例如，有一个类处理未鉴权访问异常。注解这个类，一个@Alert用于经理，其他用于管理员：
+  
+  ```
+  @Alert(role="Manager")
+  @Alert(role="Administrator")
+  public class UnauthorizedAccessException extends SecurityException { ... }
+  ```
+  
+  出于兼容性原因，重复注解存储在包含注解中，包含注解由Java 
+  编译器生成。为了让编译器做到这一点，代码中需要两个声明。
+  
+  **步骤1 ： 声明一个重复注解类型**
+  
+  注解类型必须标明@Repeatable元注解。下面的例子自定义了@Schedule重复注解类型：
+  
+  ```
+  import java.lang.annotation.Repeatable;
+  
+  @Repeatable(Schedules.class)
+  public @interface Schedule {
+    String dayOfMonth() default "first";
+    String dayOfWeek() default "Mon";
+    int hour() default 12;
+  }
+  ```
+  
+  @Repeatable元注解的值，括号内的，是包含注解的类型，Java编译器生成用于存储重复注解。例子中，包含注解类型是Schedules，所以重复@Schedule注解将存储在@Schedules注解中。
+  
+  使用未声明为可重复的注解到声明时将产生一个编译时错误。
+  
+  **步骤 2 ： 声明包含注解类型**
+  
+  包含注解类型必须指定一个类型为数组的value元素。数组类型的组件必须是可重复注解类型。Schedules包含注解类型的声明如下：
+  
+  ```
+  public @interface Schedules {
+    Schedule[] value();
+  }
+  ```
+  #### 7. 收尾
+  
+  ##### 检索注解
+  
+  在反射API中有一些方法可以用于检索注解。这些方法的行为是返回一个单一注解，例如`AnnotatedElement.getAnnotationByType(Class)`，如果搜索到请求的类型，它只返回单一注解。如果请求类型的多个注解存在，可以先得到它们的包含注解。只有，旧代码可以继续使用。Java SE 8增加的其他方法扫面包含注解，一次返回多个注解，例如`AnnotatedElement.getAnnotations(Class)`。参见AnnotatedElement类规范中所有可用方法信息。
+  
+  ##### 设计注意事项
+  
+  当设计注解类型时，你必须考虑注解类型的基数。现在可以使用注解零次，一次或者多次，如果注解类型标记为@Repeatable。也可以使用@Target元注解显示注解类型的使用。例如，创建一个只用在方法和域的可重复注解。重要的是小心设计注解类型来确保程序员使用注解时发现它的灵活和强大。
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-09T13:27:30.973Z"
+updatedAt: "2017-10-09T14:15:45.269Z"
