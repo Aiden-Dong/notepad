@@ -49,6 +49,11 @@
       "key": "87dcccdbb31f5c64eb21",
       "color": "#B013A4",
       "name": "jetty"
+    },
+    {
+      "key": "d218c9600accb5c277d2",
+      "color": "#2BA5F7",
+      "name": "spark"
     }
   ],
   "version": "1.0"
