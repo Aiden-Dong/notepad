@@ -1,0 +1,161 @@
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "2- RDD"
+content: '''
+  ### 2- RDD
+  
+  ---
+  
+  #### 2.1 概述
+  
+  RDD(Resilient Distributed Dataset)是Spark的最基本抽象，是对分布式内存的抽象使用，实现了以操作本地集合的方式来操作分布式数据集的抽象实现。RDD是Spark最核心的东西，它表示已被分区，不可变的并能够被并行操作的数据集合，不同的数据集格式对应不同的RDD实现。RDD必须是可序列化的。RDD可以cache到内存中，每次对RDD数据集的操作之后的结果，都可以存放到内存中，下一个操作可以直接从内存中输入，省去了MapReduce大量的磁盘IO操作。这对于迭代运算比较常见的机器学习算法, 交互式数据挖掘来说，效率提升比较大。
+  
+  你将RDD理解为一个大的集合，将所有数据都加载到内存中，方便进行多次重用。第一，它是分布式的，可以分布在多台机器上，进行计算。第二，它是弹性的，在计算处理过程中，机器的内存不够时，它会和硬盘进行数据交换，某种程度上会减低性能，但是可以确保计算得以继续进行。
+  
+  > RDD 特点:
+  
+  RDD是 **分布式只读且已分区集合对象**。这些集合是弹性的，如果数据集一部分丢失，则可以对它们进行重建。具有自动容错、位置感知调度和可伸缩性，而容错性是最难实现的，大多数分布式数据集的容错性有两种方式：数据检查点和记录数据的更新。对于大规模数据分析系统，数据检查点操作成本很高，主要原因是大规模数据在服务器之间的传输带来的各方面的问题，相比记录数据的更新，RDD 也只支持粗粒度的转换，也就是记录如何从其它RDD转换而来（即 Lineage），以便恢复丢失的分区。
+  
+  其特性为：
+  
+  
+  1. 数据存储结构不可变
+  2. 支持跨集群的分布式数据操作
+  3. 可对数据记录按key进行分区
+  4. 提供了粗粒度的转换操作
+  5. 数据存储在内存中，保证了低延迟性
+  
+  > RDD 优势 :
+  
+  - RDD只能从持久存储或通过Transformations操作产生，相比于分布式共享内存(DSM)可以更高效实现容错，对于丢失部分数据分区只需根据它的lineage就可重新计算出来，而不需要做特定的Checkpoint。
+  
+  - RDD的不变性，可以实现类Hadoop MapReduce的推测式执行。
+  
+  - RDD的数据分区特性，可以通过数据的本地性来提高性能，这与Hadoop MapReduce是一样的。
+  
+  - RDD都是可序列化的，在内存不足时可自动降级为磁盘存储，把RDD存储于磁盘上，这时性能会有大的下降但不会差于现在的MapReduce。
+  
+  #### 2.2 RDD 编程接口
+  
+  对于RDD，有两种类型的动作，一种是`Transformation`，一种是`Action`。它们本质区别是：
+  
+  - Transformation返回值还是一个RDD。它使用了链式调用的设计模式，对一个RDD进行计算后，变换成另外一个RDD，然后这个RDD又可以进行另外一次转换。这个过程是分布式的
+  
+  ```
+  map(func):对调用map的RDD数据集中的每个element都使用func，然后返回一个新的RDD,这个返回的数据集是分布式的数据集
+  
+  filter(func) : 对调用filter的RDD数据集中的每个元素都使用func，然后返回一个包含使func为true的元素构成的RDD
+  
+  flatMap(func):和map差不多，列表内的列表或元组打平到列表中
+  
+  mapPartitions(func):和map很像，但是map是每个element，而mapPartitions是每个partition
+  
+  mapPartitionsWithSplit(func):和mapPartitions很像，但是func作用的是其中一个split上，所以func中应该有index
+  
+  sample(withReplacement,faction,seed):抽样
+  
+  union(otherDataset)：返回一个新的dataset，包含源dataset和给定dataset的元素的集合
+  
+  distinct([numTasks]):返回一个新的dataset，这个dataset含有的是源dataset中的distinct的element
+  
+  groupByKey(numTasks):返回(K,Seq[V])，也就是hadoop中reduce函数接受的key-valuelist
+  
+  reduceByKey(func,[numTasks]):就是用一个给定的reduce func再作用在groupByKey产生的(K,Seq[V]),比如求和，求平均数
+  
+  sortByKey([ascending],[numTasks]):按照key来进行排序，是升序还是降序，ascending是boolean类型
+  
+  join(otherDataset,[numTasks]):当有两个KV的dataset(K,V)和(K,W)，返回的是(K,(V,W))的dataset,numTasks为并发的任务数
+  
+  cogroup(otherDataset,[numTasks]):当有两个KV的dataset(K,V)和(K,W)，返回的是(K,Seq[V],Seq[W])的dataset,numTasks为并发的任务数
+  
+  cartesian(otherDataset)：笛卡尔积就是m*n，大家懂的
+  ```
+  
+  - Action返回值不是一个RDD。它要么是一个Scala的普通集合，要么是一个值，要么是空，最终或返回到Driver程序，或把RDD写入到文件系统中.
+  
+  ```
+  reduce(func)：说白了就是聚集，但是传入的函数是两个参数输入返回一个值，这个函数必须是满足交换律和结合律的
+  
+  collect()：一般在filter或者足够小的结果的时候，再用collect封装返回一个数组
+  
+  count():返回的是dataset中的element的个数
+  
+  first():返回的是dataset中的第一个元素
+  
+  take(n):返回前n个elements，这个士driver program返回的
+  
+  takeSample(withReplacement，num，seed)：抽样返回一个dataset中的num个元素，随机种子seed
+  
+  saveAsTextFile（path）：把dataset写到一个text file中，或者hdfs，或者hdfs支持的文件系统中，spark把每条记录都转换为一行记录，然后写到file中
+  
+  saveAsSequenceFile(path):只能用在key-value对上，然后生成SequenceFile写到本地或者hadoop文件系统
+  
+  countByKey()：返回的是key对应的个数的一个map，作用于一个RDD
+  
+  foreach(func):对dataset中的每个元素都使用func
+  ```
+  
+  ![image](http://ww2.sinaimg.cn/mw1024/e91aafadjw1fa5bf8950wj20ki08swhb.jpg)
+  
+  ![image](http://ww4.sinaimg.cn/mw1024/e91aafadjw1fa5bfulk4pj20fh0goadz.jpg)
+  
+  ##### 2.2.1 RDD 依赖关系:
+  
+  不同的操作依据其特性，可能会产生不同的依赖，RDD之间的依赖关系有以下两种：
+  
+  
+  - 窄依赖(Narrow Dependencies)
+  
+  ```
+  一个父RDD分区最多被一个子RDD分区引用；
+  
+  表现为一个父RDD的分区,对应于一个子RDD的分区或多个父RDD的分区对应于一个子RDD的分区，也就是说一个父RDD的一个分区不可能对应一个子RDD的多个分区，如map、filter、union等操作则产生窄依赖；
+  ```
+  
+  - 宽依赖(Wide Dependencies)
+  
+  ```
+  一个子RDD的分区依赖于父RDD的多个分区或所有分区;
+  
+  也就是说存在一个父RDD的一个分区对应一个子RDD的多个分区，如groupByKey等操作则产生宽依赖操作;
+  ```
+  
+  例如 :
+  
+  ![image](http://ww4.sinaimg.cn/mw1024/e91aafadjw1fa5c393l5aj20au072q3o.jpg)
+  
+  
+  ##### 2.2.2 Stage DAG
+  
+  
+  Spark提交Job之后会把Job生成多个Stage，多个Stage之间是有依赖的，Stage之间的依赖关系就构成了DAG（有向无环图）。
+  
+  - 对于窄依赖，Spark会尽量多地将RDD转换放在同一个Stage中；
+  - 对于宽依赖，但大多数时候是shuffle操作，因此Spark会将此Stage定义为ShuffleMapStage，以便于向MapOutputTracker注册shuffle操作。Spark通常将shuffle操作定义为stage的边界。
+  
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1fa5c3g73vgj20am07gt9i.jpg)
+  
+  
+  ##### 2.2.3 RDD 数据存储管理
+  
+  RDD可以被抽象地理解为一个大的数组（Array），但是这个数组是分布在集群上的。逻辑上RDD的每个分区叫一个Partition。
+  
+  在Spark的执行过程中，RDD经历一个个的`Transfomation`算子之后，最后通过`Action`算子进行触发操作。 逻辑上每经历一次变换，就会将RDD转换为一个新的RDD，RDD之间通过`Lineage`产生依赖关系，这个关系在容错中有很重要的作用。变换的输入和输出都是RDD。 RDD会被划分成很多的分区分布到集群的多个节点中。分区是个逻辑概念，变换前后的新旧分区在物理上可能是同一块内存存储。 这是很重要的优化，以防止函数式数据不变性（immutable）导致的内存需求无限扩张。有些RDD是计算的中间结果，其分区并不一定有相应的内存或磁盘数据与之对应，如果要迭代使用数据，可以调cache()函数缓存数据。
+  
+  ![image](http://ww3.sinaimg.cn/mw1024/e91aafadjw1fa5bfxfvrkj20dj08m74p.jpg)
+  
+  上图中，RDD1含有5个分区（p1、 p2、 p3、 p4、 p5），分别存储在4个节点（Node1、node2, Node3、Node4）中。RDD2含有3个分区（p1、 p2、 p3），分布在3个节点（Node1、 Node2、 Node3）中。
+  
+  在物理上，RDD对象实质上是一个元数据结构，存储着Block、 Node等的映射关系，以及其他的元数据信息。一个RDD就是一组分区，在物理数据存储上，RDD的每个分区对应的就是一个Block，Block可以存储在内存，当内存不够时可以存储到磁盘上。
+  
+  每个Block中存储着RDD所有数据项的一个子集，暴露给用户的可以是一个Block的迭代器（例如，用户可以通过mapPartitions获得分区迭代器进行操作），也可以就是一个数据项（例如，通过map函数对每个数据项并行计算）。
+  
+  如果是从HDFS等外部存储作为输入数据源，数据按照HDFS中的数据分布策略进行数据分区，HDFS中的一个Block对应Spark的一个分区。同时Spark支持重分区，数据通过Spark默认的或者用户自定义的分区器决定数据块分布在哪些节点。例如，支持Hash分区（按照数据项的Key值取Hash值，Hash值相同的元素放入同一个分区之内）和Range分区（将属于同一数据范围的数据放入同一分区）等分区策略。
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-14T14:34:23.562Z"
+updatedAt: "2017-10-14T16:14:58.235Z"

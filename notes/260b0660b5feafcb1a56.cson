@@ -1,0 +1,109 @@
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "3- spark 原理介绍"
+content: '''
+  ### 3- spark 原理介绍
+  
+  ---
+  
+  
+  ##### 3.1 分布式 ： Distributed Computation
+  
+  分布式多台机器运行特征：
+  
+  整个spark有个提交程序的客户端，提交给集群，集群中有很多太机器，作业运行在分布式节点上，spark 程序提交到集群上运行，节点一般处理一部分数据，分布式作并行化。
+  
+  ![image](http://ww4.sinaimg.cn/mw1024/e91aafadjw1fa7kebz58qj20ds06laai.jpg)
+  
+  先有集群资源管理服务(**Cluster Manager**) 和运行作业任务的结点(**Worker Node**)，然后就是**每个应用的任务控制结点Driver**和**每个机器节点上有具体任务的执行进程(Executor)**；
+  
+  Executor有二个优点：一个是多线程来执行具体的任务，而不是像MR那样采用进程模型，减少了任务的启动开稍。二个是Executor上会有一个BlockManager存储模块，类似于KV系统(内存和磁盘共同作为存储设备)，当需要迭代多轮时，可以将中间过程的数据先放到这个存储系统上，下次需要时直接读该存储上数据，而不需要读写到hdfs等相关的文件系统里，或者在交互式查询场景下，事先将表Cache到该存储系统上，提高读写IO性能。
+  
+  另外Spark在做Shuffle时，在Groupby，Join等场景下去掉了不必要的Sort操作，相比于MapReduce只有Map和Reduce二种模式，Spark还提供了更加丰富全面的运算操作如filter,groupby,join等。
+  
+  #### 3.2 介绍:
+  
+  **Client**：客户端进程，负责提交作业到Master。
+  
+  **Master**：Standalone模式中主控节点，负责接收Client提交的作业，管理Worker，并命令Worker启动Driver和Executor。
+  
+  **Worker**：Standalone模式中slave节点上的守护进程，负责管理本节点的资源，定期向Master汇报心跳，接收Master的命令，启动Driver和Executor。
+  
+  **Driver**： 一个Spark作业运行时包括一个Driver进程，也是作业的主进程，负责作业的解析、生成Stage并调度Task到Executor上。包括DAGScheduler，TaskScheduler。
+  
+  > 说明　:
+  
+  在Spark中的task可以对应于线程，worker是一个个的进程（deamon process），worker由driver来进行管理。
+  
+  
+  **Executor**：即真正执行作业的地方，一个集群一般包含多个Executor，每个Executor接收Driver的命令Launch Task，一个Executor可以执行一到多个Task。
+  
+  **job**：包含多个task组成的并行计算，往往由action催生，具体表现为，当有Action作用于某RDD时，该action会作为一个job被提交。
+  Stage：一个Spark作业一般包含一到多个Stage，在DAGScheduler中生成，每个task执行的位置也会在这个过程中申明。
+  
+  **Task**：一个Stage包含一到多个Task，通过多个Task实现并行运行的功能。
+  
+  ```
+  在提交的过程中，DAGScheduler模块介入运算，计算RDD之间的依赖关系。
+  
+  RDD之间的依赖关系就形成了DAG。
+  
+  每一个JOB被分为多个stage，划分stage的一个主要依据是当前计算因子的输入是否是确定的.
+  如果是则将其分在同一个stage，避免多个stage之间的消息传递开销。
+  
+  当stage被提交之后，由taskscheduler来根据stage来计算所需要的task，并将task提交到对应的worker.
+  ```
+  
+  **taskSet**：一组关联的，相互之间没有shuffle依赖关系的任务组成的任务集。
+  
+  **DAGScheduler**： 实现将Spark作业分解成一到多个Stage，每个Stage根据RDD的Partition个数决定Task的个数，然后生成相应的Task set放到TaskScheduler中。
+  
+  **TaskScheduler**：实现Task分配到Executor上执行。
+  
+  **Narrow dependency** - 窄依赖，子RDD依赖于父RDD中固定的data partition
+  
+  **Wide Dependency** - 宽依赖，子RDD对父RDD中的所有data partition都有依赖
+  
+  **Caching Managenment** --缓存管理，对RDD的中间计算结果进行缓存管理以加快整体的处理速度
+  > 说明:
+  
+  Spark应用程序由一个 **driver program** 和多个job构成。
+  一个job由多个stage组成。一个stage由多个没有shuffle关系的task组成。
+  
+  #### 3.3 作业执行:
+  
+  提交作业有两种方式:**分别是Driver（作业的master，负责作业的解析、生成stage并调度task到，包含DAGScheduler）运行在Worker上**，**Driver运行在客户端**。接下来分别介绍两种方式的作业运行原理。
+  
+  ##### 3.1 应用执行过程分析
+  
+  spark应用程序进行各种transformation的计算，最后通过action触发job。
+  
+  提交之后，构建SparkContext，通过sparkContext根据RDD的依赖关系构建DAG图，DAG图提交给DAGScheduler进行解析，解析时是以shuffle为边界，反向解析，构建stage，stage之间也有依赖关系，这个过程就是对DAG图进行解析划分stage，并且计算出各个stage之间的依赖关系。
+  
+  stage以stageSet方式提交给TaskScheduler，然后将一个个TaskSet提交给底层调度器，在spark中是提交给taskScheduler处理，生成TaskSet manager.
+  
+  最后提交给executor进行计算，executor多线程计算，完成task任务后，将完成信息提交给schedulerBackend，由它将任务完成的信息提交给TaskScheduler。
+  
+  TaskScheduler反馈信息给TaskSetManager，删除该task任务，执行下一个任务。同时TaskScheduler将完成的结果插入到成功队列里，加入之后返回加入成功的信息。
+  
+  TaskScheduler将任务处理成功的信息传给TaskSet Manager。全部任务完成后TaskSet Manager将结果反馈给DAGScheduler。
+  
+  如果属于resultTask，交给JobListener。如果不属于resultTask，保存结果。全部运行完之后写入数据。
+  
+  ##### 3.2作业执行过程
+  
+  客户端提交作业给Master
+  
+  Master让一个Worker启动Driver，即SchedulerBackend。Worker创建一个DriverRunner线程，DriverRunner启动SchedulerBackend进程。
+  
+  另外Master还会让其余Worker启动Exeuctor，即ExecutorBackend。Worker创建一个ExecutorRunner线程，ExecutorRunner会启动ExecutorBackend进程。
+  
+  ExecutorBackend启动后会向Driver的SchedulerBackend注册。SchedulerBackend进程中包含DAGScheduler，它会根据用户程序，生成执行计划，并调度执行。对于每个stage的task，都会被存放到TaskScheduler中，ExecutorBackend向SchedulerBackend汇报的时候把TaskScheduler中的task调度到ExecutorBackend执行。
+  
+  所有stage都完成后作业结束。
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-14T16:22:07.329Z"
+updatedAt: "2017-10-14T16:28:51.559Z"
