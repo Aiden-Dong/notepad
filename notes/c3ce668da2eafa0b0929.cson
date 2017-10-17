@@ -1,0 +1,89 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "14-scala 隐式转换"
+content: '''
+  ### 14-scala 隐式转换
+  
+  ---
+  
+  > **scala 在如下三种情况会尝试隐式转换** :
+  
+  1. 当表达式类型与预期的类型不同时。
+  2. 当对象访问一个不存在的成员是时。
+  3. 当对象调用某个方法，而该方法的参数声明与传入的参数类型不匹配时候。
+  
+  > **scala 会在如下地方考虑查找隐式转换** :
+  
+  1. 位于源或者目标类型的半生对象的隐式转换。
+  2. 位于当前作用域可以以单个标识符指代的隐式转换。
+  
+  > **scala 在三种情况下讲不会考虑隐式转换** :
+  
+  1. 代码能够在不使用隐式转换的情况下正常编译
+  2. 编译器不会同事执行多个转换，　比如　`convert1(convert2(a)) * b`
+  3. 隐式转换存在二义性。
+  
+  #### 1- 隐式转换函数
+  
+  这种函数会自动被执行，在需要的时候将一种类型转换成另一种类型。
+  
+  - 以`implicit` 关键字声明的带有单个参数的函数。
+  - 建议使用　source2Target 这种约定俗称的命名方式。
+  
+  举例说明自动从一个类型到另一个类型的转换:
+  
+  ```
+  class ReachFile(val file:File) {
+    def read = Source.fromFile(file).mkString
+  }
+  
+  object ReachFile{
+    implicit def file2ReachFile(file: File):ReachFile={
+      return new ReachFile(file)
+    }
+  }
+  ```
+  
+  我们创建了一个从　`File` 到　`ReachFile` 的隐式转换，则可以调用　`File.read` 方法时候，　将自动将`file`转换成`ReachFile`.
+  
+  ```
+  import test.base.ReachFile._
+  
+  val file:File = new File("/etc/passwd")
+  println(file.read)
+  ```
+  
+  
+  
+  #### 2- 隐式参数
+  
+  
+  
+  #### 3-隐式对象
+  
+  #### 4-隐式类
+  
+  1.其所带的构造参数有且只能有一个
+  2.隐式类必须被定义在类，伴生对象和包对象里
+  3.隐式类不能是case class（case class在定义会自动生成伴生对象与2矛盾）
+  4.作用域内不能有与之相同名称的标示符
+  
+  ```
+  object ImplicitClass {
+    implicit class SearchFile(val file:File){
+      def read = Source.fromFile(file, "utf-8").mkString
+    }
+  }
+  
+  
+  
+  import test.base.ImplicitClass._
+  val file:File = new File("/etc/passwd")
+  println(file.read)
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-17T13:37:20.391Z"
+updatedAt: "2017-10-17T15:01:39.372Z"
