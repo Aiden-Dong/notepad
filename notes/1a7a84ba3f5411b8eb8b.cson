@@ -37,6 +37,22 @@ content: '''
   
   #### 2.2 RDD 编程接口
   
+  ##### 2.2.1 RDD 创建
+  
+  - 将集合转换成 RDD:
+  
+  ```
+  val seqGet = sc.parallelize(Array(1,2,3), 3)
+  ```
+  
+  - 加载外部数据集:
+  
+  ```
+  val fin = sc.textFile("/data/input/dpkg.log")
+  ```
+  
+  ##### 2.2.2 RDD 的操作:
+  
   对于RDD，有两种类型的动作，一种是`Transformation`，一种是`Action`。它们本质区别是：
   
   - Transformation返回值还是一个RDD。它使用了链式调用的设计模式，对一个RDD进行计算后，变换成另外一个RDD，然后这个RDD又可以进行另外一次转换。这个过程是分布式的
@@ -158,4 +174,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T14:34:23.562Z"
-updatedAt: "2017-10-14T16:14:58.235Z"
+updatedAt: "2017-10-15T03:52:42.769Z"
