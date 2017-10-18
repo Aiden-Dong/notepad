@@ -57,9 +57,53 @@ content: '''
   
   #### 2- 隐式参数
   
+  为什么把隐式参数单独拿出来放到最后讲是因为从用意上讲，隐式参数与我们前面讲述的隐式类型转化有很大的差异，虽然它涉及到了关键字implict，但是它做的是另外一件事情。隐含参数有点类似缺省参数，如果在调用方法时没有提供某个参数，编译器会在当前作用域查找是否有符合条件的 implicit 对象可以作为参数传入，不同于缺省参数，隐式参数的值可以在方法调用的前的上下文中指定，这是隐式参数更加灵活的地方。
   
+  ```
+  object ImplicitParamDemo {
+  
+      object Greeter{
+          def greet(name:String)(implicit prompt: String) {
+              println("Welcome, " + name + ". The System is ready.")
+              println(prompt)
+          }
+      }
+  
+      def main(args: Array[String]) {
+  
+          implicit val prompt = ">"
+  
+          Greeter.greet("admin")
+      }
+  
+  }
+  ```
   
   #### 3-隐式对象
+  
+  隐式对象的应用就相当于一个隐式值的应用。
+  
+  ```
+  abstract class Template[T] {
+    def add(x:T, y:T):T
+    def unit:T
+  }
+  
+  def sum[T](xs : List[T])(implicit m:Template[T]): T ={
+      if(xs.isEmpty){
+        m.unit
+      }else{
+        m.add(xs.head, sum(xs.tail))
+      }
+  }
+  
+  implicit object IntAdd extends Template[Int]{
+    override def add(x: Int, y: Int): Int = x + y
+  
+    override def unit: Int = 0
+  }
+  println(sum(List(1,2,3,4,5)))
+  ```
   
   #### 4-隐式类
   
@@ -86,4 +130,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-17T13:37:20.391Z"
-updatedAt: "2017-10-17T15:01:39.372Z"
+updatedAt: "2017-10-18T14:25:21.715Z"
