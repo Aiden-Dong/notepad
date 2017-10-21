@@ -3,13 +3,15 @@ folder: "7671e01e5a4a4ee04aa9"
 title: "1- hadoop 简介 :"
 content: '''
   ### 1- hadoop 简介 :
+  
   ---
-  - **说明 ：**
   
-  > - NameNode 需要使用更多的内存， 在这种情况下 NameNode 和 jobtracker 最好放在不同的机器中.
-  > - SecoundNameNode 可以和 Namenode 一起运行在同一个机器中， 但是同样由于内存使用的原因（SecoundName 和 NameNode 的内存需求相同）， 两者最好放在独立的硬件上.
+  **说明 ：**
   
-  - ##### 网络拓扑
+  - NameNode 需要使用更多的内存， 在这种情况下 NameNode 和 jobtracker 最好放在不同的机器中.
+  - SecoundNameNode 可以和 Namenode 一起运行在同一个机器中， 但是同样由于内存使用的原因（SecoundName 和 NameNode 的内存需求相同）， 两者最好放在独立的硬件上.
+  
+  ##### 网络拓扑
   
   > Hadoop 配置需要通过一个 Java 接口 DNSToSwitchMapping 来指定地址和网络位置之间的映射关系
   
@@ -21,9 +23,12 @@ content: '''
   resolv() 函数的输入参数 names 描述 IP 地址列表, 返回响应的我那个落位置字符串列表
   
   
-  - #### Hadoop 架构
+  #### Hadoop 架构
+  
   ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f7z8j80pl2j20hg07qgmg.jpg)
-  - **NameNode**
+  
+  
+  **NameNode**
   
   ```
   - 默认端口 50070
@@ -32,7 +37,7 @@ content: '''
   - 对内存和I/O进行集中管理
   - 是个单点，发生故障使集群崩溃
   ```
-  - **SecondaryNamenode**
+  **SecondaryNamenode**
   
   ```
   - 默认端口 : 50090
@@ -41,7 +46,7 @@ content: '''
   - 与 NameNode 进行通信，定期保存 HDFS元数据的快照
   - 当 NameNode 故障时可以作为备用 NameNode 使用
   ```
-  - **DataNode**
+  **DataNode**
   
   ```
   - 9000
@@ -49,7 +54,7 @@ content: '''
   - 负责把HDFS数据块读写到本地文件系统
   ```
   
-  - **JobTracker**
+  **JobTracker**
   
   ```
   - 默认端口 50030
@@ -59,7 +64,7 @@ content: '''
   - 每个集群只有唯一一个JobTracker,位于Master节点
   ```
   
-  - **TaskTracker**
+  **TaskTracker**
   ```
   - 默认端口 50060
   - 位于 slave 节点上， 与 datanode 结合（代码与数据结合的原则）
@@ -70,6 +75,7 @@ content: '''
   
   - #### 日常管理过程
   - 元数据备份
+  
   ```
    最直接的方法是：利用脚本文件定期的将 secondsNamenode 的内容放到异地站点。
   ```
@@ -150,9 +156,12 @@ content: '''
   mapred.output.compression | reduce 输出是否压缩
   mapred.output.compression.codec | 控制mapred的输出压缩方式
   
+  
+  ###
+  
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T09:43:49.514Z"
-updatedAt: "2017-09-20T10:13:19.613Z"
+updatedAt: "2017-10-18T06:27:27.228Z"

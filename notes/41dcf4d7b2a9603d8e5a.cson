@@ -1,0 +1,27 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "13 - Hadoop 环境变量"
+content: '''
+  ### 13 - Hadoop 环境变量
+  
+  ----
+  
+  环境信息 | 解释
+  -- | --
+  HADOOP_HOME | 程序根据 ${HADOOP_HOME} 获取 ${HADOOP_HOME}/bin 下面的命令
+  HADOOP_PREFIX | 根据 ${HADOOP_PREFIX} 获取 ${HADOOP_PREFIX}/sbin, ${HADOOP_PREFIX}/bin, ${HADOOP_PREFIX}, $HADOOP_PREFIX/${MAPRED_DIR}/webapps 等。
+  HADOOP_LIBEXEC_DIR | HADOOP JAR 相关。
+  HADOOP_HDFS_HOME | HDFS 命令相关
+  HADOOP_COMMON_HOME | HADOOP  JAR 位置
+  HADOOP_YARN_HOME | YARN 命令相关以及 JAR 配置
+  HADOOP_MAPRED_HOME | MAPREDUCE 相关 JAR
+  HADOOP_CONF_DIR | HADOOP 配置文件位置
+  
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-18T06:29:45.468Z"
+updatedAt: "2017-10-18T06:57:50.780Z"
