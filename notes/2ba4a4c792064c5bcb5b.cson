@@ -25,6 +25,32 @@ content: '''
   GraphX是用于图计算和并行图计算的新的（alpha）Spark API。通过引入弹性分布式属性图（Resilient Distributed Property Graph），一种顶点和边都带有属性的有向多重图，扩展了Spark RDD。为了支持图计算，GraphX暴露了一个基础操作符集合（如subgraph，joinVertices和aggregateMessages）和一个经过优化的Pregel API变体。此外，GraphX还包括一个持续增长的用于简化图分析任务的图算法和构建器集合。
   
   
+  #### 2. spark 集群环境配置
+  
+  spark-env.sh
+  
+  ```
+  export SPARK_DIST_CLASSPATH=$(/usr/local/share/hadoop/bin/hadoop classpath)
+  export SPARK_CONF_DIR=/usr/local/share/spark-2.1.0-bin-hadoop2.7/conf
+  # 设置运行在Yarn 环境之下
+  export HADOOP_CONF_DIR=/usr/local/share/hadoop/etc/hadoop
+  export SPARK_MASTER_IP=norma
+  export SPARK_WORKER_MEMORY=4g
+  export SPARK_WORKER_CORES=1
+  export SPARK_EXECUTOR_MEMORY=1g
+  export SPARK_DRIVER_MEMORY=1g
+  ```
+  spark-default.conf
+  
+  ```
+  spark.master                     spark://localhost:7077
+  spark.eventLog.enabled           true
+  spark.eventLog.dir               hdfs://localhost:9000/tmp/spark
+  spark.yarn.historyServer.address localhost:19888
+  spark.driver.memory              1g
+  spark.executor.extraJavaOptions  -XX:+PrintGCDetails -Dkey=value -Dnumbers="one two three"
+  ```
+  
   #### 2. spark 第一个作业　wordcount:
   
   ```
@@ -60,8 +86,9 @@ content: '''
   # 启动　Master
   # 启动　Worker
   ```
-  - 提交作业： `spark-submit --master spark://norma:7077 --class main.WordCount wordcount-1.0-selfcontained.jar`
-  
+  - 提交作业：
+  单机作业　: `spark-submit --master spark://norma:7077 --class main.WordCount wordcount-1.0-selfcontained.jar`
+  Yarn 作业　: `spark-submit --class main.WordCount --master yarn-cluster wordcount-1.0-selfcontained.jar`
   
   
   
@@ -70,4 +97,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T11:01:31.561Z"
-updatedAt: "2017-10-14T13:32:18.230Z"
+updatedAt: "2017-10-21T12:23:00.278Z"
