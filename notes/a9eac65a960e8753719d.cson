@@ -14,6 +14,8 @@ content: '''
   
   ### 1. 列表
   
+  ![](http://static.oschina.net/uploads/space/2016/0401/165358_Kvpo_2633112.png)
+  
   - scala 列表集成自 `Seq` 特质
   - 列表的不可变版本有 : Vector, Range, List, Stream, Stack, Queue
   - 列表的可变版本有 : ArrayBuffer, Stack, Queue, PriorityQueue, LinkedList, DoubleLinkedList 
@@ -57,12 +59,40 @@ content: '''
   }
   ```
   
-  #### 可变序列
+  ### 2. Map
   
+  Map作为一个存储键值对的容器（key－value），其中key值必须是唯一的，结构见图（10-4）。
   
+  ![](http://static.oschina.net/uploads/space/2016/0401/170956_vGCT_2633112.png)
+  
+  默认情况下，我们可以通过Map直接创建一个不可变的Map容器对象，这时候容器中的内容是不能改变的。如果你想获得一个内容可变的Map，那么必须使用scala.collection.mutable.Map来创建。
+  
+  ```
+  scala> val m = Map(1 -> "a", 2 -> "b")
+  m: scala.collection.immutable.Map[Int,String] = Map(1 -> a, 2 -> b)
+  
+  scala> val m = scala.collection.mutable.Map(1 -> "a", 2 -> "b")
+  m: scala.collection.mutable.Map[Int,String] = Map(2 -> b, 1 -> a)
+  ```
+  
+  ### 3.Set
+  
+  Scala中的Set和Java中的Set一样，存储的内容是不可重复的。
+  
+  ![](http://static.oschina.net/uploads/space/2016/0401/171536_3BWR_2633112.png)
+  
+  默认情况下，我们可以通过Set直接创建一个不可变的Set容器。和Map一样你可以使用mutable包中的Set来创建一个可变的Set容器。
+    
+  ```
+  scala> val set = Set(1,2,3)
+  set: scala.collection.immutable.Set[Int] = Set(1, 2, 3)
+  
+  scala> val set = collection.mutable.Set(1,2,3)
+  set: scala.collection.mutable.Set[Int] = Set(1, 2, 3)
+  ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-30T07:53:27.501Z"
-updatedAt: "2017-10-03T03:08:19.432Z"
+updatedAt: "2017-10-24T10:23:31.073Z"

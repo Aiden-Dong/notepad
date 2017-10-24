@@ -1,9 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "d218c9600accb5c277d2"
-title: "2- RDD"
+title: "2- RDD 弹性分布式数据集"
 content: '''
-  ### 2- RDD
-  
+  ### 2- RDD 弹性分布式数据集
   ---
   
   #### 2.1 概述
@@ -174,4 +173,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T14:34:23.562Z"
-updatedAt: "2017-10-15T03:52:42.769Z"
+updatedAt: "2017-10-23T06:52:25.459Z"
