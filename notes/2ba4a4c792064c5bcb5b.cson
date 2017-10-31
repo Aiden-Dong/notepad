@@ -42,7 +42,6 @@ content: '''
   
   ```
   
-  
   spark-env.sh
   
   ```
@@ -56,6 +55,7 @@ content: '''
   export SPARK_EXECUTOR_MEMORY=1g
   export SPARK_DRIVER_MEMORY=1g
   ```
+  
   spark-default.conf
   
   ```
@@ -88,6 +88,7 @@ content: '''
   - spark 环境 : `2.1.0`
   - scala 版本 : `2.11.8`
   - mvn spark 依赖　:
+  
   ```
   <dependency>
       <groupId>org.apache.spark</groupId>
@@ -96,13 +97,17 @@ content: '''
       <scope>provided</scope>
   </dependency>
   ```
+  
   - 启动　spark　集群:
+  
   ```
   sbin/start-all.sh
   # 启动　Master
   # 启动　Worker
   ```
+  
   - 提交作业：
+  
   单机作业　: `spark-submit --master spark://norma:7077 --class main.WordCount wordcount-1.0-selfcontained.jar`
   Yarn 作业　: `spark-submit --class main.WordCount --master yarn-cluster wordcount-1.0-selfcontained.jar`
   
@@ -113,4 +118,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T11:01:31.561Z"
-updatedAt: "2017-10-25T05:53:54.766Z"
+updatedAt: "2017-10-31T06:18:49.630Z"

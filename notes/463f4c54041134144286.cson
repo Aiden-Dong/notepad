@@ -4,9 +4,17 @@ title: "4- spark shell"
 content: '''
   ### 4- spark shell
   
-  
-  
   ---
+  
+  在 Spark shell 中， 有一个专有的 SparkContext 已经为你创建好。 在变量中叫做 sc 。 你自己创建的 SparkContext 将无法工作。
+  可以用 --master 参数来设置 SparkContext 要连接的集群， 用 --jars 来设置需要添加到 classpath 中的 JAR 包， 如果有多个 JAR 包使用逗号分
+  割符连接它们。 
+  
+  ```
+  spark-shell --master yarn --deploy-mode client
+  ```
+  
+  运行样例:
   
   ```
   val lines = sc.textFile("data.txt")
@@ -32,4 +40,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-24T10:29:06.978Z"
-updatedAt: "2017-10-24T10:33:00.655Z"
+updatedAt: "2017-10-31T07:30:56.220Z"

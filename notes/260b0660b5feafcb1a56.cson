@@ -6,7 +6,6 @@ content: '''
   
   ---
   
-  
   ##### 3.1 分布式 ： Distributed Computation
   
   分布式多台机器运行特征：
@@ -65,6 +64,7 @@ content: '''
   **Wide Dependency** - 宽依赖，子RDD对父RDD中的所有data partition都有依赖
   
   **Caching Managenment** --缓存管理，对RDD的中间计算结果进行缓存管理以加快整体的处理速度
+  
   > 说明:
   
   Spark应用程序由一个 **driver program** 和多个job构成。
@@ -76,6 +76,7 @@ content: '''
   
   ##### 3.1 应用执行过程分析
   
+  ```
   spark应用程序进行各种transformation的计算，最后通过action触发job。
   
   提交之后，构建SparkContext，通过sparkContext根据RDD的依赖关系构建DAG图，DAG图提交给DAGScheduler进行解析，解析时是以shuffle为边界，反向解析，构建stage，stage之间也有依赖关系，这个过程就是对DAG图进行解析划分stage，并且计算出各个stage之间的依赖关系。
@@ -89,9 +90,11 @@ content: '''
   TaskScheduler将任务处理成功的信息传给TaskSet Manager。全部任务完成后TaskSet Manager将结果反馈给DAGScheduler。
   
   如果属于resultTask，交给JobListener。如果不属于resultTask，保存结果。全部运行完之后写入数据。
+  ```
   
   ##### 3.2作业执行过程
   
+  ```
   客户端提交作业给Master
   
   Master让一个Worker启动Driver，即SchedulerBackend。Worker创建一个DriverRunner线程，DriverRunner启动SchedulerBackend进程。
@@ -101,9 +104,10 @@ content: '''
   ExecutorBackend启动后会向Driver的SchedulerBackend注册。SchedulerBackend进程中包含DAGScheduler，它会根据用户程序，生成执行计划，并调度执行。对于每个stage的task，都会被存放到TaskScheduler中，ExecutorBackend向SchedulerBackend汇报的时候把TaskScheduler中的task调度到ExecutorBackend执行。
   
   所有stage都完成后作业结束。
+  ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T16:22:07.329Z"
-updatedAt: "2017-10-14T16:28:51.559Z"
+updatedAt: "2017-10-31T03:37:11.984Z"
