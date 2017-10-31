@@ -27,6 +27,22 @@ content: '''
   
   #### 2. spark 集群环境配置
   
+  yarn-site.xml
+  
+  ```
+   <property>
+      <name>yarn.nodemanager.pmem-check-enabled</name>
+      <value>false</value>
+    </property>
+  
+    <property> 
+      <name>yarn.nodemanager.vmem-check-enabled</name>
+      <value>false</value>
+    </property>
+  
+  ```
+  
+  
   spark-env.sh
   
   ```
@@ -97,4 +113,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T11:01:31.561Z"
-updatedAt: "2017-10-21T12:23:00.278Z"
+updatedAt: "2017-10-25T05:53:54.766Z"

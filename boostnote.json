@@ -54,6 +54,11 @@
       "key": "d218c9600accb5c277d2",
       "color": "#2BA5F7",
       "name": "spark"
+    },
+    {
+      "key": "7b5f71e13e8949dc60be",
+      "color": "#FF8E00",
+      "name": "user"
     }
   ],
   "version": "1.0"
