@@ -1,0 +1,102 @@
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "6-Spark Streaming"
+content: '''
+  ### 6-Spark Streaming
+  
+  ---
+  
+  Spark streaming是Spark核心API的一个扩展， 它对实时流式数据的处理具有可扩展性、 高吞吐量、 可容错性等特点。
+  我们可以从kafka、 flume、 Twitter、 ZeroMQ、 Kinesis等源获取数据， 也可以通过由高阶函数map、 reduce、 join、 window等组成的复杂算法计算出数据。
+  最后， 处理后的数据可以推送到文件系统、 数据库、 实时仪表盘中。 事实上， 你可以将处理后的数据应用到Spark的机器学习算法、 图处理算法中去。
+  
+  ![](http://img.my.csdn.net/uploads/201710/31/1509441830_3787.png)
+  
+  在内部， 它的工作原理如下图所示。 Spark Streaming接收实时的输入数据流， 然后将这些数据切分为批数据供Spark引擎处理， Spark引擎将数据生成最终的结果数据
+  
+  ![](http://img.my.csdn.net/uploads/201710/31/1509442006_5964.png)
+  
+  Spark Streaming支持一个高层的抽象， 叫做离散流( discretized stream )或者 DStream ， 它代表连续的数据流。
+  DStream既可以利用从Kafka, Flume和Kinesis等源获取的输入数据流创建， 也可以 在其他DStream的基础上通过高阶函数获得。在内部， DStream是由一系列RDDs组成。
+  
+  #### 1. 快速入门
+  
+  在我们进入如何编写Spark Streaming程序的细节之前， 让我们快速地浏览一个简单的例子。在这个例子中， 程序从监听TCP套接字的数据服务器获取文本数据， 然后计算文本中包含的单词数。
+  
+  做法如下：
+  
+  ```
+  object SparkStreamingStart extends App{
+  
+    // 初始化 spark
+    val conf:SparkConf = new SparkConf().setAppName("Spark-Streaming-Start")
+    val sc:SparkContext = new SparkContext(conf)
+    val ssc:StreamingContext = new StreamingContext(conf,  Seconds(1))
+  
+    /**
+     * 创建 DStream
+     * 表示从 TCP 源（主机 : localhost, 端口 9999）获取到的流式数据。
+     */
+  
+    /**
+     * 这个 lines 变量是一个 DStream，表示即将从数据服务器获得的流数据。
+     * 这个DStream的每条记录都代表一行文本。 下一步， 我们需要将DStream中的每行文本都切分为单词。
+     */
+    val lines = ssc.socketTextStream("localhost", 9999)
+  
+    /**
+     * flatMap 是一个一对多的DStream操作，它通过把源DStream的每条记录都生成多条新记录来创建一个新的DStream。
+     * 在这个例子中，每行文本都被切分成了多个单词，我们把切分的单词流用 words 这个DStream表示。
+     * 下一步， 我们需要计算单词的个数。
+     *
+     * words 这个DStream被mapper(一对一转换操作)成了一个新的DStream， 它由（ word,1）对组成。
+     * 然后，我们就可以用这个新的DStream计算每批数据的词频。 最后， 我们用 wordCounts.print() 打印每秒计算的词频。
+     */
+  
+    val word = lines.flatMap(_.split(","))
+    val pairs = word.map((_,1))
+    val wordCounts = pairs.reduceByKey(_+_)
+  
+    wordCounts.print()
+  
+    /**
+     * 需要注意的是，当以上这些代码被执行时， Spark Streaming仅仅准备好了它要执行的计算，
+     * 实际上并没有真正开始执行。 在这些转换操作准备好之后， 要真正执行计算， 需要调用如下的方法
+     */
+    ssc.start()
+    ssc.awaitTermination()
+  
+  }
+  ```
+  
+  #### 2. 基本概念
+  
+  #### 2.1 依赖 
+  
+  ```
+  <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-streaming_2.11</artifactId>
+      <version>2.1.0</version>
+      <scope>provided</scope>
+  </dependency>
+  ```
+  
+  #### 2.2 初始化　StreamingContext
+  
+  为了初始化Spark Streaming程序， 一个StreamingContext对象必需被创建， 它是Spark Streaming所有流操作的主要入口。 一个StreamingContext 对象可以用SparkConf对象创建。
+  
+  ```
+  import org.apache.spark._
+  import org.apache.spark.streaming._
+  val conf = new SparkConf().setAppName(appName).setMaster(master)
+  val ssc = new StreamingContext(conf, Seconds(1))
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-10-31T09:31:10.400Z"
+updatedAt: "2017-10-31T10:59:40.203Z"

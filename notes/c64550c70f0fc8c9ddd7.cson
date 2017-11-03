@@ -1,0 +1,59 @@
+type: "MARKDOWN_NOTE"
+folder: "ec02fab285e14c31f180"
+title: "10 执行篇"
+content: '''
+  ### 10 执行篇
+  
+  ---
+  
+  #### 1. bash 调试
+  
+  你可以让bash打印出你脚本执行的过程中的所有语句。这很简单，只需要使用bash的-x选项就可以做到，下面让我们来看一下。
+  
+  下面的这段脚本，先是输出一个问候语句，然后输出当前的时间：
+  
+  ```
+  #!/bin/bash
+  echo "Hello $USER,"
+  echo "Today is $(date +'%Y-%m-%d')"
+  ```
+  下面让我们使用-x选项来运行这段脚本：
+  
+  ```
+  $ bash -x example_script.sh
+  + echo 'Hello chenhao,'
+  Hello chenhao,
+  ++ date +%Y-%m-%d
+  + echo 'Today is 2009-08-31'
+  Today is 2009-08-31
+  ```
+  
+  这时，我们可以看到，bash在运行前打印出了每一行命令。而且每行前面的+号表明了嵌套。这样的输出可以让你看到命令执行的顺序并可以让你知道整个脚本的行为。
+  
+  > 在跟踪里输出行号
+  
+  在一个很大的脚本中，你会看到很多很多的执行跟踪的输出，阅读起来非常费劲，所以，你可以在每一行前加上文件的行号，这会非常有用。要做到这样，你只需要设置下面的环境变量：
+  
+  ```
+  export PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]}: '
+  ```
+  让我们看看设置上了PS4这个环境变量后会是什么样的输出。
+  
+  ```
+  $ bash -x example_script.sh
+  +example_script.sh:2:: echo 'Hello chenhao,'
+  Hello chenhao,
+  ++example_script.sh:3:: date +%Y-%m-%d
+  +example_script.sh:3:: echo 'Today is 2009-08-31'
+  Today is 2009-08-31
+  ```
+  
+  
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-11-03T08:36:48.926Z"
+updatedAt: "2017-11-03T08:39:21.795Z"
