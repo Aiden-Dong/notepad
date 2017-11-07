@@ -59,6 +59,16 @@
       "key": "7b5f71e13e8949dc60be",
       "color": "#FF8E00",
       "name": "user"
+    },
+    {
+      "key": "353d9e00445c35bfac25",
+      "color": "#E10051",
+      "name": "Math"
+    },
+    {
+      "key": "fec47565a0577152774f",
+      "color": "#B013A4",
+      "name": "LinearAlgebra"
     }
   ],
   "version": "1.0"
