@@ -1,0 +1,66 @@
+type: "MARKDOWN_NOTE"
+folder: "fec47565a0577152774f"
+title: "２- K 近邻算法概述(KNN)"
+content: '''
+  ２- K 近邻算法概述(KNN)
+  
+  ---
+  
+  k 近邻采用测量不同特征值之间的距离方法进行分类。
+  
+  算法举例:
+  
+  ```
+  #!/usr/bin/env python
+  #-*- coding:utf-8 -*-
+  
+  import numpy
+  
+  
+  def createDataSet():
+      # 样本数据
+      group=numpy.array([[1.1, 1.0],[1.0,1.0], [0.0, 0.0], [0.0, 0.1]])
+      lables = numpy.array(['A','A','B','B'])
+      return group,lables
+  
+  def classify(intX, dataSet, labels, k):
+      dataSetSize=len(dataSet)
+      
+      # 计算与每个向量(样本数据)之间的距离
+      diffMat = numpy.tile(intX, (dataSetSize, 1)) - dataSet  # 求差集
+      sqdiffMat = diffMat**2
+      sqDistances = sqdiffMat.sum(axis=1)
+      distances=sqDistances**0.5
+      
+      ＃　向量排序
+      sortDistances = distances.argsort()
+      print(sortDistances)
+  
+      # 从前　k 个中间取出最高的来
+      classCount={}
+      for i in range(k):
+          voteIlabel = labels[sortDistances[i]];
+          classCount[voteIlabel] = classCount.get(voteIlabel,0) + 1
+      #sortClassCount=sorted(classCount.iteritems, key=classCount.itemgetter(1), reverse=True)
+      sortClassCount = sorted(classCount.items(), key=lambda b : b[1], reverse=True)
+  
+      return sortClassCount[0][0]
+  
+  def main():
+      group,labels = createDataSet()
+      print(group)
+      print(labels)
+  
+      res = classify([0.7, 0.9], group, labels, 3)
+      
+      print res
+  
+  if __name__ == '__main__':
+      main()
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-11-07T14:01:13.615Z"
+updatedAt: "2017-11-07T15:58:07.485Z"
