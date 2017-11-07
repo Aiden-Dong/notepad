@@ -104,6 +104,23 @@ content: '''
   
   如果您指定了ON DUPLICATE KEY UPDATE，并且插入行后会导致在一个UNIQUE索引或PRIMARY KEY中出现重复值，则执行旧行UPDATE。
   
+  - 使用 load data 从本地导入 
+  
+  ```
+  LOAD DATA LOCAL INFILE '{folder}/{file}'
+                          INTO TABLE {table}
+                          FIELDS TERMINATED BY '\\x1a' ESCAPED BY '\\0'
+                          LINES TERMINATED BY '\\n'
+                          ({columns});
+  ```
+  
+  - 使用 insert 批量导入数据
+  
+  ```
+  INSERT INTO flow_source_id_map (app_id, source_id_string)
+              SELECT sf.app_id, sf.flow_path FROM {table} sf
+  ```
+  
   #### 2.2 数据查询操作
   
   ```
@@ -130,4 +147,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-08-28T05:39:25.018Z"
-updatedAt: "2017-09-18T07:58:15.450Z"
+updatedAt: "2017-11-07T10:08:58.578Z"
