@@ -12,55 +12,67 @@ content: '''
   
   ```
   #!/usr/bin/env python
-  #-*- coding:utf-8 -*-
+  #-*- coding:utf8 -*-
   
   import numpy
+  import numpy as np
+  
+  # [X1, X2, X3, ..., Xn] -> [y1, y2, y3, ... yn]
+  # X 为向量矩阵， y 为标签值
+  # 向量矩阵跟向量对应的标签横向扩展，方便计算
+  
+  def createDataset():
+      dataset=numpy.array([[1,2], [2,3], [3,2], [-1,2],[-2,2],[-2,1]]).T
+      titles=numpy.array(['A','A','A','B','B','B'])
+  
+      return dataset,titles
+  
+  def knnGetTitle(inX, dataset, titles, k):
+  
+      """
+      首先计算出输入向量与所有向量之间的距离
+      然后按照距离排序
+      从距离最近的前 k 个标签中，找到出现的频率最高的标签来
+      """
+  
+      metricSet=dataset-inX  # 向量广播求差集
+      metricSet=metricSet**2
+      metricSet=metricSet.sum(axis=0)
+      metricSet=metricSet**0.5
   
   
-  def createDataSet():
-      # 样本数据
-      group=numpy.array([[1.1, 1.0],[1.0,1.0], [0.0, 0.0], [0.0, 0.1]])
-      lables = numpy.array(['A','A','B','B'])
-      return group,lables
+      sortArg=metricSet.argsort()
   
-  def classify(intX, dataSet, labels, k):
-      dataSetSize=len(dataSet)
-      
-      # 计算与每个向量(样本数据)之间的距离
-      diffMat = numpy.tile(intX, (dataSetSize, 1)) - dataSet  # 求差集
-      sqdiffMat = diffMat**2
-      sqDistances = sqdiffMat.sum(axis=1)
-      distances=sqDistances**0.5
-      
-      ＃　向量排序
-      sortDistances = distances.argsort()
-      print(sortDistances)
+      argCount={}   # title:count
   
-      # 从前　k 个中间取出最高的来
-      classCount={}
       for i in range(k):
-          voteIlabel = labels[sortDistances[i]];
-          classCount[voteIlabel] = classCount.get(voteIlabel,0) + 1
-      #sortClassCount=sorted(classCount.iteritems, key=classCount.itemgetter(1), reverse=True)
-      sortClassCount = sorted(classCount.items(), key=lambda b : b[1], reverse=True)
+          key=titles[sortArg[i]]
+          argCount[key] = argCount.get(key, 0) +1
   
-      return sortClassCount[0][0]
+      sortCount=sorted(argCount.items(), key=lambda b:b[1], reverse=True)
+  
+      print(dataset)
+      return sortCount[0][0]
   
   def main():
-      group,labels = createDataSet()
-      print(group)
-      print(labels)
+      X=numpy.array([3,4])
+      X=X.reshape(X.shape[0],1)
   
-      res = classify([0.7, 0.9], group, labels, 3)
-      
-      print res
+      dataset,titles=createDataset()
+      res = knnGetTitle(inX=X, dataset=dataset, titles=titles, k=4)
+      print(res)
+      dataset=np.hstack((dataset, X))
+      titles=np.hstack((titles, res))
+  
+      print(dataset,titles)
   
   if __name__ == '__main__':
       main()
+  
   ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-07T14:01:13.615Z"
-updatedAt: "2017-11-07T15:58:07.485Z"
+updatedAt: "2017-11-08T06:23:38.775Z"
