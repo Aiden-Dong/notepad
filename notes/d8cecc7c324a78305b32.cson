@@ -5,69 +5,240 @@ content: '''
   ### 3-决策树
   ---
   
-  [https://www.zhihu.com/question/22178202](https://www.zhihu.com/question/22178202)
+  #### 1.信息量和信息熵：
   
-  #### 信息增益:
+  **信息量**
   
-  信息的定义: $$l(x_l)=-\\log_2p(x_1)$$
+  在信息论中，认为信源输出的消息是随机的。即在未收到消息之前，是不能肯定信源到底发送什么样的消息。而通信的目的也就是要使接收者在接收到消息后，尽可能多的解除接收者对信源所存在的疑义（不定度），因此这个被解除的不定度实际上就是在通信中所要传送的信息量。(信息量可以看作是运输信息所需要的代价).
   
+  R.V.L.哈特莱定义信息量 $$l=\\log_2m$$. 
+  表示承载具有m种状态的信息，所需要位长度,即信息量。
+  
+  例如: 2种状态的信息量使用 1 bit, 32 种状态的信息量使用5 bit.来传输。
+  
+  **信息熵**
+  
+  随后 C.E.香农指出信源给出的符号是随机的，信源的信息量应是概率的函数，一信源的信息熵表示:
+  
+  $$H(U)=-\\sum_{i=1}^np_i\\log_2p_i$$
+  
+  例如，若一个连续信源被等概率量化为4层，即4 种符号。这个信源每个符号所给出的信息最应为 $$H(U)=-\\sum_{i=1}^4\\log_2\\frac{1}{4}=2bit$$ 与哈特莱公式 $$I=\\log_2m=\\log_24=2bit$$ 一致。
+  实质上哈特莱公式是等概率时仙农公式的特例
+  
+  
+  信息熵考虑对于较大的概率的信息量，采用较低的码长，例如:有4种事件{A,B,C,D} 
+  
+  它们发生的概率是 {$$\\frac{1}{2}, \\frac{1}{4}, \\frac{1}{8},\\frac{1}{8}$$}.
+  
+  则：我们可以做映射 : {A,B,C,D} => {0, 10, 110, 110, 111} 来表示
+  
+  既: $$E(N)=\\frac{1}{2}*1 + \\frac{1}{4}*2 + \\frac{1}{8}*3 + \\frac{1}{8}*3=\\frac{7}{4}$$
+  
+  **信息熵的由来**
+  
+  C.E.香农 总结了信息熵的三条性质:
+  
+  - 单调性，即发生概率越高的事件，其所携带的信息熵越低。极端案例就是“太阳从东方升起”，因为为确定事件，所以不携带任何信息量。从信息论的角度，认为这句话没有消除任何不确定性。
+  
+  - 非负性，即信息熵不能为负。这个很好理解，因为负的信息，即你得知了某个信息后，却增加了不确定性是不合逻辑的。
+  
+  - 累加性，即多随机事件同时发生存在的总不确定性的量度是可以表示为各事件不确定性的量度的和。写成公式就是：H(A,B)=H(A)*H(B)
+  
+  假设两个随机变量x和y是相互独立的，那么分别观测两个变量得到的信息量应该和同时观测两个变量的信息量是相同的，即：h(x+y)=h(x)+h(y)。而从概率上来讲，两个独立随机变量就意味着p(x,y)=p(x)p(y)，所以此处可以得出结论熵的定义h应该是概率p(x)的log函数。因此一个随机变量的熵可以使用如下定义：**$$h(x)=-\\log_2p(x)$$**
+  
+  负号保证信息量为正
+  信息论中基常常选择为2，因此信息的单位为比特bits；
+  
+  最后，我们用熵来评价整个随机变量x平均的信息量，而平均最好的量度就是随机变量的期望，即熵的定义如下：
+  
+  $$H(U)=-\\sum_{i=1}^np_i\\log_2p_i$$
+  
+  #### 2.信息增益:
+  
+  原则是将无序的数据集变得有序。
+  
+  在划分数据集之前之后信息发生的变化就是信息增益，我们可以计算每种特征划分后的信息增益， 获得增益最高的特征就是最好的信息增益 。
+  
+  我们可以使用计算信息熵减过程来衡量信息增益情况。
+  
+  
+  #### 3.算法过程:
+  
+  构建决策树`createBranch()`过程:
   
   ```
-  #!/usr/bin/env python
-  #-*- coding:utf8 -*-
+  IF so return 类标签;   # 表示确定时间，无信息量
+  Else
+       寻找划分数据的最好特征
+       划分数据集
+       创建 分支节点
+          for 每一个划分的子集
+             对每一个子集调用 createBranch()对子集操作，并将结果返回到 分支节点 中
+        return 分支节点
+  ```
   
+  我们通过将一个事件的判定结果作为一个信息,将判断的依据特点作为信息的特征.
   
-  #########################
-  #    香弄熵计算公式
-  #########################
+  决策树过程是通过不断的划分特征来提取信息，将无序信息变为有序的过程
   
-  import math
-  import numpy
+  提供的测试数据:
   
+  \\ | 是否离开水面能活 | 是否有脚蹼 | 属于鱼类
+  --- | --- | --- | ---
+  1 | 是 | 是 | Y
+  2 | 是 | 是 | Y
+  3 | 是 | 否 | N
+  4 | 否 | 是 | N
+  5 | 否 | 是 | N
+  
+  ```
+  # 特征　: [no sufacing(不浮出水面是否可以生存), flippers(是否有脚蹼)] -> flag(是否属于鱼类)
   def createDataset():
-      dataset=numpy.array([[1,1, 'test'], [1,1, 'yes'],[1,0,'heeh'],[0,1,'no'],[0,1, 'no']])
+      dataset=[[1,1,'yes'], [1,1,'yes'],[1,0,'no'],[0,1,'no'],[0,1,'no']]
+      labels=['no surfacing', 'flippers']
   
-      return dataset.T
+      return dataset, labels
+  ```
   
+  对于一个数据集合首先我们先判断这个数据集信息是否为确定信息(信息量为0)。否则的话，我们将进行信息增益过程。
+  
+  我们通过计算每一个特征对应的信息熵，然后选择熵减程度最大的特征 建立决策过程。
+  
+  ```
+  def chooseBestFeatureToSplit(dataset):
+      numFeature=len(dataset[0])-1                ## 特征数量
+      baseEntropy=calcShannonEnt(dataset)         ## 计算信息熵
+  
+      bestInfoGain=0.0 # 比较熵
+      bestFeature = -1 # 比较特征
+  
+      # 遍历特征集
+      for i in range(numFeature):
+          
+          # 得到特征集下面的特征值集合
+          featList=[example[i] for example in dataset]
+          uniqueVals=set(featList)
+  
+          newEntropy=0.0
+          for value in uniqueVals:
+              # 分离出某个特征下面对应某个特征值的某个子矩阵
+              subDataset=splitDataset(dataset,i, value)
+  
+              # 取到这个子矩阵的概率
+              prob=len(subDataset)/float(len(dataset))
+  
+              # 得到这个子矩阵的信息熵
+              ent=prob*calcShannonEnt(subDataset)
+  
+              newEntropy+=ent
+              #print(newEntropy)
+          print("newEntropy : [%f]" % newEntropy)
+  
+          # 计算信息增益[熵减程度] 获得最优的信息增益情况
+          infoGain=baseEntropy-newEntropy
+  
+          if(infoGain > bestInfoGain):
+              bestInfoGain = infoGain
+              bestFeature = i
+  
+      return bestFeature
+  ```
+  
+  计算信息熵过程:
+  
+  ```
   def calcShannonEnt(dataset):
-      numEntries=len(dataset[1,:])
+      numEntries=len(dataset)
   
       labelCounts={}
   
       # 计算标签频率
-      for i in range(numEntries):
-          currentLabel=dataset[-1, i]
+      for vec in dataset:
+          currentLabel=vec[-1]
           labelCounts[currentLabel] = labelCounts.get(currentLabel,0)+1
   
-      print(labelCounts)
       shanonEnt = 0.0
   
       for key in labelCounts:
           prob = float(labelCounts[key])/numEntries  # 计算标签概率
-          print(prob)
+  
           shanonEnt += (-prob*math.log(prob, 2))
-  
+      print("%s [%f]" % (labelCounts,shanonEnt))
       return shanonEnt
-  
-  def main():
-      dataset=createDataset()
-  
-      print(calcShannonEnt(dataset=dataset))
-  
-  if __name__ == '__main__':
-      main()
-  
   ```
   
-  #### 划分数据集
+  划分数据集过程:
   
-  分类算法除了需要测量信息熵，还需要划分数据集，度量花费数据集的熵，以便判断当前是否正确地划分了数据集。
+  ```
+  ###########################################################
+  #   划分数据集
+  #       dataset : 数据集
+  #       axis    : 选取的特征
+  #       value   : 筛选特征值
+  #
+  #       return  : 返回的是只有这个特征值的扣除这一特征的矩阵
+  #
+  ###########################################################
+  def splitDataset(dataset, axis, value):
+      retDataset=[]
+      numEntries=len(dataset)
   
-  我们将对每个特征划分数据集的结果计算一次信息熵，然后判断按照那个特征划分数据集是最好的划分方式。
+      for vec in dataset:
+          if vec[axis] == value :
+              reduceFeatVect = vec[:axis]
+              reduceFeatVect.extend(vec[axis+1:])
+  
+              retDataset.append(reduceFeatVect)
+  
+      return retDataset
+  ```
+  
+  通过以上方式，我们选择梯度最优的过程来选择特征来进行决策过程。将一个信息分离出若干的子集，然后对子集在进行决策。
+  对于以上的例子，决策后的结果是:
+  
+  ![](http://img.my.csdn.net/uploads/201711/13/1510568621_1483.png)
+  
+  从上面可以看出决策树能够更好的帮助我们选择特征划分信息， 当特征变多后，决策树能够以一种优异的方式展示数据信息。
+  
+  
+  ```
+  ## 创建决策树
+  def createTree(dataset, labels):
+      # 获取结果标签
+      classList=[example[-1] for example in dataset]
+  
+      # 判断是否是确定信息
+      if classList.count(classList[0]) == len(classList):
+          return classList[0]
+  
+      # ????
+      if len(dataset[0]) == 0:
+          return majorityCnt(classList)
+  
+      # 从　dataset 中选择　bestFeat 特征作为分割
+      bestFeat=chooseBestFeatureToSplit(dataset)
+      bestFeatLabel=labels[bestFeat]
+  
+      myTree={bestFeatLabel:{}}
+  
+      # 对应于矩阵的坍缩，　所以标签也需要删除
+      del(labels[bestFeat])
+  
+      featValues=[example[bestFeat] for example in dataset] # 选择所有的特征集
+      uniqueVals=set(featValues)
+  
+      for value in uniqueVals:
+          subLabels=labels[:]
+          childData=splitDataset(dataset, bestFeat, value) # 获取到子集信息
+          myTree[bestFeatLabel][value] = createTree(childData, subLabels)
+  
+      return myTree
+  ```
+  
   
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-10T08:25:45.279Z"
-updatedAt: "2017-11-10T14:08:22.559Z"
+updatedAt: "2017-11-13T10:42:01.631Z"
