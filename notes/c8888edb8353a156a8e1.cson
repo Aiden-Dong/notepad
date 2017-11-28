@@ -1,0 +1,68 @@
+type: "MARKDOWN_NOTE"
+folder: "672efc3aadb5d16c7fef"
+title: "9-mysql 导出表结构表数据以及导入数据"
+content: '''
+  ### 9-mysql 导出表结构表数据以及导入数据
+  
+  ---
+  
+  转载自[https://www.zybuluo.com/phper/note/435155](https://www.zybuluo.com/phper/note/435155)
+  
+  #### 导出表结果表数据
+  
+  使用mysqldump命令行下具体用法如下：
+  
+  ```
+  mysqldump -u用户名 -p密码 -d 数据库名 表名 > 脚本名;
+  ```
+  
+  1. 导出数据库为dbname的表结构（其中用户名root,密码为dbpasswd,生成的脚本名為db.sql）
+  
+  ```
+  mysqldump -uroot -pdbpasswd -d dbname >db.sql;
+  ```
+  
+  2. 导出数据库为dbname的一张表tableName表结构。
+  
+  ```
+  mysqldump -uroot -pdbpasswd -d dbname tableName>db.sql;
+  ```
+  
+  3. 导出数据库为dbname所有表结构及表数据（不加-d）
+  
+  ```
+  mysqldump -uroot -pdbpasswd dbname >db.sql;
+  ```
+  
+  4. 导出数据库为dbname的一张表tableName结构及表数据（不加-d）
+  
+  ```
+  mysqldump -uroot -pdbpasswd dbname tableName >db.sql;
+  ```
+  
+  5. 导出查询结果到文件
+  
+  ```
+  mysql -h10.10.10.10 -ucrazyant -p123456 -P3306 -Ne "use test; select * from tb_test;" > /tmp/rs.txt
+  ```
+  
+  #### 导入表结果表数据
+  
+  1. 登陆到mysql，用source命令导入
+  
+  ```
+  mysql>source /home/live-app.sql;
+  ```
+  
+  2. 直接导入
+  
+  ```
+  mysql -u用户名 -p 数据库名 < 数据库名.sql
+  mysql -uroot -p live-app < /home/live-app.sql
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-11-20T10:14:46.846Z"
+updatedAt: "2017-11-20T10:18:17.971Z"
