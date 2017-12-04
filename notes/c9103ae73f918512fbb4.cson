@@ -151,7 +151,7 @@ content: '''
   
   ##### 带等式约束的优化问题
   
-  添加了等式限制条件，优化函数为: $$\\min \\limits_{x} f(x) , subject to h(x) = 0$$
+  添加了等式限制条件，优化函数为: $$\\min \\limits_{x} f(x)$$ 约束条件 $$h(x) = 0$$
   
   拉格朗日乘子法就是通过引入新的位置变量(拉格朗日橙子)将上式的约束条件一起放到目标函数中:
   
@@ -172,9 +172,13 @@ content: '''
   $$\\nabla f(x^{*}) + \\lambda \\nabla h(x^{*}) = 0$$
   
   上式便是对 $$L(x, \\lambda) = f(x) + \\lambda h(x)$$ 求梯度等于0的结果, 这也就是拉格朗日函数了，其中那个关联梯度方向的 $$\\lambda$$ 就是拉格朗日乘子.
+  
+  ##### KKT条件
+  
+  
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-04T12:09:55.739Z"
+updatedAt: "2017-12-04T14:56:11.779Z"
