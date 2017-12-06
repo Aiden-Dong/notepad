@@ -1,0 +1,78 @@
+type: "MARKDOWN_NOTE"
+folder: "353d9e00445c35bfac25"
+title: "4- 微分，全微分，方向导数与梯度"
+content: '''
+  ### 4- 微分，全微分，方向导数与梯度
+  
+  ---
+  
+  ### 1. 微分
+  
+  ![](https://pic3.zhimg.com/50/v2-5a01bf084f9cda7b5d9c1bdb0e11798e_hd.jpg)
+  
+  
+  微分可以近似地描述当函数自变量的取值作足够小的改变时，函数的值是怎样改变的。
+  
+  设函数 $${\\displaystyle y=f(x)}$$在某区间 $${\\displaystyle {\\mathcal {I}}}$$内有定义。
+  
+  对于 $${\\displaystyle {\\mathcal {I}}}$$内一点 $${\\displaystyle x_{0}}$$，
+  
+  当 $${\\displaystyle x_{0}}$$变动到附近的 $$x_{0}+\\Delta x$$（也在此区间内）时，
+  
+  如果函数的增量 $$\\Delta y = f(x_{0}+ \\Delta x) - f(x_{0})$$ 可表示为 $$\\Delta y = A \\Delta x + o( \\Delta x)$$（其中$$A$$ 是不依赖于 $$\\Delta x$$ 的常数），
+  
+  而 $$o( \\Delta x)$$ 是比 $$\\Delta x$$ 高阶的无穷小，那么称函数 $$f(x)$$ 在点 $$x_{0}$$是可微的，且 $$A \\Delta x$$称作函数在点 $$x_{0}$$相应于自变量增量 $$\\Delta x$$ 的微分，
+  
+  记作 **$$\\textrm{d}y$$** ，即 $${\\displaystyle {\\textrm {d}}y=A\\Delta x}$$， $$\\textrm{d}y$$ 是 $$\\Delta y$$ 的线性主部。
+  
+  #### 和导数的关系:
+  
+  微分和导数是两个不同的概念。
+  
+  但是，对一元函数来说，可微与可导是完全等价的概念。
+  
+  可微的函数，其微分等于导数乘以自变量的微分 $$\\textrm{d}x$$ ，换句话说，函数的微分与自变量的微分之商等于该函数的导数。因此，导数也叫做 **微商**。
+  
+  于是函数 $$y = f(x)$$ 的微分又可记作 $${\\displaystyle {\\textrm {d}}y=f'(x){\\textrm {d}}x}$$
+  
+  ### 2. 全微分
+  
+  #### 定义
+  
+  全微分（英语：total derivative）是微积分学的一个概念，指多元函数的全增量 $$\\Delta z$$ 的线性主部，记为 $$dz$$。
+  
+  例如，对于二元函数 $$z=f(x,y)$$，设 $$f$$  在点 $$P_{0}(x_{0},\\ y_{0})$$ 的某个邻域内有定义，
+  
+  $$P(x_{0}+\\Delta x,\\ y_{0}+\\Delta y)$$ 为该邻域内的任意一点，则该函数在点 $$P_{0}(x_{0},\\ y_{0})$$ 的全增量可表示为
+  
+  $$\\Delta z=A\\Delta x+B\\Delta y+o(\\rho )$$，
+  
+  其中 $$A$$ ， $$B$$ 仅与 $$x$$， $$y$$ 有关，而与 $$\\Delta x$$， $$\\Delta y$$ 无关， 
+  
+  $$\\rho ={\\sqrt  {(\\Delta x)^{2}+(\\Delta y)^{2}}}$$。若 $$o(\\rho )$$ 是当 $$\\rho \\rightarrow 0$$ 时的高阶无穷小，则称此函数 $$z=f(x,\\ y)$$ 在点 $$(x,\\ y)$$ 可微分，
+  
+  而 $$A\\Delta x+B\\Delta y$$ 即为函数 $$z=f(x,\\ y)$$ 在点 $$P_{0}(x_{0},\\ y_{0})$$ 的全微分，记作
+  
+  $$dz|_{{x=x_{0},\\ y=y_{0}}}=A\\Delta x+B\\Delta y$$
+  
+  或 
+  
+  $$df(x_{0},y_{0})=A\\Delta x+B\\Delta y$$。
+  
+  #### 几何意义：
+  
+  $$dz$$ 是 $$\\Delta x$$, 与　$$\\Delta y$$ 条件下的引发的 $$z$$ 的变化，
+  
+  可以看作是先固定　$$y$$, 然后增长一个$$x$$ 的变化量 $$\\Delta x$$, 即为 :$${\\displaystyle {\\textrm {d}}z=f_x'(x,y){\\textrm {d}}x}$$
+  
+  然后在这个基础上，固定 $$x$$,然后对y增加一个 $$\\Delta y$$的增长量 : $${\\displaystyle {\\textrm {d}}z=f_x'(x,y){\\textrm {d}}x + f_y'(x,y){\\textrm {d}}y}$$
+  
+  这与 $$\\Delta z$$ 差两个高阶无穷小 $$o( \\Delta x)$$,$$o( \\Delta y)$$. 即　$$\\Delta z = dz + o( \\Delta x) + o( \\Delta y)$$ 
+  
+  ### 3. 方向导数
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-12-06T08:56:51.424Z"
+updatedAt: "2017-12-06T12:34:54.927Z"

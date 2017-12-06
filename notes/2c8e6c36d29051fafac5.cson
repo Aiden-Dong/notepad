@@ -120,9 +120,36 @@ content: '''
   
   hive.optimize.index.filter：自动使用索引
   hive.optimize.index.groupby：使用聚合索引优化GROUP BY操作
+  
+  
+  #### 16. orc 优化:
+  
+  - hive 选项:
+  
+  ```
+  <property>
+    <name>hive.optimize.index.filter</name>
+    <value>true</value>
+    <description>Whether to enable automatic use of indexes</description>
+  </property>
+  
+  <property>
+    <name>hive.optimize.index.groupby</name>
+    <value>true</value>
+    <description>Whether to enable optimization of group-by queries using Aggregate indexes.</description>
+  </property>
+  ```
+  
+  - spark 选项
+  
+  ```
+  spark.sql.orc.filterPushdown     true
+  spark.sql.hive.convertMetastoreOrc  true
+  spark.sql.orc.cacheMetadata        true
+  ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-27T10:10:20.353Z"
-updatedAt: "2017-11-27T10:12:21.706Z"
+updatedAt: "2017-12-06T09:44:09.122Z"
