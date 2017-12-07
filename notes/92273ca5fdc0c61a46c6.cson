@@ -6,12 +6,24 @@ content: '''
   
   ---
   
-  ### 1. 微分
+  ### 1. 导数和微分
+  
+  #### 导数定义
+  
+  导数本质是，对于增量 $$\\Delta x$$, 和由 $$\\Delta x$$ 引发的 $$y$$ 的增量 $$\\Delta y$$.
+  
+  导数表示为 $$f'(x) = limit_{\\Delta x \\rightarrow 0}(\\Delta x / \\Delta y)$$  -----（4-1）   
+  
+  即导数即为: **增量**的**比值**取**极限**,也就是这一点**切线斜率**, 这是**划曲为直**的概念。
+  ![](https://pic2.zhimg.com/50/v2-5cb01b073761c6cc8109f91542518929_hd.jpg)
+  
+  #### 微分
   
   ![](https://pic3.zhimg.com/50/v2-5a01bf084f9cda7b5d9c1bdb0e11798e_hd.jpg)
   
-  
   微分可以近似地描述当函数自变量的取值作足够小的改变时，函数的值是怎样改变的。
+  
+  > 定义是这么说的:
   
   设函数 $${\\displaystyle y=f(x)}$$在某区间 $${\\displaystyle {\\mathcal {I}}}$$内有定义。
   
@@ -19,25 +31,35 @@ content: '''
   
   当 $${\\displaystyle x_{0}}$$变动到附近的 $$x_{0}+\\Delta x$$（也在此区间内）时，
   
-  如果函数的增量 $$\\Delta y = f(x_{0}+ \\Delta x) - f(x_{0})$$ 可表示为 $$\\Delta y = A \\Delta x + o( \\Delta x)$$（其中$$A$$ 是不依赖于 $$\\Delta x$$ 的常数），
+  如果函数的增量 $$\\Delta y = f(x_{0}+ \\Delta x) - f(x_{0})$$ 
+  
+  可表示为 $$\\Delta y = A \\Delta x + o( \\Delta x)$$（其中$$A$$ 是不依赖于 $$\\Delta x$$ 的常数）-----（4-2），
   
   而 $$o( \\Delta x)$$ 是比 $$\\Delta x$$ 高阶的无穷小，那么称函数 $$f(x)$$ 在点 $$x_{0}$$是可微的，且 $$A \\Delta x$$称作函数在点 $$x_{0}$$相应于自变量增量 $$\\Delta x$$ 的微分，
   
   记作 **$$\\textrm{d}y$$** ，即 $${\\displaystyle {\\textrm {d}}y=A\\Delta x}$$， $$\\textrm{d}y$$ 是 $$\\Delta y$$ 的线性主部。
   
-  #### 和导数的关系:
+  > 和导数的关系:
   
   微分和导数是两个不同的概念。
   
   但是，对一元函数来说，可微与可导是完全等价的概念。
   
-  可微的函数，其微分等于导数乘以自变量的微分 $$\\textrm{d}x$$ ，换句话说，函数的微分与自变量的微分之商等于该函数的导数。因此，导数也叫做 **微商**。
+  对于(4-2)式 : 我们可以换一种写法: 
   
-  于是函数 $$y = f(x)$$ 的微分又可记作 $${\\displaystyle {\\textrm {d}}y=f'(x){\\textrm {d}}x}$$
+  $$limit_{\\Delta x \\rightarrow 0} \\Delta y / \\Delta x= A + o( \\Delta x) / \\Delta x = f'(x)$$。
+  
+  即 $$A=f'(x)$$ -----（4-3）
+  
+  > 则有: 
+  
+  $$\\Delta y = f'(x) \\Delta x + o( \\Delta x)$$  -----(4-4)
+  
+  $$dy = f'(x) dx$$-----(4-5)
   
   ### 2. 全微分
   
-  #### 定义
+  > 首先定义是这么说的:
   
   全微分（英语：total derivative）是微积分学的一个概念，指多元函数的全增量 $$\\Delta z$$ 的线性主部，记为 $$dz$$。
   
@@ -59,6 +81,20 @@ content: '''
   
   $$df(x_{0},y_{0})=A\\Delta x+B\\Delta y$$。
   
+  > 演变过程:
+  
+  对于 $$\\Delta z = f(x+ \\Delta x, y + \\Delta y) - f(x,y)$$ ----- （4-6）
+  
+  我们可以写成 : $$\\Delta z = f(x+ \\Delta x, y + \\Delta y) - f(x, y + \\Delta y) + f(x, y + \\Delta y) - f(x,y)$$ ----- （4-7）
+  
+  然后参照一元微分或偏导数定义，则有:  $$f(x+ \\Delta x, y + \\Delta y) - f(x, y + \\Delta y)  = f_x'(x,y) \\Delta x + o(\\Delta x)$$ ------ （4-8）
+  
+  同理，可得到 : $$\\Delta z = f(x+ \\Delta x, y + \\Delta y) - f(x,y) = f_x'(x,y) \\Delta x + f_y'(x,y) \\Delta y +  o(\\Delta x) + o(\\Delta y)$$ ----- (4-9)
+  
+  则有 :
+  
+  $$dz = f_x'(x,y) \\Delta x + f_y'(x,y) \\Delta y$$ ----- (4-10)
+  
   #### 几何意义：
   
   $$dz$$ 是 $$\\Delta x$$, 与　$$\\Delta y$$ 条件下的引发的 $$z$$ 的变化，
@@ -69,10 +105,87 @@ content: '''
   
   这与 $$\\Delta z$$ 差两个高阶无穷小 $$o( \\Delta x)$$,$$o( \\Delta y)$$. 即　$$\\Delta z = dz + o( \\Delta x) + o( \\Delta y)$$ 
   
-  ### 3. 方向导数
+  ![](http://img.my.csdn.net/uploads/201712/07/1512634739_4483.png)
+  
+  ### 3. 方向导数与梯度
+  
+  对于单维度自变量， 导数就代指其变化率或者斜率的多少，但是对于多维自变量的函数, 我们没办法直接求某一点对应的斜率的大小。
+  
+  例如，对于二维自变量：$$f(x,y) = x^2 + y^2$$, 其图像大致为:
+  
+  ![](https://pic3.zhimg.com/50/v2-4af6f4ff5af7942b6114aa89e2df821a_hd.jpg), 
+  
+  可见对于任意一点上， 它的导数（**斜率**）随方向不同而变化 。
+  
+  > 从定义出发:
+  
+  对于 对于二维自变量， 在 $$x0y$$ 平面上存在一个点(如果是维度更高，则自变量变化为维度所在的超平面) $$(x,y)$$, 向 $$(x + \\Delta x, y + \\Delta y)$$ 产生了一个增量 $$\\Delta t$$.
+  
+  即 $$\\Delta t ={\\sqrt  {(\\Delta x)^{2}+(\\Delta y)^{2}}}$$, 
+  
+  从而引发 $$\\Delta z = f(x + \\Delta x,  y + \\Delta y) - f(x,y)$$ 的增量。
+  
+  要直接对 $$z$$ 求导数， 会发生 $$\\Delta z / \\Delta t = (f(x + \\Delta x,  y + \\Delta y) - f(x,y)) / \\Delta t$$ 导致直接求导失败。
+  
+  > 为了克服这样的事情，引入了方向导数的概念。
+  
+  ![](http://img.my.csdn.net/uploads/201712/07/1512643295_6819.png)
+  
+  我们如果想求某一个方向上的斜率， 比如:
+  
+  对于 $$f(x,y)$$, 在 $$x0y$$ 平面上存在一个单位向量： $$\\vec{u}=\\cos \\alpha \\cdot \\vec{i} + \\cos \\beta \\cdot \\vec{j}$$, 即 $$\\vec{u}(\\cos  \\alpha,\\cos \\beta)$$ 。
+  
+  $$\\cos \\alpha$$, $$\\cos \\beta$$ 分别对应着**单位向量**在这个方向上的方向余弦。
+  
+  则，如果在这个方向上存在一个增量 $$\\Delta t$$ 
+  
+  则有 : $$\\Delta t \\cdot \\vec{u} = \\Delta t  \\cos \\alpha \\cdot \\vec{i} + \\Delta t \\cos \\beta \\cdot \\vec{j}$$, 
+  
+  即在: $$x0y$$ 平面上存在 $$(\\Delta t  \\cos \\alpha, \\Delta t  \\cos \\beta)$$ 的增量。
+  
+  这时候在带入我们的求导公式上来 就有:
+  
+  $$\\Delta z / \\Delta t = (f(x + \\Delta t  \\cos \\alpha,  y + \\Delta t  \\cos \\beta) - f(x,y)) / \\Delta t$$，
+  
+  由(4-7)可以迁移过来得到 $$limit_{\\Delta t \\rightarrow 0}\\Delta z / \\Delta t = f'_x(x,y) \\cos \\alpha + f'_y(x,y) \\cos \\beta$$ ----- (4-11)
+  
+  从另外一个方向上来看： $$limit_{\\Delta t \\rightarrow 0}\\frac{\\Delta z}{\\Delta t}$$ 的结果是一个**内积**的形式。
+  
+  既有 $$(f'_x(x,y), f'_y(x,y)) \\cdot (\\cos \\alpha, \\cos \\beta)$$ , ----- (4-11)
+  
+  令 
+  
+  $$\\vec{A} = (f'_x(x,y), f'_y(x,y))$$
+  $$\\vec{I} = (\\cos \\alpha, \\cos \\beta)$$
+  
+  则 $$\\frac{\\Delta z}{\\Delta t} = \\vec{A} \\cdot \\vec{I} = |\\vec{A}| * |\\vec{I}| * \\cos \\alpha$$
+  
+  对于$$f(x,y)$$的 某个具体的点$$\\vec{A}$$为恒量 $$|\\vec{I}|=1$$ 所以 $$\\frac{\\Delta z}{\\Delta t}$$的大小收到 $$\\cos \\alpha$$的控制。
+  
+  **所以当 $$\\vec{A}$$与$$\\vec{I}$$同向的时候，函数值变化最快**。
+  
+  这个方向即为 **梯度**.
+  
+   > 从几何角度来说这个事情，可以看出:
+   
+  ![](http://img.my.csdn.net/uploads/201712/07/1512653291_7516.png)
+  
+  我们从上面这个直角四面体所构成的坐标系空间可以看出， 我们从原点出发寻找梯度下降最快的方向。
+  
+  这个问题就会转变为从原点出发 ，寻找直角三角形第三边的最短路径的方向的问题。
+  
+  延伸为点到直线的最短路径。
+  
+  > 求解单位向量由于能力有限还没给出方案， 只能提供一个思路。谢谢。
+  
+  
+  
+  
+  
+  
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-06T08:56:51.424Z"
-updatedAt: "2017-12-06T12:34:54.927Z"
+updatedAt: "2017-12-07T13:46:39.430Z"

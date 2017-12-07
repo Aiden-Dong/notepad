@@ -1,0 +1,16 @@
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "7- spark-sql"
+content: '''
+  ### 7- spark-sql
+  
+  
+  ```
+  spark-sql --master yarn --executor-memory 4g --driver-memory 3g  --executor-cores 2  --num-executors 20 
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-12-07T03:01:17.463Z"
+updatedAt: "2017-12-07T03:01:31.881Z"
