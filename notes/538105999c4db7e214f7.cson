@@ -1,0 +1,99 @@
+type: "MARKDOWN_NOTE"
+folder: "353d9e00445c35bfac25"
+title: "5- 拉格朗日乘子法,KKY条件与线性规划对偶理论的微妙关系"
+content: '''
+  ### 5- 拉格朗日乘子法,KKY条件与线性规划对偶理论的微妙关系
+  
+  ---
+  
+  
+  本文主要讲述给定一个线性规划，我们为什么能按照对偶规则，机械地并且非常容易地写出其对偶。当然为便于理解，本文先介绍了什么是拉格朗日乘子法、KKT(KarushKuhnTucker)条件。
+  二者是求解有约束条件的优化问题的两个重要方法。
+  
+  #### 1. 优化问题常见类型
+  
+  通常我们需要求解的最优化问题有如下3类： 
+  
+  **1. 没有约束条件**: 
+  
+  $$minf(x)$$
+  
+  **2. 有等式约束的优化问题，可以写为**: 
+  
+  $$minf(x)$$
+  
+  $$s.t.gi(x)=0;i=1,...,m$$
+  
+  **3. 再加入不等式约束的优化问题，可以写为** 
+  
+  $$minf(x)$$
+  
+  $$s.t.gi(x)<=0;i=1,...,m$$
+  
+  $$hi(x)=0;i=1,...,p$$
+  
+  对于**第(i)类**的优化问题，我们先求取 $$f(x)$$ 的导数，然后令导函数为零，可以求得候选极大值或极小值，再在这些值中选取最优解；
+  
+  如果是凸函数，可以保证是最优解。
+  
+  #### 2. 拉格朗日乘子法
+  
+  > 定义上是这么说的:
+  
+  在数学中的最优化问题中，拉格朗日乘数法（以数学家约瑟夫·拉格朗日命名）是一种寻找多元函数在其变量受到一个或多个条件的约束时的极值的方法。
+  
+  这种方法可以将一个有`n`个变量与`k`个约束条件的最优化问题转换为一个解有 $$n+k$$ 个变量的方程组的解的问题。
+  
+  这种方法中引入了一个或一组新的未知数，即**拉格朗日乘数**，又称**拉格朗日乘子**，或拉氏乘子，它们是在转换后的方程，即约束方程中作为梯度（gradient）的线性组合中各个向量的系数。
+  
+  比如，要求 $$f(x, y)$$ ,在 $${\\displaystyle g(x,y)=c\\,}$$ 时的最大值时，我们可以引入新变量拉格朗日乘数 $$\\lambda$$ ，
+  
+  这时我们只需要下列拉格朗日函数的极值：
+  
+  $${\\displaystyle {\\mathcal {L}}(x,y,\\lambda )=f(x,y)+\\lambda \\cdot {\\Big (}g(x,y)-c{\\Big )}}$$
+  
+  更一般地，对含n个变量和k个约束的情况，有：
+  
+  $${\\displaystyle {\\mathcal {L}}\\left(x_{1},\\ldots ,x_{n},\\lambda _{1},\\ldots ,\\lambda _{k}\\right)=f\\left(x_{1},\\ldots ,x_{n}\\right)-\\sum \\limits _{i=1}^{k}{\\lambda _{i}g_{i}\\left(x_{1},\\ldots ,x_{n}\\right)},}$$
+  
+  > 证明过程:
+  
+  设函数 $$f(x,y)$$ 在 $$A$$ 点处有极值 $$\\kappa$$ ，且在 $$A$$ 点的邻域内连续。
+  
+  则在 $$A$$ 点处有$${\\displaystyle f\\left(x,y\\right)=\\kappa }$$
+  
+  另有一常值函数
+  
+  $${\\displaystyle g\\left(x,y\\right)=c}$$
+  
+  二函数在 $$A$$ 点处的全微分为
+  
+  $${\\displaystyle \\mathrm {d} f={\\frac {\\partial {f}}{\\partial {x}}}\\mathrm {d} x+{\\frac {\\partial {f}}{\\partial {y}}}\\mathrm {d} y=0}$$
+  
+  $${\\displaystyle \\mathrm {d} g={\\frac {\\partial {g}}{\\partial {x}}}\\mathrm {d} x+{\\frac {\\partial {g}}{\\partial {y}}}\\mathrm {d} y=0}$$
+  
+  由于 $$\\mathrm{d}x$$ 和 $$\\mathrm{d}y$$ 是任取的无穷小量，故该线性方程组的系数成比例，有
+  
+  $${\\displaystyle {\\dfrac {\\dfrac {\\partial {f}}{\\partial {x}}}{\\dfrac {\\partial {g}}{\\partial {x}}}}={\\dfrac {\\dfrac {\\partial {f}}{\\partial {y}}}{\\dfrac {\\partial {g}}{\\partial {y}}}}=-\\lambda }$$
+  
+  即
+  
+  $${\\displaystyle {\\frac {\\partial {f}}{\\partial {x}}}+\\lambda \\cdot {\\frac {\\partial {g}}{\\partial {x}}}=0}$$
+  
+  $${\\displaystyle {\\frac {\\partial {f}}{\\partial {y}}}+\\lambda \\cdot {\\frac {\\partial {g}}{\\partial {y}}}=0}$$
+  
+  将上二式分别乘以 $$\\mathrm{d}x$$ 和 $$\\mathrm{d}y$$，再相加并积分，得到一新函数
+  
+  $${\\displaystyle {\\mathcal {L}}(x,y,\\lambda )=f(x,y)+\\lambda \\cdot g(x,y)}$$
+  
+  那么，求原函数极值的问题就转化为求该函数极值的问题。
+  
+  类似地，这种求极值的方法也可以推广到多维函数 $${\\displaystyle f\\left(x_{1},\\ldots ,x_{n}\\right)}$$。
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-12-08T09:13:22.794Z"
+updatedAt: "2017-12-08T13:33:38.737Z"
