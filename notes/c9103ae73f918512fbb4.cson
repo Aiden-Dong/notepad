@@ -5,9 +5,8 @@ content: '''
   #### 6- SVM 支持向量机
   
   ---
-  [http://blog.csdn.net/macyang/article/details/38782399/](http://blog.csdn.net/macyang/article/details/38782399/)
   
-  [https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098)
+  转载自:[https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098), 欢迎阅读原创。
   
   ### 1. 支持条件
   
@@ -109,7 +108,7 @@ content: '''
   
   ##### 标准形式
   
-  我们首先考虑一个决策面是否能够将所有的样本都正确分类的约束。图中的样本点分成两类（红色和蓝色），我们为每个样本点\\boldsymbol{x}_i加上一个类别标签y_i：
+  我们首先考虑一个决策面是否能够将所有的样本都正确分类的约束。图中的样本点分成两类（红色和蓝色），我们为每个样本点 $${x}_i$$  加上一个类别标签$$y_i$$：
   
   $$y_i = \\left\\{\\begin{array}{ll}+1 & \\textrm{for blue points}\\\\-1 & \\textrm{for red points}\\end{array}\\right.$$ (2.7)
   
@@ -129,7 +128,7 @@ content: '''
   
   ![](http://www.zhihu.com/equation?tex=%5Cboldsymbol%7B%5Comega%7D_d+%3D+%5Cfrac%7B%5Cboldsymbol%7B%5Comega%7D%7D%7B%7C%7C%5Cboldsymbol%7B%5Comega%7D%7C%7Cd%7D%2C%7E%7E+%5Cgamma_d+%3D+%5Cfrac%7B%5Cgamma%7D%7B%7C%7C%5Cboldsymbol%7B%5Comega%7D%7C%7Cd%7D)
   
-  写成标准形式:
+  **写成标准形式**:
   
   ![](http://www.zhihu.com/equation?tex=%5Cleft%5C%7B%5Cbegin%7Barray%7D%7Bll%7D+%5Cboldsymbol%7B%5Comega%7D%5ET%5Cboldsymbol%7Bx%7D_i%2B%5Cgamma%5Cgeq+1+%26+%5Ctextrm%7Bfor%7E%7E%7D+y_i%3D1%5C%5C%5Cboldsymbol%7B%5Comega%7D%5ET%5Cboldsymbol%7Bx%7D_i%2B%5Cgamma%5Cleq+-1+%26+%5Ctextrm%7Bfor%7E%7E%7D+y_i%3D-1%5Cend%7Barray%7D%5Cright.) (2.11)
   
@@ -143,7 +142,7 @@ content: '''
   
   $$arg \\max \\limits_{w, b} \\frac{\\hat{\\gamma}}{\\lVert w \\rVert}$$  约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge \\hat{\\gamma}$$, i = 1,2,…,k
   
-  意思就是在这个支持向量的前提下(点到超平面的距离最短), 使得这个点到超平面的距离最大化。
+  意思就是在这个**支持向量**的前提下(点到超平面的距离最短), 使得这个点到超平面的距离最大化。
   
   其中 $$\\hat{\\gamma}$$ 是支持向量到超平面的**函数间隔**。
   
@@ -151,34 +150,11 @@ content: '''
   
   $$arg \\max \\limits_{w, b} \\frac{1}{\\lVert w \\rVert}$$ 约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$$, i = 1,2,…,k
   
-  将最大化问题转换为求最小值:
+  > 将最大化问题转换为求最小值:
   
-  $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 约束条件: $$-y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$$, i = 1,2,…,k
+  $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$$, i = 1,2,…,k  ----- (2.13)
   
   这便是一个线性不等式约束下的二次优化问题, 下面我本就使用拉格朗日乘子法来获取我们优化目标的对偶形式。
-  
-  
-  ### 3. 模型优化 
-  
-  ##### 通过拉格朗日乘子法
-  
-  拉格朗日乘数法是一种寻找多元函数在其变量受到一个或多个条件的约束时的极值的方法。
-  这种方法可以将一个有n个变量与k个约束条件的最优化问题转换为一个解有 n+k 个变量的方程组的解的问题。
-  这样我们可以将我们带约束的目标函数通过拉格朗日乘子法将约束放入到目标函数中方便优化。
-  KKT条件是拉格朗日乘子法在约束条件为不等式的一种延伸。
-  下面我就对拉格朗日乘子法和KKT条件进行下简单总结。
-  
-  ##### 拉格朗日乘子法和KKT条件
-  
-  我们从无约束优化到带有不等式约束条件逐渐介绍下几种不同类型的优化问题。
-  
-  ##### 无约束优化问题
-  
-  对于无约束优化问题
-  
-  $$\\min \\limits_{x} f(x)$$
-  
-  梯度 $$\\nabla f(x) = 0$$ 是局部最小点的必要条件，这样，优化问题的求解变成了对该必要条件解方程组。
   
   
   ##### 带等式约束的优化问题
@@ -189,30 +165,28 @@ content: '''
   
   $$L(x, \\lambda) = f(x) + \\lambda h(x)$$, 限制条件 $$h(x) = 0$$
   
-  通过求解方程组: $$\\nabla L(x, \\lambda) = 0$$; $$h(x) = 0$$ 便可得到局部最小值的必要条件。
+  > 通过求解方程组: $$\\nabla L(x, \\lambda) = 0$$; $$h(x) = 0$$ 便可得到局部最小值的必要条件。
   
-  ##### 拉格朗日乘子法原理
+  $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 限制条件 $$y_{i} \\cdot (wx_{i}^{T} + b) -1 \\ge 0$$, $$i = 1,2,...,k$$
   
-  我在这里稍微总结下Lagrange Multiplier的原理吧.
+  对应的拉格朗日函数:
   
-  ![](https://pic1.zhimg.com/50/v2-42bb76fc7eb2c2fdcb984e4b94107c9c_hd.jpg)
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum_{i=1}^{N} \\alpha_{i}[y_{i}(w^{T}x_{i} + b) - 1]$$
   
-  参考上图(忽略函数形式的差异)，当约束条件 $$h(x)=0$$ 与 f(x) 的等高线相切的时候，切点具有局部最优值。
+  其中,  $$\\alpha_{i} \\ge 0$$
   
-  此时 $$h(x^{*})$$ 的梯度与 $$f(x^{*})$$ 梯度同向，我们可以加入一个参数 $$\\lambda$$ ，得到他们之间的关系:
+  令 $$g_{i}(w, b) = -y_{i}(w^{T}x_{i} + b) + 1$$，则有 $$g_{i}(w, b) \\le 0$$ .
   
-  $$\\nabla f(x^{*}) + \\lambda \\nabla h(x^{*}) = 0$$
+  - 如果 $$\\alpha_{i} \\gt 0$$ , 根据KKT条件 $$\\alpha_{i}g_{i}(w, b) = 0$$ , 推出 $$g_{i}(w, b) = 0$$ , 则约束 $$g_{i} \\le 0$$ 是一个有效约束(active constraint), 对应的 $$x_{i}$$ 为支持向量
+  - 如果 $$\\alpha_{i} = 0$$ , 即 $$g_{i}(w, b) \\lt 0$$ , $$g_{i}(w, b) \\le 0$$ 为不起作用的约束，对应的 $$x_{i}$$ 不是支持向量
   
-  上式便是对 $$L(x, \\lambda) = f(x) + \\lambda h(x)$$ 求梯度等于0的结果, 这也就是拉格朗日函数了，其中那个关联梯度方向的 $$\\lambda$$ 就是拉格朗日乘子.
-  
-  ##### KKT条件
-  
+  可见，**支持向量对应的约束为活动约束, 我们的目标函数是由支持向量决定的**，毕竟我们就是支持向量机嘛.
   
   
   
 '''
 tags: []
-isStarred: false
+isStarred: true
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-05T09:10:34.976Z"
+updatedAt: "2017-12-11T11:52:14.263Z"
