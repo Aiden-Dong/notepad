@@ -58,37 +58,35 @@ content: '''
   
   > 证明过程:
   
-  设函数 $$f(x,y)$$ 在 $$A$$ 点处有极值 $$\\kappa$$ ，且在 $$A$$ 点的邻域内连续。
+  > 几何意义:
   
-  则在 $$A$$ 点处有$${\\displaystyle f\\left(x,y\\right)=\\kappa }$$
+  假设有自变量x和y，给定约束条件g(x,y)=c，要求f(x,y)在约束g下的极值。
   
-  另有一常值函数
+  我们可以画出f的等高线图，如下图。
   
-  $${\\displaystyle g\\left(x,y\\right)=c}$$
+  此时，约束g=c由于只有一个自由度，因此也是图中的一条曲线（红色曲线所示）。
   
-  二函数在 $$A$$ 点处的全微分为
+  显然地，当约束曲线g=c与某一条等高线f=d1相切时，函数f取得极值。两曲线相切等价于两曲线在切点处拥有共线的法向量。
   
-  $${\\displaystyle \\mathrm {d} f={\\frac {\\partial {f}}{\\partial {x}}}\\mathrm {d} x+{\\frac {\\partial {f}}{\\partial {y}}}\\mathrm {d} y=0}$$
+  因此可得函数f(x,y)在切点$$(x_0,y_0)$$的梯度方向与$$g(x,y)=c$$曲线在切点 $$(x_0,y_0)$$ 的法向量方向方向相同。
   
-  $${\\displaystyle \\mathrm {d} g={\\frac {\\partial {g}}{\\partial {x}}}\\mathrm {d} x+{\\frac {\\partial {g}}{\\partial {y}}}\\mathrm {d} y=0}$$
+  于是我们便可以列出方程组求解切点的坐标 $$(x_0,y_0)$$，进而得到函数f的极值。
   
-  由于 $$\\mathrm{d}x$$ 和 $$\\mathrm{d}y$$ 是任取的无穷小量，故该线性方程组的系数成比例，有
+  即 : $$\\nabla f(x^{*},y^{*}) + \\lambda \\nabla (g(x^{*},y^{*})-c) = 0$$
   
-  $${\\displaystyle {\\dfrac {\\dfrac {\\partial {f}}{\\partial {x}}}{\\dfrac {\\partial {g}}{\\partial {x}}}}={\\dfrac {\\dfrac {\\partial {f}}{\\partial {y}}}{\\dfrac {\\partial {g}}{\\partial {y}}}}=-\\lambda }$$
+  所以可以另 :  $$L(x,y, \\lambda) = f(x,y) + \\lambda (g(x^{*},y^{*})-c)$$ ----- (5-1)
   
-  即
+  然后求梯度等于0的结果, 这也就是拉格朗日函数了.
   
-  $${\\displaystyle {\\frac {\\partial {f}}{\\partial {x}}}+\\lambda \\cdot {\\frac {\\partial {g}}{\\partial {x}}}=0}$$
+  ![](http://img.my.csdn.net/uploads/201712/11/1512976279_3969.png)
   
-  $${\\displaystyle {\\frac {\\partial {f}}{\\partial {y}}}+\\lambda \\cdot {\\frac {\\partial {g}}{\\partial {y}}}=0}$$
+  当然还有另一种情况 
   
-  将上二式分别乘以 $$\\mathrm{d}x$$ 和 $$\\mathrm{d}y$$，再相加并积分，得到一新函数
+  ![](http://img.my.csdn.net/uploads/201712/11/1512976279_3322.png)
   
-  $${\\displaystyle {\\mathcal {L}}(x,y,\\lambda )=f(x,y)+\\lambda \\cdot g(x,y)}$$
+  红线是函数 $$f(x,y)$$ 获得极值的位置等高线在 $$x0y$$的投影，$$g(x,y)=c$$横跨f(x,y)的极值等高线.
   
-  那么，求原函数极值的问题就转化为求该函数极值的问题。
-  
-  类似地，这种求极值的方法也可以推广到多维函数 $${\\displaystyle f\\left(x_{1},\\ldots ,x_{n}\\right)}$$。
+  在这种情况下, $$f(x,y)$$ 在极值点的梯度为 0. 令 （5-1）式 $$\\lambda = 0$$ 可使等式成立。 
   
   
 '''
@@ -96,4 +94,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-08T09:13:22.794Z"
-updatedAt: "2017-12-08T13:33:38.737Z"
+updatedAt: "2017-12-11T08:12:43.043Z"
