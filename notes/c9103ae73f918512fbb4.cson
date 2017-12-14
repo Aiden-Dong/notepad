@@ -6,7 +6,10 @@ content: '''
   
   ---
   
-  转载自:[https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098), 欢迎阅读原创。
+  转载自:
+  [https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098)
+  [https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html](https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html)
+  欢迎阅读原创。
   
   ### 1. 支持条件
   
@@ -138,15 +141,7 @@ content: '''
   
   ![](http://www.zhihu.com/equation?tex=d+%3D+%5Cfrac%7B%7C%5Cboldsymbol%7B%5Comega%7D%5ET%5Cboldsymbol%7Bx%7D_i%2B%5Cgamma%7C%7D%7B%7C%7C%5Cboldsymbol%7B%5Comega%7D%7C%7C%7D%3D%5Cfrac%7B1%7D%7B%7C%7C%5Cboldsymbol%7B%5Comega%7D%7C%7C%7D%2C%7E%7E%5Ctextrm%7Bif%7D+%7E%5Cboldsymbol%7Bx%7D_i+%5Ctextrm+%7Bis+a+support+vector%7D+) (2.12)
   
-  我们的优化目标是最大化数据点到超平面的间隔，这里可以把最小化的部分(寻找支持向量)放到约束条件中, 有
-  
-  $$arg \\max \\limits_{w, b} \\frac{\\hat{\\gamma}}{\\lVert w \\rVert}$$  约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge \\hat{\\gamma}$$, i = 1,2,…,k
-  
-  意思就是在这个**支持向量**的前提下(点到超平面的距离最短), 使得这个点到超平面的距离最大化。
-  
-  其中 $$\\hat{\\gamma}$$ 是支持向量到超平面的**函数间隔**。
-  
-  我们将所有参数 w 和 b 除以 $$\\hat{\\gamma}$$ ，便有 $$\\hat{\\gamma} = \\min y_{i}(wx_{i}^{T} + b) = 1$$ , 于是有:
+  于是有:
   
   $$arg \\max \\limits_{w, b} \\frac{1}{\\lVert w \\rVert}$$ 约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$$, i = 1,2,…,k
   
@@ -157,7 +152,7 @@ content: '''
   这便是一个线性不等式约束下的二次优化问题, 下面我本就使用拉格朗日乘子法来获取我们优化目标的对偶形式。
   
   
-  ##### 带等式约束的优化问题
+  #### 凸二次规划问题
   
   添加了等式限制条件，优化函数为: $$\\min \\limits_{x} f(x)$$ 约束条件 $$h(x) = 0$$
   
@@ -171,7 +166,7 @@ content: '''
   
   对应的拉格朗日函数:
   
-  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum_{i=1}^{N} \\alpha_{i}[y_{i}(w^{T}x_{i} + b) - 1]$$
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[y_{i}(w^{T}x_{i} + b) - 1]$$
   
   其中,  $$\\alpha_{i} \\ge 0$$
   
@@ -182,6 +177,14 @@ content: '''
   
   可见，**支持向量对应的约束为活动约束, 我们的目标函数是由支持向量决定的**，毕竟我们就是支持向量机嘛.
   
+  ### 3. 偏导数:
+  
+  
+  
+  ### 4. SMO 算法详解
+  
+  
+  
   
   
 '''
@@ -189,4 +192,4 @@ tags: []
 isStarred: true
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-11T11:52:14.263Z"
+updatedAt: "2017-12-14T10:58:31.387Z"
