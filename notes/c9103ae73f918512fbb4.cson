@@ -9,6 +9,8 @@ content: '''
   转载自:
   [https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098)
   [https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html](https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html)
+  [http://backnode.github.io/pages/2015/12/22/SVM-dual.html](http://backnode.github.io/pages/2015/12/22/SVM-dual.html)
+  
   欢迎阅读原创。
   
   ### 1. 支持条件
@@ -164,25 +166,35 @@ content: '''
   
   $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 限制条件 $$y_{i} \\cdot (wx_{i}^{T} + b) -1 \\ge 0$$, $$i = 1,2,...,k$$
   
-  对应的拉格朗日函数:
+  > 对应的拉格朗日函数:
   
-  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[y_{i}(w^{T}x_{i} + b) - 1]$$
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
+  
+  限制条件 : $$1-y_{i}(w^{T}x_{i} + b) \\le 0$$
   
   其中,  $$\\alpha_{i} \\ge 0$$
   
-  令 $$g_{i}(w, b) = -y_{i}(w^{T}x_{i} + b) + 1$$，则有 $$g_{i}(w, b) \\le 0$$ .
+  令 $$g_{i}(w, b) = 1-y_{i}(w^{T}x_{i} + b)$$，则有 $$g_{i}(w, b) \\le 0$$ .
   
   - 如果 $$\\alpha_{i} \\gt 0$$ , 根据KKT条件 $$\\alpha_{i}g_{i}(w, b) = 0$$ , 推出 $$g_{i}(w, b) = 0$$ , 则约束 $$g_{i} \\le 0$$ 是一个有效约束(active constraint), 对应的 $$x_{i}$$ 为支持向量
   - 如果 $$\\alpha_{i} = 0$$ , 即 $$g_{i}(w, b) \\lt 0$$ , $$g_{i}(w, b) \\le 0$$ 为不起作用的约束，对应的 $$x_{i}$$ 不是支持向量
   
   可见，**支持向量对应的约束为活动约束, 我们的目标函数是由支持向量决定的**，毕竟我们就是支持向量机嘛.
   
-  ### 3. 偏导数:
+  ### 3. 对偶问题
+  
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
+  
+  限制条件 : $$1-y_{i}(w^{T}x_{i} + b) \\le 0$$
+  
+  $$\\frac{\\partial L(w,b, \\alpha)}{\\partial w} = w - \\sum \\limits_{i=1}^{N} \\alpha_{i}y{i}x_{i} = 0$$   ==> $$w=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i}x_{i}$$  ------ (2.15)
+  
+  $$\\frac{\\partial L(w,b, \\alpha)}{\\partial b}=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$  ----- (2.16)
   
   
+  将 (2.16) 带入到
   
-  ### 4. SMO 算法详解
-  
+  #### 4. SMO 算法详解
   
   
   
@@ -192,4 +204,4 @@ tags: []
 isStarred: true
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-14T10:58:31.387Z"
+updatedAt: "2017-12-15T11:38:03.757Z"
