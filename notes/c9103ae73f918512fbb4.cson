@@ -10,6 +10,8 @@ content: '''
   [https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098)
   [https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html](https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html)
   [http://backnode.github.io/pages/2015/12/22/SVM-dual.html](http://backnode.github.io/pages/2015/12/22/SVM-dual.html)
+  [http://blog.csdn.net/luoshixian099/article/details/51227754](http://blog.csdn.net/luoshixian099/article/details/51227754)
+  
   
   欢迎阅读原创。
   
@@ -168,7 +170,7 @@ content: '''
   
   > 对应的拉格朗日函数:
   
-  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} + \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
   
   限制条件 : $$1-y_{i}(w^{T}x_{i} + b) \\le 0$$
   
@@ -183,7 +185,7 @@ content: '''
   
   ### 3. 对偶问题
   
-  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} + \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
   
   限制条件 : $$1-y_{i}(w^{T}x_{i} + b) \\le 0$$
   
@@ -192,10 +194,48 @@ content: '''
   $$\\frac{\\partial L(w,b, \\alpha)}{\\partial b}=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$  ----- (2.16)
   
   
-  将 (2.16) 带入到
+  将 (2.16) 带入到  (2.14) 式子， 去掉 b 项:
+  
+  $$L(w, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i})]$$ ------ （2.17）
+  
+  然后将 (2.15) 带入到 (2.17) 式子, 得到:
+  
+  $$L(w, \\alpha) = \\frac{1}{2} w^{T}w + \\sum \\limits_{i=1}^{N} \\alpha_{i}-w^{T}w = \\sum \\limits_{i=1}^{N} \\alpha_{i} - \\frac{1}{2} w^{T}w$$ ----- (2.18)
+  
+  将公式 (2.15) 带入到 (2.18) 得到:
+  
+  
+  $$L(\\alpha, x, y) = \\sum \\limits_{i=1}^{N} \\alpha_{i} - \\frac{1}{2}(\\sum \\limits_{i=1}^{N} \\sum \\limits_{j=1}^{N}  \\alpha_{i} \\alpha_{j} y{i} y{j} x_{i} \\cdot x_{j})$$  ------ （2.19）
+  
+  约束条件 : 
+  
+  $$\\alpha \\ge 0$$
+  
+  $$\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$
   
   #### 4. SMO 算法详解
   
+  ##### 4.1 视为一个二元函数 
+  
+  为了求解N个参数 $$(\\alpha_1,\\alpha_2,\\alpha_3,...,\\alpha_N)$$，首先想到的是坐标上升的思路，例如求解 $$\\alpha_1$$ ,可以固定其他 $$N-1$$ 个参数，可以看成关于$$\\alpha_1$$的一元函数求解，但是注意到上述问题的等式约束条件 $$\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$,当固定其他参数时，参数$$\\alpha_1$$也被固定，因此此种方法不可用。
+  
+  SMO算法选择同时优化两个参数，固定其他$$N-2$$个参数，假设选择的变量为$$\\alpha_1,\\alpha_2$$,固定其他参数$$\\alpha_3,alpha_4,...,\\alpha_N$$,由于参数$$\\alpha_3,alpha_4,...,\\alpha_N$$的固定，可以简化目标函数为只关于$$\\alpha_1,\\alpha_2$$的二元函数，Constant表示常数项。
+  
+  $$min \\Phi(\\alpha_1, \\alpha_2) = \\frac{1}{2} K_{11} \\alpha_{1}^{2} + \\frac{1}{2} K_{22} \\alpha_{2}^{2} + y_{1}y_{2} K_{12} \\alpha_{1} \\alpha_{2} - ( \\alpha_{1} + \\alpha_{2} ) + y_{1} v_{1} \\alpha_{1} + y_{2} v_{2} \\alpha_{2} + C$$   ------ (2.20)
+  
+  其中$$v_{i}=\\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$$
+  
+  ##### 4.2 视为一元函数:
+  
+  由等式约束得：$$\\alpha_{1} y_{1} + \\alpha_{2} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\zeta$$，可见 $$\\zeta$$ 为定值。
+  
+  等式 $$\\alpha_{1} y_{1} + \\alpha_{2} y_{2} = \\zeta$$ 两边同时乘以 $$y_{1}$$,且 $$y_{1}^{2} = 1$$ ，得
+  
+  $$\\alpha_{1} = ( \\zeta - y_{2}\\alpha_{2})y_{1}$$ ---- (2.21)
+  
+  (2.21)式带回到(2.20)中得到只关于参数 $$\\alpha_{2}$$ 的一元函数，由于常数项不影响目标函数的解，以下省略掉常数项$$C$$
+  
+  $$min \\Phi( \\alpha_{2} ) = \\frac{1}{2} K_{11} ( \\zeta - \\alpha_{2} y_{2} )^{2} + \\frac{1}{2} K_{22} \\alpha^{2}_{2} + y_2 K{12} ( \\zeta - \\alpha_{2} y_{2} ) \\alpha_{2} - ( \\zeta - \\alpha_{2} y_{2} ) y_{1} - \\alpha{2} + v_{1} ( \\zeta - \\alpha_{2} y_{2} ) + y_{2} v_{2} \\alpha_{2}$$
   
   
   
@@ -204,4 +244,4 @@ tags: []
 isStarred: true
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-15T11:38:03.757Z"
+updatedAt: "2017-12-18T12:25:19.867Z"
