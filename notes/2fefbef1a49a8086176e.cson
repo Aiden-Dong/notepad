@@ -1,0 +1,41 @@
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "17-一个hadoop-Streaming 的例子:"
+content: '''
+  ### 17-一个hadoop-Streaming 的例子:
+  
+  ---
+  
+  ```
+  ${hadoophome}hadoop fs -rmr $OUTPUT_PATH
+  ${hadoophome}hadoop-streaming \\
+  	-input "$INPUT_PATH" \\
+  	-output "$OUTPUT_PATH" \\
+  	-mapper "python mapper_deviceId_outlier.py" \\
+  	-reducer "python reducer_deviceId_outlier.py"\\
+  	-file "./mapper_deviceId_outlier.py" \\
+  	-file "./reducer_deviceId_outlier.py"\\
+  	-partitioner org.apache.hadoop.mapred.lib.KeyFieldBasedPartitioner \\
+  	-jobconf stream.map.output.field.separator="	" \\
+  	-jobconf stream.num.map.output.key.fields=1 \\
+  	-jobconf map.output.key.field.separator="	" \\
+  	-jobconf num.key.fields.for.partition=1 \\
+  	-jobconf mapred.max.split.size=256000000\\
+  	-jobconf mapred.reduce.tasks=50 \\
+  	-jobconf mapred.max.tracker.failures=30 \\
+  	-jobconf mapred.map.max.attempts=35 \\
+  	-jobconf mapred.rseduce.max.attempts=35 \\
+  	-jobconf mapred.job.map.capacity=400 \\
+  	-jobconf mapred.job.reduce.capacity=240 \\
+  	-jobconf mapred.reduce.slowstart.completed.maps=0.6 \\
+  	-jobconf mapreduce.map.java.opts="-Xmx8G -verbose:gc" \\
+  	-jobconf mapreduce.map.memory.mb=3072 \\
+  	-jobconf mapreduce.reduce.memory.mb=3072 \\
+  	-jobconf mapred.job.name=$JOB_NAME
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2017-12-19T03:45:19.129Z"
+updatedAt: "2017-12-19T05:48:10.446Z"
