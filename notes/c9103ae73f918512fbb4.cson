@@ -242,10 +242,23 @@ content: '''
   
   上式中是关于变量 $$\\alpha_{2}$$ 的函数，对上式求导并令其为 $$0$$ 得： 
   
-  $$ \\frac {\\partial \\Phi(\\alpha_{2})}{\\partial \\alpha_{2}}=(K11+K22−2K12)α2−K11ζy2+K12ζy2+y1y2−1−v1y2+v2y2=0$$
+  $$\\frac {\\partial \\Phi(\\alpha_{2})}{\\partial \\alpha_{2}} = (K_{11} + K_{22} -  2K_{12}) \\alpha_{2} - K_{11} \\zeta y_{2} + K_{12} \\zeta y_{2} + y_{1}y_{2} - 1 - v_{1} y_{2} + v_{2} y_{2}
+   = 0$$
+   
+   1. 由上式中假设求得了 $$\\alpha_{2}$$ 的解，带回到 (2.21) 式中可求得 $$\\alpha_{1}$$ 的解，分别记为 $$\\alpha_{1}^{new}$$ , $$\\alpha_{2}^{new}$$, 优化前的解记为 $$\\alpha_{1}^{old}$$,$$\\alpha_{2}^{old}$$;由于参数$$\\alpha_{3}$$, $$\\alpha_{4}$$ ,..., $$\\alpha_{N}$$ 固定，由等式约束 $$\\sum \\limits_{i=1}^{N} y_{i} \\alpha_{i} = 0$$ 有 $$\\alpha_{1}^{old} y_{1} +  \\alpha_{2}^{old} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\alpha_{1}^{new} y_{1} + \\alpha_{2}^{new} y_{2} =  \\zeta$$
+  
+  $$\\zeta = \\alpha_{1}^{old}y_{1} + \\alpha_{2}^{old}y_{2}$$ ------ (4)
+  
+  2. 假设SVM超平面的模型为 $$f(x)=w^{T}x+b$$ , 上一篇中已推导出 $$w$$ 的表达式, 将其带入得 $$f(x)= \\sum \\limits_{i=1}^{N} \\alpha_{i} y_{i} K(xi,x)+b$$; $$f(x_{i})$$ 表示样本 $$x_{i}$$ 的预测值, $$y_{i}$$ 表示样本 $$x_{i}$$ 的真实值，定义 $$E_{i}$$ 表示预测值与真实值之差为
+  Ei=f(xi)−yi(5)
+  
+  3.由于vi=∑Nj=3αjyjK(xi,xj),i=1,2，因此 
+  v1=f(x1)−∑j=12yjαjK1j−b(6)
+  
+  v2=f(x2)−∑j=12yjαjK2j−b(7)
 '''
 tags: []
 isStarred: true
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-19T12:02:33.516Z"
+updatedAt: "2017-12-19T14:01:20.633Z"
