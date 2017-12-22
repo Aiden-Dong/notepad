@@ -7,6 +7,7 @@ content: '''
   ---
   转载自[http://blog.csdn.net/Mr_KkTian/article/details/53750424](http://blog.csdn.net/Mr_KkTian/article/details/53750424), 欢迎阅读原创。
   转载自[https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098), 欢迎阅读原创。
+  转载自:[http://blog.csdn.net/johnnyconstantine/article/details/46335763](http://blog.csdn.net/johnnyconstantine/article/details/46335763)
   
   本文主要讲述给定一个线性规划，我们为什么能按照对偶规则，机械地并且非常容易地写出其对偶。当然为便于理解，本文先介绍了什么是**拉格朗日乘子法**、**KKT(KarushKuhnTucker)条件**。
   
@@ -94,10 +95,10 @@ content: '''
   
   > 则KKT条件(具有局部最优点的必要条件)为:
   
-  1. $$\\mu_{1} \\ge 0, \\mu_{2} \\ge 0$$ >>>> question ???
-  2. $$\\nabla f(x) + \\mu_{1} \\nabla g_{1}(x) + \\mu_{2} \\nabla g_{2}(x) = 0$$
-  3. $$\\mu_{1}g(x)=0; \\mu_{2}g(x) = 0$$
-  4. $$g_{1}(x) \\le 0, g_{2}(x) \\le 0$$
+  1. $$\\mu_{1} \\ge 0, \\mu_{2} \\ge 0$$ ------ 不等式约束情况
+  2. $$\\nabla f(x) + \\mu_{1} \\nabla g_{1}(x) + \\mu_{2} \\nabla g_{2}(x) = 0$$ ----- 是对拉格朗日函数取极值时候带来的一个必要条件
+  3. $$\\mu_{1}g(x)=0; \\mu_{2}g(x) = 0$$   ------- 是互补松弛条件
+  4. $$g_{1}(x) \\le 0, g_{2}(x) \\le 0$$    ------- 是原约束条件
   
   > 说明:
   
@@ -162,4 +163,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-08T09:13:22.794Z"
-updatedAt: "2017-12-11T10:07:42.113Z"
+updatedAt: "2017-12-22T09:19:39.101Z"
