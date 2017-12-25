@@ -243,24 +243,54 @@ content: '''
   上式中是关于变量 $$\\alpha_{2}$$ 的函数，对上式求导并令其为 $$0$$ 得： 
   
   $$\\frac {\\partial \\Phi(\\alpha_{2})}{\\partial \\alpha_{2}} = (K_{11} + K_{22} -  2K_{12}) \\alpha_{2} - K_{11} \\zeta y_{2} + K_{12} \\zeta y_{2} + y_{1}y_{2} - 1 - v_{1} y_{2} + v_{2} y_{2}
-   = 0$$
+   = 0$$ ---- (2.21)
    
   1.由上式中假设求得了 $$\\alpha_{2}$$ 的解，带回到 (2.21) 式中可求得 $$\\alpha_{1}$$ 的解，分别记为 $$\\alpha_{1}^{new}$$ , $$\\alpha_{2}^{new}$$, 优化前的解记为 $$\\alpha_{1}^{old}$$,$$\\alpha_{2}^{old}$$;由于参数$$\\alpha_{3}$$, $$\\alpha_{4}$$ ,..., $$\\alpha_{N}$$ 固定，由等式约束 $$\\sum \\limits_{i=1}^{N} y_{i} \\alpha_{i} = 0$$ 有 $$\\alpha_{1}^{old} y_{1} +  \\alpha_{2}^{old} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\alpha_{1}^{new} y_{1} + \\alpha_{2}^{new} y_{2} =  \\zeta$$
   
-  $$\\zeta = \\alpha_{1}^{old}y_{1} + \\alpha_{2}^{old}y_{2}$$ ------ (4)
+  $$\\zeta = \\alpha_{1}^{old}y_{1} + \\alpha_{2}^{old}y_{2}$$ ------ (2.22)
   
   2.假设SVM超平面的模型为 $$f(x)=w^{T}x+b$$ , 上一篇中已推导出 $$w$$ 的表达式, 将其带入得 $$f(x)= \\sum \\limits_{i=1}^{N} \\alpha_{i} y_{i} K(xi,x)+b$$; $$f(x_{i})$$ 表示样本 $$x_{i}$$ 的预测值, $$y_{i}$$ 表示样本 $$x_{i}$$ 的真实值，定义 $$E_{i}$$ 表示预测值与真实值之差为
   
-  $$E_{i} = f(x_{i}) - y_{i}$$ ------ (5)
+  $$E_{i} = f(x_{i}) - y_{i}$$ ------ (2.23)
   
   3.由于 $$v_{i} = \\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$$，因此 :
   
-  $$v_{1} = f(x_{1}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{1j} - b$$ ------ (6)
+  $$v_{1} = f(x_{1}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{1j} - b$$ ------ (2.24)
   
-  $$v_{2} = f(x_{2}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{2j} - b$$  ----- (7)
+  $$v_{2} = f(x_{2}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{2j} - b$$  ----- (2.25)
+  
+  把(2.22), (2.24), (2.25) 带入到 (2.21)中去。　 
+  
+  化简得: 此时求解出的 $$\\alpha_{2}^{new}$$未考虑约束问题，先记为 $$\\alpha_2^{new,unclipped}$$
+  
+  $$(K_{11} + K_{22} - 2K_{12}) \\alpha_{2}^{new,unclipped} = (K_{11} + K_{22} - 2K_{12}) \\alpha_2^{old} + y_2[y_2 - y_1 + f(x_1) - f(x_2)]$$
+  
+  带入(2.23)式，并记 $$\\eta=K_{11} + K_{22} - 2K_{12}$$ 得:
+  
+  $$\\alpha_{2}^{new,unclipped} = \\alpha^{old}_{2} + \\frac{y_{2}(E_{1} - E_{2})}{\\eta}$$
+  
+  #### 4.4 对原始值解修剪:
+  
+  上述求出的解未考虑到约束条件：
+  
+  $$0 \\le \\alpha_{i=1,2} \\le C$$
+  
+  $$\\alpha_{1}y_{1} + \\alpha_{2}y_{2} = \\zeta$$
+  
+  在二维平面上直观表达上述两个约束条件:
+  
+  ![http://img.blog.csdn.net/20160427143321581](http://img.blog.csdn.net/20160427143321581)
+  
+  最优解必须要在方框内且在直线上取得，因此 $$L \\ge \\alpha_2^{new} \\ge H$$;
+  
+  当$$y_{1} \\ne y_{2}$$时, $$L=\\max(0,\\alpha_{2}^{old} - \\alpha_{1}^{old});H=min(C,C + \\alpha_{2}^{old} - \\alpha_{1}^{old})$$ 
+  
+  当$$y_{1}=y_{2}$$时，$$L=max(0,\\alpha_{1}^{old} + \\alpha_2^{old} - C);H=min(C,\\alpha_{2}^{old} + \\alpha_{1}^{old})$$ 
+  
+  经过上述约束的修剪，最优解就可以记为$$\\alpha_{2}^{new}$$了。
 '''
 tags: []
 isStarred: true
 isTrashed: false
 createdAt: "2017-11-29T14:24:04.048Z"
-updatedAt: "2017-12-21T09:22:19.050Z"
+updatedAt: "2017-12-25T12:41:09.410Z"

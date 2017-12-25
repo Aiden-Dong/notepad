@@ -60,7 +60,7 @@ content: '''
   在Hive中min的默认值是1B，max的默认值是256MB：
   
   ```
-  Hive> set mapred.max.split.size=1
+  Hive> set mapred.min.split.size=1
   Hive> set mapred.max.split.size=256000000
   ```
   
@@ -448,4 +448,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-01T03:24:42.991Z"
-updatedAt: "2017-12-01T09:50:19.294Z"
+updatedAt: "2017-12-25T03:31:28.490Z"
