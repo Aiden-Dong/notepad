@@ -6,8 +6,9 @@ content: '''
   
   ---
   
-  转载自:
+  参考自:
   [https://zhuanlan.zhihu.com/p/28660098](https://zhuanlan.zhihu.com/p/28660098)
+  [http://www.cnblogs.com/liqizhou/archive/2012/05/11/2495689.html](http://www.cnblogs.com/liqizhou/archive/2012/05/11/2495689.html)
   [https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html](https://wizardforcel.gitbooks.io/dm-algo-top10/content/svm-5.html)
   [http://backnode.github.io/pages/2015/12/22/SVM-dual.html](http://backnode.github.io/pages/2015/12/22/SVM-dual.html)
   [http://blog.csdn.net/luoshixian099/article/details/51227754](http://blog.csdn.net/luoshixian099/article/details/51227754)
@@ -178,8 +179,6 @@ content: '''
   
   令 $$g_{i}(w, b) = 1-y_{i}(w^{T}x_{i} + b)$$，则有 $$g_{i}(w, b) \\le 0$$ .
   
-  - 如果 $$\\alpha_{i} \\gt 0$$ , 根据KKT条件 $$\\alpha_{i}g_{i}(w, b) = 0$$ , 推出 $$g_{i}(w, b) = 0$$ , 则约束 $$g_{i} \\le 0$$ 是一个有效约束(active constraint), 对应的 $$x_{i}$$ 为支持向量
-  - 如果 $$\\alpha_{i} = 0$$ , 即 $$g_{i}(w, b) \\lt 0$$ , $$g_{i}(w, b) \\le 0$$ 为不起作用的约束，对应的 $$x_{i}$$ 不是支持向量
   
   可见，**支持向量对应的约束为活动约束, 我们的目标函数是由支持向量决定的**，毕竟我们就是支持向量机嘛.
   
@@ -212,6 +211,11 @@ content: '''
   $$\\alpha \\ge 0$$
   
   $$\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$
+  
+  计算`w`:
+  
+  $$w = \\sum \\limits_{n=1}^{N}\\alpha_n y_n x_n$$
+  
   
   #### 4. SMO 算法详解
   
@@ -397,4 +401,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-26T09:56:10.572Z"
-updatedAt: "2017-12-26T09:56:12.178Z"
+updatedAt: "2017-12-26T11:41:46.175Z"
