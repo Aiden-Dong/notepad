@@ -223,9 +223,9 @@ content: '''
   
   为了求解N个参数 $$(\\alpha_1,\\alpha_2,\\alpha_3,...,\\alpha_N)$$，首先想到的是坐标上升的思路，例如求解 $$\\alpha_1$$ ,可以固定其他 $$N-1$$ 个参数，可以看成关于$$\\alpha_1$$的一元函数求解，但是注意到上述问题的等式约束条件 $$\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$,当固定其他参数时，参数$$\\alpha_1$$也被固定，因此此种方法不可用。
   
-  SMO算法选择同时优化两个参数，固定其他$$N-2$$个参数，假设选择的变量为$$\\alpha_1,\\alpha_2$$,固定其他参数$$\\alpha_3,alpha_4,...,\\alpha_N$$,由于参数$$\\alpha_3,alpha_4,...,\\alpha_N$$的固定，可以简化目标函数为只关于$$\\alpha_1,\\alpha_2$$的二元函数，Constant表示常数项。
+  SMO算法选择同时优化两个参数，固定其他$$N-2$$个参数，假设选择的变量为$$\\alpha_1,\\alpha_2$$,固定其他参数$$\\alpha_3,\\alpha_4,...,\\alpha_N$$,由于参数$$\\alpha_3,\\alpha_4,...,\\alpha_N$$的固定，可以简化目标函数为只关于$$\\alpha_1,\\alpha_2$$的二元函数，Constant表示常数项。
   
-  $$min \\Phi(\\alpha_1, \\alpha_2) = \\frac{1}{2} K_{11} \\alpha_{1}^{2} + \\frac{1}{2} K_{22} \\alpha_{2}^{2} + y_{1}y_{2} K_{12} \\alpha_{1} \\alpha_{2} - ( \\alpha_{1} + \\alpha_{2} ) + y_{1} v_{1} \\alpha_{1} + y_{2} v_{2} \\alpha_{2} + C$$   ------ (2.20)
+  $$min \\Phi(\\alpha_1, \\alpha_2) = ( \\alpha_{1} + \\alpha_{2} ) - \\frac{1}{2} K_{11} \\alpha_{1}^{2} - \\frac{1}{2} K_{22} \\alpha_{2}^{2} - y_{1}y_{2} K_{12} \\alpha_{1} \\alpha_{2}  - y_{1} v_{1} \\alpha_{1} - y_{2} v_{2} \\alpha_{2} + C$$   ------ (2.20)
   
   其中$$v_{i}=\\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$$
   
@@ -239,14 +239,14 @@ content: '''
   
   上式带回到(2.20)中得到只关于参数 $$\\alpha_{2}$$ 的一元函数，由于常数项不影响目标函数的解，以下省略掉常数项$$C$$
   
-  $$min \\Phi( \\alpha_{2} ) = \\frac{1}{2} K_{11} ( \\zeta - \\alpha_{2} y_{2} )^{2} + \\frac{1}{2} K_{22} \\alpha^{2}_{2} + y_2 K{12} ( \\zeta - \\alpha_{2} y_{2} ) \\alpha_{2} - ( \\zeta - \\alpha_{2} y_{2} ) y_{1} - \\alpha{2} + v_{1} ( \\zeta - \\alpha_{2} y_{2} ) + y_{2} v_{2} \\alpha_{2}$$ 
+  $$min \\Phi( \\alpha_{2} ) = ( \\zeta - \\alpha_{2} y_{2} ) y_{1} + \\alpha_{2} - \\frac{1}{2} K_{11} ( \\zeta - \\alpha_{2} y_{2} )^{2} - \\frac{1}{2} K_{22} \\alpha^{2}_{2} - y_2 K{12} ( \\zeta - \\alpha_{2} y_{2} ) \\alpha_{2} - v_{1} ( \\zeta - \\alpha_{2} y_{2} ) - y_{2} v_{2} \\alpha_{2}$$ 
   
   
   ##### 4.3 对一元函数求极值点
   
   上式中是关于变量 $$\\alpha_{2}$$ 的函数，对上式求导并令其为 $$0$$ 得： 
   
-  $$\\frac {\\partial \\Phi(\\alpha_{2})}{\\partial \\alpha_{2}} = (K_{11} + K_{22} -  2K_{12}) \\alpha_{2} - K_{11} \\zeta y_{2} + K_{12} \\zeta y_{2} + y_{1}y_{2} - 1 - v_{1} y_{2} + v_{2} y_{2}
+  $$\\frac {\\partial \\Phi(\\alpha_{2})}{\\partial \\alpha_{2}} = - (K_{11} + K_{22} -  2K_{12}) \\alpha_{2} + K_{11} \\zeta y_{2} - K_{12} \\zeta y_{2} - y_{1}y_{2} + 1 + v_{1} y_{2} - v_{2} y_{2}
    = 0$$ 
    
   1.由上式中假设求得了 $$\\alpha_{2}$$ 的解，带回到 (2.21) 式中可求得 $$\\alpha_{1}$$ 的解，分别记为 $$\\alpha_{1}^{new}$$ , $$\\alpha_{2}^{new}$$, 优化前的解记为 $$\\alpha_{1}^{old}$$,$$\\alpha_{2}^{old}$$;由于参数$$\\alpha_{3}$$, $$\\alpha_{4}$$ ,..., $$\\alpha_{N}$$ 固定，由等式约束 $$\\sum \\limits_{i=1}^{N} y_{i} \\alpha_{i} = 0$$ 有 $$\\alpha_{1}^{old} y_{1} +  \\alpha_{2}^{old} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\alpha_{1}^{new} y_{1} + \\alpha_{2}^{new} y_{2} =  \\zeta$$
@@ -299,7 +299,7 @@ content: '''
   
   #### 4.5 求解 $$\\alpha_{1}^{new}$$
   
-  由于其他 $$N-2$$ 个变量固定，因此 \\alpha_{1}^{old}y_{1} + \\alpha_2^{old}y_{2} = \\alpha_{1}^{new}y_{1} + \\alpha_{2}^{new}y_{2}$$ 所以可求得:
+  由于其他 $$N-2$$ 个变量固定，因此 $$\\alpha_{1}^{old}y_{1} + \\alpha_2^{old}y_{2} = \\alpha_{1}^{new}y_{1} + \\alpha_{2}^{new}y_{2}$$ 所以可求得:
   
   $$\\alpha_{1}^{new} = \\alpha_{1}^{old} + y_{1}y_{2} (\\alpha_{2}^{old} - \\alpha_{2}^{new})$$ ------ (2.27)
   
@@ -401,4 +401,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-26T09:56:10.572Z"
-updatedAt: "2017-12-26T11:41:46.175Z"
+updatedAt: "2017-12-27T03:55:42.025Z"
