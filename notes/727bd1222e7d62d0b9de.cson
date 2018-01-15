@@ -139,9 +139,212 @@ content: '''
   - 将过滤器放到存储处理程序中，如HBase处理程序（http://issues.apache.org/jira/browse/HIVE-1226）
   - 一旦将索引框架添加到Hive（http://issues.apache.org/jira/browse/HIVE-417），将筛选器向下推入索引访问计划
   
+  
+  #### 涉及的组件
+  
+  1. 传播Hive现有谓词下推的结果。Hive的优化器已经完成了通过查询计划（通过配置参数 `hive.optimize.ppd=true/false` 来控制）向下推断言的艰巨工作。剩下的“最后一公里”是将表级过滤器下载到相应的输入格式中。
+  
+  2. 选择主要的过滤器传递给输入格式。这种表示需要中性(独立于使用它的访问计划), 并与Hive松散耦合（这样存储处理程序可以选择最小化它们对Hive内部的依赖关系）。
+  
+  3. Helper类用于解释主要表示。许多访问计划将需要以类似的方式分析过滤器，例如分解连词并检测支持的列比较模式。Hive应该为这种情况提供可共享的实用程序，以便它们不需要在每个访问方法的代码中被复制。
+  
+  4. 将筛选器转换为特定于访问方法的表单。这部分依赖于特定的访问方式; 例如对于HBase，它涉及将过滤条件转换为相应的调用来建立一个HBase扫描对象。
+  
+  > 主要过滤表示
+  
+  为了实现最可能的耦合，我们将使用一个字符串作为过滤器的主要表示。特别地，字符串将是在所产生的形式时蜂房unparses一个ExprNodeDesc，例如
+  
+  ```
+  ((key >= 100) and (key < 200))
+  ```
+  
+  一般来说，这是作为有效的SQL出现的，尽管它可能并不总是与原始的SQL完全匹配，例如
+  
+  ```
+  cast(x as int)
+  ```
+  
+  变
+  
+  ```
+  UDFToInteger(x)
+  ```
+  
+  此字符串中的列名是对过滤器操作的表的列的非限定引用，因为它们在Hive Metastore中是已知的。这些列名称可能与底层存储已知的列名称不同; 例如，HBase存储处理程序将Hive列名映射到HBase列名（由列族限定）。从Hive列名映射是解释过滤器字符串的代码的责任。
+  
+  #### 其他滤波器表示:
+  
+  如上所述，我们希望避免在解释过滤字符串的代码中进行重复（例如解析）。
+  
+  作为第一个剪辑，我们将ExprNodeDesc通过以序列化的形式将其作为可选伙伴传递给过滤器字符串来提供对树的访问。在跟进中，我们将为字符串表单提供解析实用程序。
+  
+  我们还将提供一个IndexPredicateAnalyzer类，能够在树中检测简单的sargable
+  
+  子表达式ExprNodeDesc。在后续工作中，我们将提供支持来区分和组合更复杂的可索引子表达式。
+  
+  ```
+  public class IndexPredicateAnalyzer
+  {
+    public IndexPredicateAnalyzer();
+   
+    /**
+     * 将比较运算符注册为可以通过索引搜索满足的运算符。
+     * 除非被调用，否则analyzePredicate将永远不会找到任何可索引的条件。
+     *
+     * @param udfName name of comparison operator as returned
+     * by either {@link GenericUDFBridge#getUdfName} (for simple UDF's)
+     * or udf.getClass().getName() (for generic UDF's).
+     */
+    public void addComparisonOp(String udfName);
+   
+    /**
+     * 清除比较中允许的一组列名。 （最初，所有列名都是允许的。）
+     * 
+     * Clears the set of column names allowed in comparisons.  (Initially, all
+     * column names are allowed.)
+     */
+    public void clearAllowedColumnNames();
+   
+    /**
+     * 将列名添加到允许的一组列名中。
+     *
+     * @param columnName name of column to be allowed
+     **/
+    public void allowColumnName(String columnName);
+   
+    /**
+     * 分析一个谓词。
+     *
+     * @param predicate predicate to be analyzed
+     *
+     * @param searchConditions receives conditions produced by analysis
+     *
+     * @return residual predicate which could not be translated to
+     * searchConditions
+     */
+    public ExprNodeDesc analyzePredicate(
+      ExprNodeDesc predicate,
+      final List<IndexSearchCondition> searchConditions);
+   
+    /**
+     * 将搜索条件转换回ExprNodeDesc表单（作为左深度连接）。
+     *
+     * @param searchConditions (typically produced by analyzePredicate)
+     *
+     * @return ExprNodeDesc form of search conditions
+     */
+    public ExprNodeDesc translateSearchConditions(
+      List<IndexSearchCondition> searchConditions);
+  }
+   
+  public class IndexSearchCondition
+  {
+    /**
+     * Constructs a search condition, which takes the form
+     * <pre>column-ref comparison-op constant-value</pre>.
+     * 
+     * 构造一个搜索条件，其形式为<pre> column-ref comparison-op constant-value </ pre>。
+     * 
+     * @param columnDesc column being compared
+     *
+     * @param comparisonOp comparison operator, e.g. "="
+     * (taken from GenericUDFBridge.getUdfName())
+     *
+     * @param constantDesc constant value to search for
+     *
+     * @Param comparisonExpr the original comparison expression
+     */
+    public IndexSearchCondition(
+      ExprNodeColumnDesc columnDesc,
+      String comparisonOp,
+      ExprNodeConstantDesc constantDesc,
+      ExprNodeDesc comparisonExpr);
+  }
+  
+  ```
+  
+  > 过滤器传递
+  
+  将过滤器向下传递给输入格式的方法将遵循类似于将列向下推动的模式。
+  
+  - org.apache.hadoop.hive.serde2.ColumnProjectionUtils 封装下推通信
+  - 诸如HiveInputFormat调用ColumnProjectionUtils在实例化一个jobConf之前设置投影下推属性（READ_COLUMN_IDS_CONF_STR）的类RecordReader
+  - RecordReader调用ColumnProjectionUtils访问此属性的工厂方法
+  
+  对于过滤器下推：
+  
+  - HiveInputFormat在调用getSplits之前以及在实例化一个记录读取器之前，在作业conf中设置属性`hive.io.filter.text`（字符串形式）和`hive.io.filter.expr.serialized`（序列化形式的ExprNodeDesc）
+  - 存储处理程序的输入格式将读取这些属性并处理过滤器表达式
+  - 有一个单独的优化器交互协商过滤器分解（在后面的章节中介绍）
+  
+  请注意，getSplits需要参与，因为筛选器的选择性可能会删除一些将被访问的分割。（在理论上，列投影也会影响分界线，但是我们会留下来进行跟进。）
+  
+  > 过滤器集合
+  
+  那么，哪里会HiveInputFormat得到过滤表达式传递？再次，我们可以从列预测模式开始：
+  
+  - 在优化期间，org.apache.hadoop.hive.ql.optimizer.ColumnPrunerProcFactory's ColumnPrunerTableScanProc填充下推信息TableScanOperator
+  - 以后，HiveInputFormat.initColumnsNeeded从中检索这个信息TableScanOperator
+  
+  对于过滤器下推，等效是 TableScanPPD 在 org.apache.hadoop.hive.ql.ppd.OpProcFactory。
+  
+  目前，它将调用 createFilter 将表达式放到一个叫做condn的表达式中，然后把这个表达式粘贴到一个新的表达式 FilterOperator 上。
+  
+  我们可以调用 condn.getExprString() 并存储结果 TableScanOperator。
+  
+  Hive配置参数 hive.optimize.ppd.storage 可用于启用或禁用向存储处理程序推送过滤器。这将默认启用。但是，如果hive.optimize.ppd被禁用，那么这隐含地防止下推到存储处理器。
+  
+  我们只从非本地表开始; 我们将重新审视这个过滤器，将其过滤到索引和内置存储格式，如RCFile。
+  
+  > 滤波器分解
+  
+  考虑一个过滤器
+  
+  ```
+  x > 3 AND upper(y) = 'XYZ'
+  ```
+  
+  假设存储处理程序能够实现范围 scanfor x > 3，但是没有评估 {{upper（y）= 'XYZ'}} 的功能。
+  
+  在这种情况下，最佳方案将涉及分解过滤器，将第一部分向下推入存储处理程序，剩下的部分仅由 Hive 通过自己的执行程序进行评估。
+  
+  为了做到这一点，存储处理程序需要能够与Hive协商分解。这意味着Hive给存储处理器提供了整个过滤器，并且存储处理器返回一个“剩余”：需要由Hive评估的部分。
+  
+  零残差表示存储处理程序能够自行处理整个过滤器（在这种情况下FilterOperator 不需要）。
+  
+  为了支持这种交互，我们将引入一个新的（可选的）接口来实现存储处理器：
+  
+  ```
+  
+  public interface HiveStoragePredicateHandler {
+    public DecomposedPredicate decomposePredicate(
+      JobConf jobConf,
+      Deserializer deserializer,
+      ExprNodeDesc predicate);
+   
+    public static class DecomposedPredicate {
+      public ExprNodeDesc pushedPredicate;
+      public ExprNodeDesc residualPredicate;
+    }
+  }
+  ```
+  
+  Hive的优化器（在谓词下推过程中）调用decomposePredicate方法，传递完整的表达式并接收分解（或者null来表示没有下推是可能的）。pushedPredicate稍后将获取传递回存储处理程序的输入格式，并将其residualPredicate附加到FilterOperator。
+  
+  假定存储处理程序足够复杂，可以实现这个接口，这个处理程序适合于紧密耦合ExprNodeDesc表示。
+  
+  同样，这个接口是可选的，即使没有它，下推仍然是可能的。如果存储处理程序没有实现这个接口，Hive将始终实现整个表达式FilterOperator，但是它仍然将表达式提供给存储处理程序的输入格式; 
+  
+  存储处理程序可以自由实现尽可能多或尽可能少的。
+  
+  
+  ### HbaseHandler
+  
+  
+  
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-29T06:03:41.102Z"
-updatedAt: "2017-12-29T09:22:19.710Z"
+updatedAt: "2018-01-11T03:16:20.791Z"

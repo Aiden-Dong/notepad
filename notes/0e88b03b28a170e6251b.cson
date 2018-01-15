@@ -2,7 +2,7 @@ type: "MARKDOWN_NOTE"
 folder: "ec02fab285e14c31f180"
 title: "1- 变量篇"
 content: '''
-  ### 1- 变量篇
+  ## 1- 变量篇
   
   ---
   
@@ -10,7 +10,7 @@ content: '''
   
   -> 变量与变量内容以等号链接, 等号两边不能有空格， 变量名开头不能使用数字
   -> 变量内容有空格可以使用空格链接起来
-  -> 单引号内的字符为一般字符，不进行翻译 如：  SETTEXT="one is '$LANG'"
+  -> 单引号内一般字符，不进行翻译 如：  SETTEXT="one is '$LANG'"
   -> 执行命令可以使用 $(), 或 反单引号 来调用字符串
   -> 使用变量的两种方式:
   
@@ -148,4 +148,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-19T09:53:46.117Z"
-updatedAt: "2017-11-27T03:51:35.582Z"
+updatedAt: "2018-01-09T02:32:23.170Z"

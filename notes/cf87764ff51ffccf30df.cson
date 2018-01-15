@@ -10,7 +10,7 @@ content: '''
   参考自:[https://www.iteblog.com/archives/1527.html](https://www.iteblog.com/archives/1527.html) 环境阅读原作者内容.
   
   - 版本 tag:**release-1.2.1**
-  - 编译 : `mvn clean package -Phadoop-2 -DskipTests`
+  - 编译 : `mvn clean package -Phadoop-2 -DskipTests -Pdist`
   - 程序包: `apache-hive-1.2.1-bin.tar.gz`
   
   
@@ -380,4 +380,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-25T03:48:02.653Z"
-updatedAt: "2017-12-26T07:42:22.513Z"
+updatedAt: "2018-01-11T02:49:55.882Z"

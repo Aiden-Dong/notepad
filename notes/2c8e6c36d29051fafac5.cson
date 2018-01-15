@@ -24,47 +24,57 @@ content: '''
   hive.mapred.local.mem：本地模式启动的JVM内存大小
   
   #### 2. 并发执行：
+  
   hive.exec.parallel=true ，默认为false
   hive.exec.parallel.thread.number=8
   
   #### 3.Strict Mode：
+  
   hive.mapred.mode=true，严格模式不允许执行以下查询：
   分区表上没有指定了分区
   没有limit限制的order by语句
   笛卡尔积：JOIN时没有ON语句
   
   #### 4.动态分区：
+  
   hive.exec.dynamic.partition.mode=strict：该模式下必须指定一个静态分区
   hive.exec.max.dynamic.partitions=1000
   hive.exec.max.dynamic.partitions.pernode=100：在每一个mapper/reducer节点允许创建的最大分区数
   DATANODE：dfs.datanode.max.xceivers=8192：允许DATANODE打开多少个文件
   
   #### 5.推测执行：
+  
   mapred.map.tasks.speculative.execution=true
   mapred.reduce.tasks.speculative.execution=true
   hive.mapred.reduce.tasks.speculative.execution=true;
   
   #### 6.Single MapReduce MultiGROUP BY
+  
   hive.multigroupby.singlemar=true：当多个GROUP BY语句有相同的分组列，则会优化为一个MR任务
   
   #### 7. hive.exec.rowoffset：是否提供虚拟列
   
   #### 8. 分组
+  
   两个聚集函数不能有不同的DISTINCT列，以下表达式是错误的：
-  INSERT OVERWRITE TABLE pv_gender_agg SELECT pv_users.gender, count(DISTINCT pv_users.userid), count(DISTINCT pv_users.ip) FROM pv_users GROUP BY pv_users.gender;
+  `INSERT OVERWRITE TABLE pv_gender_agg SELECT pv_users.gender, count(DISTINCT pv_users.userid), count(DISTINCT pv_users.ip) FROM pv_users GROUP BY pv_users.gender;`
+  
   SELECT语句中只能有GROUP BY的列或者聚集函数。
   
   #### 9.
+  
   hive.map.aggr=true;在map中会做部分聚集操作，效率更高但需要更多的内存。
   hive.groupby.mapaggr.checkinterval：在Map端进行聚合操作的条目数目
   
   #### 10.
+  
   hive.groupby.skewindata=true：数据倾斜时负载均衡，当选项设定为true，生成的查询计划会有两个MRJob。第一个MRJob 中，
   Map的输出结果集合会随机分布到Reduce中，每个Reduce做部分聚合操作，并输出结果，这样处理的结果是相同的GroupBy Key
   有可能被分发到不同的Reduce中，从而达到负载均衡的目的；第二个MRJob再根据预处理的数据结果按照GroupBy Key分布到
   Reduce中（这个过程可以保证相同的GroupBy Key被分布到同一个Reduce中），最后完成最终的聚合操作。
   
   #### 11.Multi-Group-By Inserts：
+  
   FROM test
   INSERT OVERWRITE TABLE count1
   SELECT count(DISTINCT test.dqcode)
@@ -74,6 +84,7 @@ content: '''
   GROUP BY test.sfcode;
   
   #### 12.排序
+  
   ORDER BY colName ASC/DESC
   hive.mapred.mode=strict时需要跟limit子句
   hive.mapred.mode=nonstrict时使用单个reduce完成排序
@@ -147,9 +158,29 @@ content: '''
   spark.sql.hive.convertMetastoreOrc  true
   spark.sql.orc.cacheMetadata        true
   ```
+  
+  #### 17. Hive 执行模式:
+  
+  -  MR 执行模式
+  
+  hive.exec.mode.local.auto=true : 开启本地mr
+  set hive.exec.mode.local.auto.inputbytes.max=50000000  : 设置local mr的最大输入数据量,当输入数据量小于这个值的时候会采用local mr的方式
+  set hive.exec.mode.local.auto.tasks.max=10             : 设置local mr的最大输入文件个数,当输入文件个数小于这个值的时候会采用local mr的方式
+  
+  - Map Join 过程
+  
+  hive.auto.convert.join=true    : 开启 MapJoin
+  hive.mapjoin.smalltable.filesize=2500000 : 标记小文件的上限大小
+  
+  hive.auto.convert.join=false   : 关闭自动MAPJOIN转换操作
+  hive.ignore.mapjoin.hint=false : 不忽略MAPJOIN标记
+  ```
+  SELECT /*+ MAPJOIN(smalltable)*/  .key,value
+  FROM smalltable JOIN bigtable ON smalltable.key = bigtable.key
+  ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-27T10:10:20.353Z"
-updatedAt: "2017-12-06T09:44:09.122Z"
+updatedAt: "2018-01-12T03:16:42.355Z"

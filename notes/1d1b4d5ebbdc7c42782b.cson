@@ -4,6 +4,45 @@ title: "7- spark-sql"
 content: '''
   ### 7- spark-sql
   
+  - 依赖类:
+  
+  ```
+  <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.11</artifactId>
+      <version>${spark.version}</version>
+      <scope>provided</scope>
+  </dependency>
+  
+  <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-hive -->
+  <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-hive_2.11</artifactId>
+      <version>${spark.version}</version>
+  </dependency>
+  ```
+  
+  
+  Spark 中所有相关功能的入口点是 SQLContext 类或者它的子类，创建一个SQLContext的所有需要仅仅是一个**SparkContext**。
+  
+  ```
+  val sc: SparkContext // An existing SparkContext.
+  val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+  // createSchemaRDD is used to implicitly convert an RDD to a SchemaRDD.
+  import sqlContext.createSchemaRDD
+  ```
+  
+  除了一个基本的SQLContext， 你也能够创建一个HiveContext， 它支持基本SQLContext所支持功能的一个超集。 
+  
+  它的额外的功能包括用更完整的HiveQL分析器写查询去访问HiveUDFs的能力、 从Hive表读取数据的能力。 
+  
+  用HiveContext你不需要一个已经存在的Hive开启，SQLContext可用的数据源对HiveContext也可用。
+  
+  
+  - 数据源 :
+  
+  
+  
   
   ```
   spark-sql --master yarn --executor-memory 4g --driver-memory 3g  --executor-cores 2  --num-executors 20 
@@ -13,4 +52,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-07T03:01:17.463Z"
-updatedAt: "2017-12-07T03:01:31.881Z"
+updatedAt: "2018-01-15T10:42:20.935Z"
