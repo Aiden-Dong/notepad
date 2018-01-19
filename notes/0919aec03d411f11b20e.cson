@@ -1,0 +1,98 @@
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "9-Spark Session API和Dataset API"
+content: '''
+  ### 9-Spark Session API和Dataset API
+  
+  ---
+  
+  转载自[https://bigdata-ny.github.io/2016/08/15/spark-two-series-part-1/](https://bigdata-ny.github.io/2016/08/15/spark-two-series-part-1/),推荐阅读原创.
+  
+  #### Dataset：Spark新的抽象层
+  
+  Spark 最原始的抽象基础是 RDD（分布式弹性数据集），但是从Spark 2.0 开始，Dataset将成为Spark新的抽象层。
+  
+  所有的Spark开发者将使用 Dataset API 和 Dataframe（Dataset子集）API 编写代码，同时RDD API也还是可以用的，不过已降为low-level的API.
+  
+  Dataframe API 在Spark 1.3时被引入，Dataset是Dataframe的超集。Dataset API和Dataframe API的使用带给Spark更好的性能和灵活性。Spark Streaming也将使用Dataset代替RDD。
+  
+  #### Spark Session：Spark 2.0入口
+  
+  在Spark早期版本，spark context是Spark的入口，RDD API通过context API创建。
+  
+  相应地:
+  
+  - streaming由StreamingContext创建；
+  
+  - SQL由sqlContext创建；
+  
+  - hive由HiveContext创建。
+  
+  而到了Spark 2.0，DataSet和Dataframe API由`Spark Session`创建。
+  
+  **SparkSession** 包括 **SQLContext**，**HiveContext**和**StreamingContext**的功能。**SparkSession** 实际起计算的还是 spark context。
+  
+  下面直接看代码吧。
+  
+  #### 创建SparkSession
+  
+  使用工厂模式创建SparkSession。下面是创建SparkSession的代码：
+  
+  ```
+  val sparkSession = SparkSession.builder.
+        master("local")
+        .appName("spark session example")
+        .getOrCreate()
+  ```
+  
+  上面的代码类似于创建SparkContext和SQLContext。如果你需要创建hive context，你可以使用下面的代码创建SparkSession，并支持Hive。
+  
+  ```
+  val sparkSession = SparkSession.builder.
+        master("local")
+        .appName("spark session example")
+        .enableHiveSupport()
+        .getOrCreate()
+  ```
+  
+  enableHiveSupport开启Hive支持后就可以像HiveContext一样使用。
+  
+  创建Spark Session后，可以来读取数据了。
+  
+  #### 使用Spark Session读取数据
+  
+  使用Spark Session读取CSV数据：
+  
+  ```
+  val df = sparkSession.read.option("header","true").
+      csv("src/main/resources/sales.csv")
+  ```
+  上面的代码与SQLContext类似，你可以复用原有SQLContext的代码。
+  
+  #### WordCount
+  
+  下面来个完整的WordCount例子：
+  
+  ```
+  #create SparkSession
+  val sparkSession = SparkSession.builder.
+        master("local")
+        .appName("example")
+        .getOrCreate()
+  #read data and convert to Dataset
+  import sparkSession.implicits._
+  val data = sparkSession.read.text("src/main/resources/data.txt").as[String]
+  #split and group by word
+  val words = data.flatMap(value => value.split("\\\\s+"))
+  val groupedWords = words.groupByKey(_.toLowerCase)
+  #count
+  val counts = groupedWords.count()
+  #print results
+  counts.show()
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2018-01-16T05:51:07.584Z"
+updatedAt: "2018-01-16T06:16:39.497Z"

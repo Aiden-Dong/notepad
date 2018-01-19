@@ -4,6 +4,10 @@ title: "7- spark-sql"
 content: '''
   ### 7- spark-sql
   
+  ---
+  
+  参考:[http://blog.csdn.net/wsdc0521/article/details/50011349](http://blog.csdn.net/wsdc0521/article/details/50011349)
+  
   - 依赖类:
   
   ```
@@ -52,4 +56,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-07T03:01:17.463Z"
-updatedAt: "2018-01-15T10:42:20.935Z"
+updatedAt: "2018-01-17T07:49:11.161Z"

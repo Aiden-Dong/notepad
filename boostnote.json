@@ -69,6 +69,11 @@
       "key": "fec47565a0577152774f",
       "color": "#B013A4",
       "name": "MachineLearning"
+    },
+    {
+      "key": "199632a5d0d7fd0aac09",
+      "color": "#30D5C8",
+      "name": "Linux"
     }
   ],
   "version": "1.0"

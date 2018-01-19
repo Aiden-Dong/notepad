@@ -1,0 +1,68 @@
+type: "MARKDOWN_NOTE"
+folder: "50a801ae3cc972d1a4c3"
+title: "16-scala 类型与类型转换"
+content: '''
+  16-scala 类型与类型转换
+  
+  ---
+  
+  转载自[http://blog.csdn.net/u010376788/article/details/48193893](http://blog.csdn.net/u010376788/article/details/48193893)
+  
+  **isInstanceOf** ：检查某个对象是否属于某个给定的类。
+  **asInstanceOf** ：将引用转换为子类的引用。
+  **classOf**      ：如果想测试p指向的是一个Employee对象但又不是其子类，可以用if(p.getClass == classOf[Employee])，classOf方法定义在scala.Predef对象中，因此会被自动引入。
+  
+  如：
+  
+  ```
+  if(p.isInstanceOf[Employee]){   
+  val s = p.asInstanceOf[Employee]   
+  }  
+  ```
+  
+  与Java相比：
+  
+  scala | java
+  --- | ---
+  object.isInstanceOf[class] | object isInstanceOf class
+  object.asInstanceOf[class] | (class) object
+  classOf[class] | class.class
+  
+  ```
+  object ClassTest {  
+    def main(args: Array[String]){  
+      val testA: SuperClass = new SuperClass  
+      val testB: SuperClass = new SubClass  
+      val testC: SubClass = new SubClass  
+        
+      println(testA.isInstanceOf[SuperClass])  
+      println(testB.isInstanceOf[SuperClass])  
+      println(testC.isInstanceOf[SubClass])  
+        
+      println(testA.asInstanceOf[SuperClass])  
+      println(testB.asInstanceOf[SuperClass])  
+      println(testB.asInstanceOf[SubClass])  
+        
+      if(testB.getClass() == classOf[SuperClass]){  
+          println("true")  
+      }  
+      else{  
+        println("false")  
+      }  
+    }  
+  }  
+    
+  class SuperClass{  
+      
+  }  
+    
+  class SubClass extends SuperClass{  
+      
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
+createdAt: "2018-01-18T03:26:46.104Z"
+updatedAt: "2018-01-18T03:35:27.583Z"

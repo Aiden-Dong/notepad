@@ -8,14 +8,14 @@ content: '''
   
   转载自[http://smallx.me/2016/07/01/spark结构化数据处理：Spark-SQL、DataFrame和Dataset/](http://smallx.me/2016/07/01/spark结构化数据处理：Spark-SQL、DataFrame和Dataset/)　建议阅读原作者.
   
-  ### 概述:
+  ### 1.概述:
   
   相比于Spark RDD API，Spark SQL包含了对结构化数据和在其上的运算的更多信息，Spark SQL使用这些信息进行了额外的优化，使对结构化数据的操作更加高效和方便。
   
   有多种方式去使用Spark SQL，包括SQL、DataFrames API和Datasets API。但无论是哪种API或者是编程语言，它们都是基于同样的执行引擎，因此你可以在不同的API之间随意切换，它们各有各的特点，看你喜欢。
   
   
-  ### DataFrame:
+  #### 1.1 DataFrame:
   
   DataFrame是一个分布式集合，其中数据被组织为命名的列。它概念上等价于关系数据库中的表，但底层做了更多的优化。DataFrame可以从很多数据源构建，比如：已经存在的RDD、结构化文件、外部数据库、Hive表。
   
@@ -35,7 +35,7 @@ content: '''
   
   但是在有些情况下RDD可以表达的逻辑用DataFrame无法表达，所以后续提出了Dataset API，Dataset结合了RDD和DataFrame的好处。
   
-  ### DataSet:
+  #### 1.2 DataSet:
   
   Dataset是Spark 1.6新添加的一个实验性接口，其目的是想结合RDD的好处(强类型(这意味着可以在编译时进行类型安全检查)、可以使用强大的lambda函数)和Spark SQL的优化执行引擎的好处。可以从JVM对象构造出Dataset，然后使用类似于RDD的函数式转换算子(map/flatMap/filter等)对其进行操作。
   
@@ -43,15 +43,15 @@ content: '''
   
   实际上Dataset是包含了DataFrame的功能的，这样二者就出现了很大的冗余，故Spark 2.0将二者统一：保留Dataset API，把DataFrame表示为Dataset[Row]，即Dataset的子集。
   
-  ### API进化
+  #### 1.3 API进化
   
   Spark在迅速的发展，从原始的RDD API，再到DataFrame API，再到Dataset的出现，速度可谓惊人，执行性能上也有了很大提升。
   
   我们在使用API时，应该优先选择DataFrame & Dataset，因为它的性能很好，而且以后的优化它都可以享受到，但是为了兼容早期版本的程序，RDD API也会一直保留着。后续Spark上层的库将全部会用 DataFrame & Dataset，比如MLlib、Streaming、Graphx等。
   
-  ### 入门
+  ### 2. 入门
   
-  #### 起点之SQLContext
+  #### 2.1 起点之SQLContext
   
   要想使用Spark SQL，首先你得创建一个`SQLContext`对象，在这之前你只需要创建一个`SparkContext`就行了，如下：
   
@@ -72,7 +72,7 @@ content: '''
   
   不过就目前来说，HiveQL解析器更加完善，因此推荐使用HiveQL。
   
-  #### 创建并使用DataFrame
+  #### 2.2 创建并使用DataFrame
   
   通过SQLContext，应用程序可以从已经存在的RDD、结构化文件、外部数据库以及Hive表中创建出DataFrame。
   
@@ -129,7 +129,7 @@ content: '''
   
   另外，`org.apache.spark.sql.functions`单例对象还包含了一些操作`DataFrame`的函数，主要有这几个方面：聚集操作、集合操作、字符串处理、排序、日期计算、通用数学函数、校验码操作、窗口操作、用户定义函数支持等等。
   
-  #### 在程序中执行SQL查询
+  #### 2.3 在程序中执行SQL查询
   
   我们可以通过在程序中使用`SQLContext.sql()`来执行SQL查询，结果将作为一个DataFrame返回：
   
@@ -150,7 +150,7 @@ content: '''
   // Andy	30
   ```
   
-  #### 创建并使用Dataset
+  #### 2.4 创建并使用Dataset
   
   Dataset跟RDD相似，但是Dataset并没有使用Java序列化库 和 Kryo序列化库，而是使用特定Encoder来序列化对象。
   
@@ -171,7 +171,7 @@ content: '''
   val people = sqlContext.read.json(path).as[Person]
   ```
   
-  #### 与RDD的互操作性:
+  #### 2.5 与RDD的互操作性:
   
   Spark SQL支持两种不同的方法将RDD转换为DataFrame。
   
@@ -179,7 +179,7 @@ content: '''
   
   第二种方法通过一个编程接口，此时你需要构造一个模式并将其应用到一个已存在的RDD以将其转换为DataFrame，该方法适用于在运行时之前还不知道列以及列的类型的情况。
   
-  #### 用反射推断模式
+  ##### 2.5.1 用反射推断模式
   
   Spark SQL的Scala接口支持将包含case class的RDD自动转换为DataFrame。case class定义了表的模式，case class的参数名被反射读取并成为表的列名。
   case class也可以嵌套或者包含复杂类型(如序列或者数组)。示例如下：
@@ -202,7 +202,7 @@ content: '''
   val resultDF = sqlContext.sql("SELECT name, age FROM people WHERE age >= 20")
   ```
   
-  ####  手动编程指定模式
+  ##### 2.5.2 手动编程指定模式
   
   当case class不能提前定义时(比如记录的结构被编码为字符串，或者当文本数据集被解析时不同用户需要映射不同的字段)，可以通过下面三步来将RDD转换为DataFrame：
   
@@ -237,7 +237,7 @@ content: '''
   resultDF.map(t => "Name: " + t(0)).collect().foreach(println)
   ```
   
-  ### 数据源
+  ### 3. 数据源
   
   DataFrame可以当作标准RDD进行操作，也可以注册为一个临时表。
   
@@ -247,7 +247,7 @@ content: '''
   
   此外，当你使用SQL查询这些数据源中的数据并且只用到了一部分字段时，Spark SQL可以智能地只扫描这些用到的字段。
   
-  #### 通用加载/保存函数
+  #### 3.1 通用加载/保存函数
   
   `DataFrameReader` 和 `DataFrameWriter` 中包好一些通用的加载和保存函数，所有这些操作都将parquet格式作为默认数据格式。
   
@@ -258,7 +258,7 @@ content: '''
   df.select("name", "favorite_color").write.save("namesAndFavColors.parquet")
   ```
   
-  #### 手动指定选项:
+  ##### 3.1.1 手动指定选项:
   
   你也可以手动指定数据源和其他任何想要传递给数据源的选项。
   
@@ -271,7 +271,7 @@ content: '''
   df.select("name", "age").write.format("parquet").save("namesAndAges.parquet")
   ```
   
-  #### 用SQL直接查询文件
+  ##### 3.1.2 用SQL直接查询文件
   
   也可以不用read API加载一个文件到DataFrame然后查询它，而是直接使用SQL语句在文件上查询：
   
@@ -279,13 +279,13 @@ content: '''
   val df = sqlContext.sql("SELECT * FROM parquet.`examples/src/main/resources/users.parquet`")
   ```
   
-  #### 保存到持久表
+  ##### 3.1.3 保存到持久表
   
   可以使用`DataFrameWriter.saveAsTable()`将一个DataFrame保存到一个持久化表，根据不同的设置，表可能被保存为Hive兼容格式，也可能被保存为Spark SQL特定格式，关于这一点请参见API文档。
   
   我们可以通过SQLContext.table()或DataFrameReader.table()来加载一个表并返回一个DataFrame。
   
-  #### Parquet文件
+  #### 3.2 Parquet文件
   
   Parquet格式是被很多其他的数据处理系统所支持的列式数据存储格式。
   
@@ -295,7 +295,7 @@ content: '''
   
   出于兼容性考虑，在写Parquet文件时，所有列将自动转换为nullable。
   
-  #### 加载保存数据
+  #### 3.2.1 加载保存数据
   
   ```
   import sqlContext.implicits._
@@ -327,7 +327,7 @@ content: '''
   SELECT * FROM people
   ```
   
-  #### 分区发现
+  #### 3.2.2 分区发现
   
   在很多系统中(如Hive)，表分区是一个通用的优化方法。
   
@@ -366,11 +366,196 @@ content: '''
   |-- age: long (nullable = true)
   |-- gender: string (nullable = true)
   |-- country: string (nullable = true)
+  ```
+  
+  上述模式中，分区列的数据类型被自动推断。目前，支持的数据类型有数字类型和字符串类型。
+  
+  如果你不想数据类型被自动推断，可以配置`spark.sql.sources.partitionColumnTypeInference.enabled`，默认为`true`，如果设置为`false`，将禁用自动类型推断并默认使用字符串类型。
+  
+  
+  从Spark 1.6.0开始，分区发现默认只发现给定路径下的分区。
+  
+  如果用户传递`path/to/table/gender=male`作为路径读取数据，gender将不被作为一个分区列。
+  
+  你可以在数据源选项中设置basePath来指定分区发现应该开始的基路径。
+  
+  例如，还是将`path/to/table/gender=male`作为数据路径，但同时设置`basePath`为`path/to/table/`，`gender`将被作为分区列。
+  
+  ##### 3.2.3 模式合并
+  
+  就像ProtocolBuffer、Avro和Thrift，Parquet也支持模式演化(schema evolution)。
+  这就意味着你可以向一个简单的模式逐步添加列从而构建一个复杂的模式。
+  这种方式可能导致模式信息分散在不同的Parquet文件中，Parquet数据源能够自动检测到这种情况并且合并所有这些文件中的模式信息。
+  
+  但是由于模式合并是相对昂贵的操作，并且绝大多数情况下不是必须的，因此从Spark 1.5.0开始缺省关闭模式合并。
+  开启方式：在读取Parquet文件时，设置数据源选项`mergeSchema`为`true`，或者设置全局的SQL选项`spark.sql.parquet.mergeSchema`为`true`。示例如下：
   
   ```
+  import sqlContext.implicits._
+  
+  val df1 = sc.makeRDD(1 to 5).map(i => (i, i * 2)).toDF("single", "double")
+  df1.write.parquet("data/test_table/key=1")
+  
+  val df2 = sc.makeRDD(6 to 10).map(i => (i, i * 3)).toDF("single", "triple")
+  df2.write.parquet("data/test_table/key=2")
+  
+  val df3 = sqlContext.read.option("mergeSchema", "true").parquet("data/test_table")
+  df3.printSchema()
+  // root
+  // |-- single: int (nullable = true)
+  // |-- double: int (nullable = true)
+  // |-- triple: int (nullable = true)
+  // |-- key : int (nullable = true)
+  ```
+  
+  #### 3.3 JSON数据
+  
+  `SQLContext.read.json()`可以将`RDD[String]`或者`JSON`文件加载并转换为一个`DataFrame`。
+  
+  有一点需要注意的是：这里用的JSON文件并不是随意的典型的JSON文件，每一行必须是一个有效的JSON对象，如果一个对象跨越多行将导致失败。对于RDD[String]也是一样。
+  
+  ```
+  // 路径可以是单个文件的路径，也可以是目录路径
+  val path = "examples/src/main/resources/people.json"
+  val people = sqlContext.read.json(path)
+  people.printSchema()
+  // root
+  //  |-- age: integer (nullable = true)
+  //  |-- name: string (nullable = true)
+  
+  // 从RDD[String]加载数据创建DataFrame，每一个string应该是一个JSON对象
+  val anotherPeopleRDD = sc.parallelize(
+    """{"name":"Yin","address":{"city":"Columbus","state":"Ohio"}}""" :: Nil)
+  val anotherPeople = sqlContext.read.json(anotherPeopleRDD)
+  ```
+  
+  下面是SQL示例：
+  
+  ```
+  CREATE TEMPORARY TABLE people
+  USING org.apache.spark.sql.json
+  OPTIONS (
+    path "examples/src/main/resources/people.json"
+  )
+  
+  SELECT * FROM people
+  ```
+  
+  #### 3.4 数据库
+  
+  Spark SQL也可以使用JDBC从其他数据库中读取数据，你应该优先使用它而不是JdbcRDD，因为它将返回的数据作为一个DataFrame，所以很方便操作。
+  
+  但请注意：这和Spark SQL JDBC服务是不同的，Spark SQL JDBC服务允许其他应用通过JDBC连接到Spark SQL进行查询。
+  
+  要在Spark SQL中连接到指定数据库，首先需要通过环境变量`SPARK_CLASSPATH`设置你的数据库的JDBC驱动的路径。
+  例如在spark-shell中连接MySQL数据库，你可以使用如下命令：
+  
+  ```
+  SPARK_CLASSPATH=mysql-connector-java-5.1.26-bin.jar bin/spark-shell
+  ```
+  
+  可以通过SQLContext.read.format("jdbc").options(...).load()或SQLContext.read.jdbc(...)从数据库中加载数据到DataFrame。如下示例，我们从MySQL数据库中加载数据：
+  
+  ```
+  val jdbcDF = sqlContext.read.format("jdbc").options(
+    Map("driver" -> "com.mysql.jdbc.Driver",
+        "url" -> "jdbc:mysql://<host>:<port>/<database_name>",
+        "dbtable" -> "<table_name>",
+        "user" -> "root",
+        "password" -> "123456")).load()
+  ```
+  
+  下面是SQL示例：
+  
+  ```
+  CREATE TEMPORARY TABLE people
+  USING org.apache.spark.sql.jdbc
+  OPTIONS (
+    driver "com.mysql.jdbc.Driver",
+    url "jdbc:mysql://<host>:<port>/<database_name>",
+    dbtable "<table_name>",
+    user "root",
+    password "123456"
+  )
+  ```
+  
+  - JDBC驱动需要在所有节点的相同路径下都存在，因为是分布式处理嘛，就像Spark核心一样。
+  - 有些数据库需要使用大写来引用相应的名字，好像Oracle中就需要使用大写的表名。
+  
+  ### 4. 分布式SQL引擎
+  
+  Spark SQL也可以扮演一个分布式SQL引擎的角色，你可以使用JDBC/ODBC或者Spark SQL命令行接口连接到它，并直接执行交互式SQL查询。
+  
+  #### 4.1 运行Thrift JDBC/ODBC Server
+  
+  Spark SQL中实现的Thrift JDBC/ODBC Server跟Hive中的HiveServer2相一致。可以使用如下命令开启JDBC/ODBC服务，缺省情况下的服务监听地址为`localhost:10000`:
+  
+  ```
+  ./sbin/start-thriftserver.sh
+  ```
+  
+  这个脚本不仅可以接受spark-submit命令可以接受的所有选项，还支持`--hiveconf` 属性=值选项来配置 Hive属性。你可以执行`./sbin/start-thriftserver.sh --help`来查看完整的选项列表。
+  
+  你可以使用beeline连接到上面已经开启的Spark SQL引擎。命令如下：
+  
+  ```
+  // 启动beeline
+  ./bin/beeline
+  
+  // 在beeline中连接到Spark SQL引擎
+  beeline> !connect jdbc:hive2://localhost:10000
+  ```
+  
+  连接到beeline需要输入用户名和密码。在非安全模式下，简单地输入你自己的用户名就可以了，密码可以为空。对于安全模式，参见[beeline文档](https://cwiki.apache.org/confluence/display/Hive/HiveServer2+Clients)。
+  
+  #### 4.2 运行Spark SQL CLI
+  
+  Spark SQL CLI的引入使得在Spark SQL中可方便地通过Hive metastore对Hive进行查询。
+  
+  目前为止还不能使用 Spark SQL CLI 与Thrift JDBC/ODBC Server进行交互。
+  
+  这个脚本主要对本地开发比较有用，在共享的集群上，你应该让各用户连接到Thrift JDBC/ODBC Server。
+  
+  使用Spark SQL CLI前需要注意：
+  
+  - 将hive-site.xml配置文件拷贝到$SPARK_HOME/conf目录下。
+  - 需要在./conf/spark-env.sh中的SPARK_CLASSPATH添加jdbc驱动的jar包。
+  
+  启动Spark SQL CLI的命令如下：
+  
+  ```
+  ./bin/spark-sql
+  ```
+  
+  在启动spark-sql时，如果不指定master，则以local的方式运行，master既可以指定standalone的地址，也可以指定yarn。
+  
+  当设定master为yarn时(spark-sql –master yarn)时，可以通过 http://master:8088 页面监控到整个job的执行过程。
+  
+  如果在./conf/spark-defaults.conf中配置了spark master的话，那么在启动spark-sql时就不需要再指定master了。
+  
+  spark-sql启动之后就可以在其中敲击SQL语句了。
+  
+  关于Spark SQL CLI的可用命令和参数，请敲击./bin/spark-sql --help以查看。
+  
+  
+  ### 5. 性能调优:
+  
+  ##### 5.1 缓存数据在内存中
+  
+  通过调用`sqlContext.cacheTable("tableName")`或`dataFrame.cache()`，Spark SQL可以将表以列式存储缓存在内存中。
+  
+  这样的话，Spark SQL就可以只扫描那些使用到的列，并且将自动压缩数据以减少内存占用和GC开销。你可以调用`sqlContext.uncacheTable("tableName")`将缓存的表从内存中移除。
+  
+  另外，你也可以在SQL/HiveQL中使用`CACHE tablename`和`UNCACHE tablename`来缓存表和移除已缓存的表。
+  
+  和缓存RDD时的动机一样，如果想在同样的数据上多次运行任务或查询，就应该把这些数据表缓存起来。
+  
+  ##### 5.2 其他调优相关参数
+  
+  还有其他一些参数可以用于优化查询性能，参见[Spark SQL官方文档性能调优部分](http://spark.apache.org/docs/latest/sql-programming-guide.html#performance-tuning)。
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2018-01-15T10:52:28.261Z"
-updatedAt: "2018-01-15T12:03:08.281Z"
+updatedAt: "2018-01-16T05:50:21.043Z"
