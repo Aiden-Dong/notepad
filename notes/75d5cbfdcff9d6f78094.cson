@@ -102,23 +102,24 @@ content: '''
   
   首先看下分割超平面的一个性质。
   当我们等比例的扩大或缩小ww和bb并不会改变超平面的位置。
-  例如对于位于三维空间中的二维平面 $$3x + 2y + z + 5 = 0$$ ,$$w=[3, 2, 1]^{T}$$ , b=5 ，我们等比例扩大或者缩小`w`和`b`并不会影响平面.
-  即 $$\\frac{3}{2} + y + \\frac{1}{2}z = 0$$ 与原始平面相同。
+  例如对于位于三维空间中的二维平面 $3x + 2y + z + 5 = 0$ ,$w=[3, 2, 1]^{T}$ , b=5 ，我们等比例扩大或者缩小`w`和`b`并不会影响平面.
+  即 $\\frac{3}{2} + y + \\frac{1}{2}z = 0$与原始平面相同。
   
   这样我们就可以任意等比例修改参数，来使我们优化的目标表达起来更加友好。
   
   > 几何间隔和函数间隔
   
-  - 函数间隔(Functional Margin):  $$\\hat{\\gamma_{i}} = y_{i}(wx_{i}^{T} + b)$$
-  - 几何间隔(Geometry Margin):  $$\\gamma_{i} = y_{i}(\\frac{wx_{i}^{T}}{\\lVert w \\rVert} + \\frac{b}{\\lVert w \\rVert})$$
+  - 函数间隔(Functional Margin):  $\\hat{\\gamma_{i}} = y_{i}(wx_{i}^{T} + b)$
+  - 几何间隔(Geometry Margin):  $\\gamma_{i} = y_{i}(\\frac{wx_{i}^{T}}{\\lVert w \\rVert} + \\frac{b}{\\lVert w \\rVert})$
   
-  可见由于我们可以等比例的改变参数，函数间隔相当于参数都乘上了 $$\\lVert w \\rVert$$ .
+  可见由于我们可以等比例的改变参数，函数间隔相当于参数都乘上了 $\\lVert w \\rVert$ .
   
   ##### 标准形式
   
-  我们首先考虑一个决策面是否能够将所有的样本都正确分类的约束。图中的样本点分成两类（红色和蓝色），我们为每个样本点 $${x}_i$$  加上一个类别标签$$y_i$$：
+  我们首先考虑一个决策面是否能够将所有的样本都正确分类的约束。图中的样本点分成两类（红色和蓝色），我们为每个样本点 ${x}_i$  加上一个类别标签$y_i$：
   
-  $$y_i = \\left\\{\\begin{array}{ll}+1 & \\textrm{for blue points}\\\\-1 & \\textrm{for red points}\\end{array}\\right.$$ (2.7)
+  $$y_i = \\left\\{\\begin{array}{ll}+1 & \\textrm{for blue points}\\\\-1 & \\textrm{for red points}\\end{array}\\right. -- (2.7)$$ 
+  
   
   如果我们的决策面方程能够完全正确地对图2中的样本点进行分类，就会满足下面的公式
   
@@ -148,63 +149,67 @@ content: '''
   
   于是有:
   
-  $$arg \\max \\limits_{w, b} \\frac{1}{\\lVert w \\rVert}$$ 约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$$, i = 1,2,…,k
+  $arg \\max \\limits_{w, b} \\frac{1}{\\lVert w \\rVert}$ 约束条件: $y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$, i = 1,2,…,k
   
   > 将最大化问题转换为求最小值:
   
-  $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 约束条件: $$y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$$, i = 1,2,…,k  ----- (2.13)
+  $arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$ 约束条件: $y_{i} \\cdot (wx_{i}^{T} + b) \\ge 1$, i = 1,2,…,k  ----- (2.13)
   
   这便是一个线性不等式约束下的二次优化问题, 下面我本就使用拉格朗日乘子法来获取我们优化目标的对偶形式。
   
   
   #### 凸二次规划问题
   
-  添加了等式限制条件，优化函数为: $$\\min \\limits_{x} f(x)$$ 约束条件 $$h(x) = 0$$
+  添加了等式限制条件，优化函数为: $\\min \\limits_{x} f(x)$ 约束条件 $h(x) = 0$
   
   拉格朗日乘子法就是通过引入新的位置变量(拉格朗日橙子)将上式的约束条件一起放到目标函数中:
   
-  $$L(x, \\lambda) = f(x) + \\lambda h(x)$$, 限制条件 $$h(x) = 0$$
+  $$L(x, \\lambda) = f(x) + \\lambda h(x)$$
+  $$s.t. h(x) = 0$$
   
-  > 通过求解方程组: $$\\nabla L(x, \\lambda) = 0$$; $$h(x) = 0$$ 便可得到局部最小值的必要条件。
+  > 通过求解方程组: $\\nabla L(x, \\lambda) = 0$; $h(x) = 0$ 便可得到局部最小值的必要条件。
   
-  $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 限制条件 $$y_{i} \\cdot (wx_{i}^{T} + b) -1 \\ge 0$$, $$i = 1,2,...,k$$
+  $$arg \\min \\limits_{w, b} \\frac{1}{2} \\lVert w \\rVert ^{2}$$ 
+  $$s.t. y_{i} \\cdot (wx_{i}^{T} + b) -1 \\ge 0 , i = 1,2,...,k$$
   
   > 对应的拉格朗日函数:
   
-  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} + \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} + \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)] --- (2.14)$$
   
-  限制条件 : $$1-y_{i}(w^{T}x_{i} + b) \\le 0$$
+  $$s.t. : 1-y_{i}(w^{T}x_{i} + b) \\le 0$$
   
-  其中,  $$\\alpha_{i} \\ge 0$$
+  $$\\alpha_{i} \\ge 0$$
   
-  令 $$g_{i}(w, b) = 1-y_{i}(w^{T}x_{i} + b)$$，则有 $$g_{i}(w, b) \\le 0$$ .
+  令 $g_{i}(w, b) = 1-y_{i}(w^{T}x_{i} + b)$，则有 $g_{i}(w, b) \\le 0$ .
   
   
   可见，**支持向量对应的约束为活动约束, 我们的目标函数是由支持向量决定的**，毕竟我们就是支持向量机嘛.
   
   ### 3. 对偶问题
   
-  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} + \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)]$$ ------- (2.14)
+  $$L(w, b, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} + \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i} + b)] ---- (2.14)$$
   
-  限制条件 : $$1-y_{i}(w^{T}x_{i} + b) \\le 0$$
+  $$s.t. : 1-y_{i}(w^{T}x_{i} + b) \\le 0$$
   
-  $$\\frac{\\partial L(w,b, \\alpha)}{\\partial w} = w - \\sum \\limits_{i=1}^{N} \\alpha_{i}y{i}x_{i} = 0$$   ==> $$w=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i}x_{i}$$  ------ (2.15)
+  $$\\frac{\\partial L(w,b, \\alpha)}{\\partial w} = w - \\sum \\limits_{i=1}^{N} \\alpha_{i}y{i}x_{i} = 0$$ 
+  ==> 
+  $$w=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i}x_{i}--- (2.15)$$
   
-  $$\\frac{\\partial L(w,b, \\alpha)}{\\partial b}=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$  ----- (2.16)
+  $$\\frac{\\partial L(w,b, \\alpha)}{\\partial b}=\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0  --- (2.16)$$
   
   
   将 (2.16) 带入到  (2.14) 式子， 去掉 b 项:
   
-  $$L(w, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i})]$$ ------ （2.17）
+  $$L(w, \\alpha) = \\frac{1}{2} \\lVert w \\rVert^{2} - \\sum \\limits_{i=1}^{N} \\alpha_{i}[1-y_{i}(w^{T}x_{i})] --- (2.17)$$
   
   然后将 (2.15) 带入到 (2.17) 式子, 得到:
   
-  $$L(w, \\alpha) = \\frac{1}{2} w^{T}w + \\sum \\limits_{i=1}^{N} \\alpha_{i}-w^{T}w = \\sum \\limits_{i=1}^{N} \\alpha_{i} - \\frac{1}{2} w^{T}w$$ ----- (2.18)
+  $$L(w, \\alpha) = \\frac{1}{2} w^{T}w + \\sum \\limits_{i=1}^{N} \\alpha_{i}-w^{T}w = \\sum \\limits_{i=1}^{N} \\alpha_{i} - \\frac{1}{2} w^{T}w --- (2.18)$$ 
   
   将公式 (2.15) 带入到 (2.18) 得到:
   
   
-  $$L(\\alpha, x, y) = \\sum \\limits_{i=1}^{N} \\alpha_{i} - \\frac{1}{2}(\\sum \\limits_{i=1}^{N} \\sum \\limits_{j=1}^{N}  \\alpha_{i} \\alpha_{j} y{i} y{j} x_{i} \\cdot x_{j})$$  ------ （2.19）
+  $$L(\\alpha, x, y) = \\sum \\limits_{i=1}^{N} \\alpha_{i} - \\frac{1}{2}(\\sum \\limits_{i=1}^{N} \\sum \\limits_{j=1}^{N}  \\alpha_{i} \\alpha_{j} y{i} y{j} x_{i} \\cdot x_{j})--- (2.19)$$
   
   约束条件 : 
   
@@ -221,55 +226,57 @@ content: '''
   
   ##### 4.1 视为一个二元函数 
   
-  为了求解N个参数 $$(\\alpha_1,\\alpha_2,\\alpha_3,...,\\alpha_N)$$，首先想到的是坐标上升的思路，例如求解 $$\\alpha_1$$ ,可以固定其他 $$N-1$$ 个参数，可以看成关于$$\\alpha_1$$的一元函数求解，但是注意到上述问题的等式约束条件 $$\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$$,当固定其他参数时，参数$$\\alpha_1$$也被固定，因此此种方法不可用。
+  为了求解N个参数 $(\\alpha_1,\\alpha_2,\\alpha_3,...,\\alpha_N)$，首先想到的是坐标上升的思路，例如求解 $\\alpha_1$ ,可以固定其他 $N-1$ 个参数，可以看成关于$\\alpha_1$的一元函数求解，但是注意到上述问题的等式约束条件 $\\sum \\limits_{i=1}^{N} \\alpha_{i}y{i} = 0$,当固定其他参数时，参数$\\alpha_1$也被固定，因此此种方法不可用。
   
-  SMO算法选择同时优化两个参数，固定其他$$N-2$$个参数，假设选择的变量为$$\\alpha_1,\\alpha_2$$,固定其他参数$$\\alpha_3,\\alpha_4,...,\\alpha_N$$,由于参数$$\\alpha_3,\\alpha_4,...,\\alpha_N$$的固定，可以简化目标函数为只关于$$\\alpha_1,\\alpha_2$$的二元函数，Constant表示常数项。
+  SMO算法选择同时优化两个参数，固定其他$N-2$个参数，假设选择的变量为$\\alpha_1,\\alpha_2$,固定其他参数$\\alpha_3,\\alpha_4,...,\\alpha_N$,由于参数$\\alpha_3,\\alpha_4,...,\\alpha_N$的固定，可以简化目标函数为只关于$\\alpha_1,\\alpha_2$的二元函数，Constant表示常数项。
   
-  $$min \\Phi(\\alpha_1, \\alpha_2) = ( \\alpha_{1} + \\alpha_{2} ) - \\frac{1}{2} K_{11} \\alpha_{1}^{2} - \\frac{1}{2} K_{22} \\alpha_{2}^{2} - y_{1}y_{2} K_{12} \\alpha_{1} \\alpha_{2}  - y_{1} v_{1} \\alpha_{1} - y_{2} v_{2} \\alpha_{2} + C$$   ------ (2.20)
+  $$min \\Phi(\\alpha_1, \\alpha_2) = ( \\alpha_{1} + \\alpha_{2} ) - \\frac{1}{2} K_{11} \\alpha_{1}^{2} - \\frac{1}{2} K_{22} \\alpha_{2}^{2} - y_{1}y_{2} K_{12} \\alpha_{1} \\alpha_{2}  - y_{1} v_{1} \\alpha_{1} - y_{2} v_{2} \\alpha_{2} + C  --- (2.20)$$
   
-  其中$$v_{i}=\\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$$
+  其中$v_{i}=\\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$
   
   ##### 4.2 视为一元函数:
   
-  由等式约束得：$$\\alpha_{1} y_{1} + \\alpha_{2} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\zeta$$，可见 $$\\zeta$$ 为定值。
+  由等式约束得：$\\alpha_{1} y_{1} + \\alpha_{2} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\zeta$，可见 $\\zeta$ 为定值。
   
-  等式 $$\\alpha_{1} y_{1} + \\alpha_{2} y_{2} = \\zeta$$ 两边同时乘以 $$y_{1}$$,且 $$y_{1}^{2} = 1$$ ，得
+  等式 $\\alpha_{1} y_{1} + \\alpha_{2} y_{2} = \\zeta$ 两边同时乘以 $y_{1}$,且 $y_{1}^{2} = 1$ ，得
   
-  $$\\alpha_{1} = ( \\zeta - y_{2}\\alpha_{2})y_{1}$$---- (2.21)
+  $$\\alpha_{1} = ( \\zeta - y_{2}\\alpha_{2})y_{1}---- (2.21)$$
   
-  上式带回到(2.20)中得到只关于参数 $$\\alpha_{2}$$ 的一元函数，由于常数项不影响目标函数的解，以下省略掉常数项$$C$$
+  上式带回到(2.20)中得到只关于参数 $\\alpha_{2}$ 的一元函数，由于常数项不影响目标函数的解，以下省略掉常数项$C$
   
   $$min \\Phi( \\alpha_{2} ) = ( \\zeta - \\alpha_{2} y_{2} ) y_{1} + \\alpha_{2} - \\frac{1}{2} K_{11} ( \\zeta - \\alpha_{2} y_{2} )^{2} - \\frac{1}{2} K_{22} \\alpha^{2}_{2} - y_2 K{12} ( \\zeta - \\alpha_{2} y_{2} ) \\alpha_{2} - v_{1} ( \\zeta - \\alpha_{2} y_{2} ) - y_{2} v_{2} \\alpha_{2}$$ 
   
   
   ##### 4.3 对一元函数求极值点
   
-  上式中是关于变量 $$\\alpha_{2}$$ 的函数，对上式求导并令其为 $$0$$ 得： 
+  上式中是关于变量 $\\alpha_{2}$ 的函数，对上式求导并令其为 $0$ 得： 
   
   $$\\frac {\\partial \\Phi(\\alpha_{2})}{\\partial \\alpha_{2}} = - (K_{11} + K_{22} -  2K_{12}) \\alpha_{2} + K_{11} \\zeta y_{2} - K_{12} \\zeta y_{2} - y_{1}y_{2} + 1 + v_{1} y_{2} - v_{2} y_{2}
    = 0$$ 
    
-  1.由上式中假设求得了 $$\\alpha_{2}$$ 的解，带回到 (2.21) 式中可求得 $$\\alpha_{1}$$ 的解，分别记为 $$\\alpha_{1}^{new}$$ , $$\\alpha_{2}^{new}$$, 优化前的解记为 $$\\alpha_{1}^{old}$$,$$\\alpha_{2}^{old}$$;由于参数$$\\alpha_{3}$$, $$\\alpha_{4}$$ ,..., $$\\alpha_{N}$$ 固定，由等式约束 $$\\sum \\limits_{i=1}^{N} y_{i} \\alpha_{i} = 0$$ 有 $$\\alpha_{1}^{old} y_{1} +  \\alpha_{2}^{old} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\alpha_{1}^{new} y_{1} + \\alpha_{2}^{new} y_{2} =  \\zeta$$
+  1.由上式中假设求得了 $\\alpha_{2}$ 的解，带回到 (2.21) 式中可求得 $\\alpha_{1}$ 的解，分别记为 $\\alpha_{1}^{new}$ , $\\alpha_{2}^{new}$, 优化前的解记为 $\\alpha_{1}^{old}$,$\\alpha_{2}^{old}$;由于参数$\\alpha_{3}$, $\\alpha_{4}$ ,..., $\\alpha_{N}$ 固定，由等式约束 $\\sum \\limits_{i=1}^{N} y_{i} \\alpha_{i} = 0$ 有 
   
-  $$\\zeta = \\alpha_{1}^{old}y_{1} + \\alpha_{2}^{old}y_{2}$$ ------ (2.22)
+  $$\\alpha_{1}^{old} y_{1} +  \\alpha_{2}^{old} y_{2} = - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} = \\alpha_{1}^{new} y_{1} + \\alpha_{2}^{new} y_{2} =  \\zeta$$
   
-  2.假设SVM超平面的模型为 $$f(x)=w^{T}x+b$$ , 上一篇中已推导出 $$w$$ 的表达式, 将其带入得 $$f(x)= \\sum \\limits_{i=1}^{N} \\alpha_{i} y_{i} K(xi,x)+b$$; $$f(x_{i})$$ 表示样本 $$x_{i}$$ 的预测值, $$y_{i}$$ 表示样本 $$x_{i}$$ 的真实值，定义 $$E_{i}$$ 表示预测值与真实值之差为
   
-  $$E_{i} = f(x_{i}) - y_{i}$$ ------ (2.23)
+  $$\\zeta = \\alpha_{1}^{old}y_{1} + \\alpha_{2}^{old}y_{2} ------ (2.22)$$
   
-  3.由于 $$v_{i} = \\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$$，因此 :
+  2.假设SVM超平面的模型为 $f(x)=w^{T}x+b$ , 上一篇中已推导出 $w$ 的表达式, 将其带入得 $f(x)= \\sum \\limits_{i=1}^{N} \\alpha_{i} y_{i} K(xi,x)+b$; $f(x_{i})$ 表示样本 $x_{i}$ 的预测值, $y_{i}$ 表示样本 $x_{i}$ 的真实值，定义 $E_{i}$ 表示预测值与真实值之差为
   
-  $$v_{1} = f(x_{1}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{1j} - b$$ ------ (2.24)
+  $$E_{i} = f(x_{i}) - y_{i}   --- (2.23)$$
   
-  $$v_{2} = f(x_{2}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{2j} - b$$  ----- (2.25)
+  3.由于 $v_{i} = \\sum \\limits_{j=3}^{N} \\alpha_{j} y_{j} K(x_{i},x_{j}),i=1,2$，因此 :
+  
+  $$v_{1} = f(x_{1}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{1j} - b --- (2.24)$$
+  $$v_{2} = f(x_{2}) - \\sum \\limits_{j=1}^{2} y_{j} \\alpha_{j} K_{2j} - b --- (2.25)$$
   
   把(2.22), (2.24), (2.25) 带入到 (2.21)中去。　 
   
-  化简得: 此时求解出的 $$\\alpha_{2}^{new}$$未考虑约束问题，先记为 $$\\alpha_2^{new,unclipped}$$
+  化简得: 此时求解出的 $\\alpha_{2}^{new}$未考虑约束问题，先记为 $\\alpha_2^{new,unclipped}$
   
   $$(K_{11} + K_{22} - 2K_{12}) \\alpha_{2}^{new,unclipped} = (K_{11} + K_{22} - 2K_{12}) \\alpha_2^{old} + y_2[y_2 - y_1 + f(x_1) - f(x_2)]$$
   
-  带入(2.23)式，并记 $$\\eta=K_{11} + K_{22} - 2K_{12}$$ 得:
+  带入(2.23)式，并记 $\\eta=K_{11} + K_{22} - 2K_{12}$ 得:
   
   $$\\alpha_{2}^{new,unclipped} = \\alpha^{old}_{2} + \\frac{y_{2}(E_{1} - E_{2})}{\\eta}$$
   
@@ -285,47 +292,47 @@ content: '''
   
   ![http://img.blog.csdn.net/20160427143321581](http://img.blog.csdn.net/20160427143321581)
   
-  最优解必须要在方框内且在直线上取得，因此 $$L \\ge \\alpha_2^{new} \\ge H$$;
+  最优解必须要在方框内且在直线上取得，因此 $L \\ge \\alpha_2^{new} \\ge H$;
   
-  当$$y_{1} \\ne y_{2}$$时, $$L=\\max(0,\\alpha_{2}^{old} - \\alpha_{1}^{old});H=min(C,C + \\alpha_{2}^{old} - \\alpha_{1}^{old})$$ 
+  当$y_{1} \\ne y_{2}$时, $L=\\max(0,\\alpha_{2}^{old} - \\alpha_{1}^{old});H=min(C,C + \\alpha_{2}^{old} - \\alpha_{1}^{old})$
   
-  当$$y_{1}=y_{2}$$时，$$L=max(0,\\alpha_{1}^{old} + \\alpha_2^{old} - C);H=min(C,\\alpha_{2}^{old} + \\alpha_{1}^{old})$$ 
+  当$y_{1}=y_{2}$时，$L=max(0,\\alpha_{1}^{old} + \\alpha_2^{old} - C);H=min(C,\\alpha_{2}^{old} + \\alpha_{1}^{old})$
   
-  经过上述约束的修剪，最优解就可以记为$$\\alpha_{2}^{new}$$了。
+  经过上述约束的修剪，最优解就可以记为$\\alpha_{2}^{new}$了。
   
   所以有:
   
-  $$\\alpha_{2}^{new} = \\left\\{\\begin{array}{ll} H, \\alpha_{2}^{new, uncliped} \\gt H \\\\  \\alpha_{2}^{new, uncliped}, L \\le \\alpha_{2}^{new, uncliped} \\le H \\\\ L, \\alpha_2^{new, unclipped} \\lt  L \\end{array}\\right.$$  ------ （2.26）
+  $$\\alpha_{2}^{new} = \\left\\{\\begin{array}{ll} H, \\alpha_{2}^{new, uncliped} \\gt H \\\\  \\alpha_{2}^{new, uncliped}, L \\le \\alpha_{2}^{new, uncliped} \\le H \\\\ L, \\alpha_2^{new, unclipped} \\lt  L \\end{array}\\right. --- (2.26)$$
   
-  #### 4.5 求解 $$\\alpha_{1}^{new}$$
+  #### 4.5 求解 $\\alpha_{1}^{new}$
   
-  由于其他 $$N-2$$ 个变量固定，因此 $$\\alpha_{1}^{old}y_{1} + \\alpha_2^{old}y_{2} = \\alpha_{1}^{new}y_{1} + \\alpha_{2}^{new}y_{2}$$ 所以可求得:
+  由于其他 $N-2$个变量固定，因此 $\\alpha_{1}^{old}y_{1} + \\alpha_2^{old}y_{2} = \\alpha_{1}^{new}y_{1} + \\alpha_{2}^{new}y_{2}$ 所以可求得:
   
-  $$\\alpha_{1}^{new} = \\alpha_{1}^{old} + y_{1}y_{2} (\\alpha_{2}^{old} - \\alpha_{2}^{new})$$ ------ (2.27)
+  $$\\alpha_{1}^{new} = \\alpha_{1}^{old} + y_{1}y_{2} (\\alpha_{2}^{old} - \\alpha_{2}^{new}) --- (2.27)$$
   
   #### 4.6 取临界情况
   
-  大部分情况下，有 $$\\eta = K_{11} + K_{22} - 2K_{12} \\gt 0$$ 。但是在如下几种情况下，$$\\alpha_{2}^{new}$$需要取临界值$$L$$或者$$H$$.
+  大部分情况下，有 $\\eta = K_{11} + K_{22} - 2K_{12} \\gt 0$ 。但是在如下几种情况下，$\\alpha_{2}^{new}$需要取临界值$L$或者$H$.
   
   
-  1. $$\\eta \\lt 0$$,当核函数K不满足Mercer定理时，矩阵K非正定;
-  2. $$\\eta=0$$,样本x1与x2输入特征相同;
+  1. $\\eta \\lt 0$,当核函数K不满足Mercer定理时，矩阵K非正定;
+  2. $\\eta=0$,样本x1与x2输入特征相同;
   
   $$min \\Phi( \\alpha_{2} ) = \\frac{1}{2} K_{11} ( \\zeta - \\alpha_{2} y_{2} )^{2} + \\frac{1}{2} K_{22} \\alpha^{2}_{2} + y_2 K{12} ( \\zeta - \\alpha_{2} y_{2} ) \\alpha_{2} - ( \\zeta - \\alpha_{2} y_{2} ) y_{1} - \\alpha{2} + v_{1} ( \\zeta - \\alpha_{2} y_{2} ) + y_{2} v_{2} \\alpha_{2}$$ 
   
-  也可以如下理解，对上式求二阶导数就是　$$\\eta = K_{11} + K_{22} - 2K_{12}$$, 
+  也可以如下理解，对上式求二阶导数就是　$\\eta = K_{11} + K_{22} - 2K_{12}$, 
   
-  当 $$\\eta \\lt 0$$ 时，目标函数为凸函数，没有极小值，极值在定义域边界处取得。 
-  当 $$\\eta = 0$$ 时，目标函数为单调函数，同样在边界处取极值。 
+  当 $\\eta \\lt 0$ 时，目标函数为凸函数，没有极小值，极值在定义域边界处取得。 
+  当 $\\eta = 0$ 时，目标函数为单调函数，同样在边界处取极值。 
   
   > 计算方法： 
   
-  即当 $$\\alpha_{2}^{new}=L$$ 和 $$\\alpha_{2}^{new}=H$$ 分别带入(2.27)式中，计算出 $$\\alpha_{1}^{new} = L_{1}$$ 和 $$\\alpha_{1}^{new} = H_{1}$$.
+  即当 $\\alpha_{2}^{new}=L$ 和 $\\alpha_{2}^{new}=H$ 分别带入(2.27)式中，计算出 $\\alpha_{1}^{new} = L_{1}$ 和 $\\alpha_{1}^{new} = H_{1}$.
   
-  $$L_{1} = \\alpha_{1} + y_1y_2(\\alpha_{2} - L)$$,
-  $$H_{1} = \\alpha_{1} + y_1y_2(\\alpha_{2} - H)$$,
+  $$L_{1} = \\alpha_{1} + y_1y_2(\\alpha_{2} - L)$$
+  $$H_{1} = \\alpha_{1} + y_1y_2(\\alpha_{2} - H)$$
   
-  带入目标函数(2.20)内，比较$$\\Phi(\\alpha_{1} = L_{1},\\alpha_{2}=L)$$与$$\\Phi(\\alpha_{1} = H_{1},\\alpha_{2}=H)$$的大小，$$\\alpha_{2}$$取较小的函数值对应的边界点。
+  带入目标函数(2.20)内，比较$\\Phi(\\alpha_{1} = L_{1},\\alpha_{2}=L)$与$\\Phi(\\alpha_{1} = H_{1},\\alpha_{2}=H)$的大小，$\\alpha_{2}$取较小的函数值对应的边界点。
   
   ![](http://img.blog.csdn.net/20160427164937605)
   
@@ -339,29 +346,29 @@ content: '''
   
   ##### 第一个变量的选择:
   
-  第一个变量的选择称为外循环，首先遍历整个样本集，选择违反KKT条件的 $$\\alpha_{i}$$作为第一个变量.
+  第一个变量的选择称为外循环，首先遍历整个样本集，选择违反KKT条件的 $\\alpha_{i}$作为第一个变量.
   
   接着依据相关规则选择第二个变量(见下面分析),对这两个变量采用上述方法进行优化。
   
-  当遍历完整个样本集后，遍历非边界样本集$$(0<\\alpha_{i}<C)$$中违反KKT的$$\\alpha_{i}$$作为第一个变量，同样依据相关规则选择第二个变量，对此两个变量进行优化。
+  当遍历完整个样本集后，遍历非边界样本集$(0<\\alpha_{i}<C)$中违反KKT的$\\alpha_{i}$作为第一个变量，同样依据相关规则选择第二个变量，对此两个变量进行优化。
   
-  当遍历完非边界样本集后，再次回到遍历整个样本集中寻找，即在整个样本集与非边界样本集上来回切换，寻找违反KKT条件的 $$\\alpha_{i}$$作为第一个变量。
+  当遍历完非边界样本集后，再次回到遍历整个样本集中寻找，即在整个样本集与非边界样本集上来回切换，寻找违反KKT条件的 $\\alpha_{i}$作为第一个变量。
   
-  直到遍历整个样本集后，没有违反KKT条件$$\\alpha_{i}$$，然后退出。
+  直到遍历整个样本集后，没有违反KKT条件$\\alpha_{i}$，然后退出。
   
-  边界上的样本对应的$$\\alpha_{i}=0$$或者 $$\\alpha_{i}=C$$，在优化过程中很难变化，然而非边界样本0<αi<C会随着对其他变量的优化会有大的变化。
+  边界上的样本对应的$\\alpha_{i}=0$或者 $\\alpha_{i}=C$，在优化过程中很难变化，然而非边界样本$0<\\alpha_{i}<C$会随着对其他变量的优化会有大的变化。
   
   ![](http://img.blog.csdn.net/20160427212013553)
   
   ##### 第二个变量的选择:
   
-  SMO称第二个变量的选择过程为内循环，假设在外循环中找个第一个变量记为 $$\\alpha_{1}$$，第二个变量的选择希望能使$$\\alpha_{2}$$ 有较大的变化.
+  SMO称第二个变量的选择过程为内循环，假设在外循环中找个第一个变量记为 $\\alpha_{1}$，第二个变量的选择希望能使$\\alpha_{2}$ 有较大的变化.
   
-  由于$$\\alpha_{2}$$是依赖于$$|E_{1}-E_{2}|$$
+  由于$\\alpha_{2}$是依赖于$|E_{1}-E_{2}|$
   
-  当 $$E_{1}$$ 为正时，那么选择最小的$$E_{i}$$作为$$E_{2}$$.
+  当 $E_{1}$ 为正时，那么选择最小的$E_{i}$作为$E_{2}$.
   
-  如果$$E_{1}$$为负，选择最大$$E_{i}$$作为$$E_{2}$$，通常为每个样本的Ei保存在一个列表中，选择最大的|E1−E2|来近似最大化步长。 
+  如果$E_{1}$为负，选择最大$E_{i}$作为$E_{2}$，通常为每个样本的Ei保存在一个列表中，选择最大的|E1−E2|来近似最大化步长。 
   
   有时按照上述的启发式选择第二个变量，不能够使得函数值有足够的下降，这时按下述步骤:
   
@@ -373,9 +380,9 @@ content: '''
   
   #### 4.7 阈值b的计算
   
-  每完成对两个变量的优化后，要$$b$$的值进行更新，因为$$b$$的值关系到$$f(x)$$的计算，即关系到下次优化时$$E_{i}$$的计算。 
+  每完成对两个变量的优化后，要$b$的值进行更新，因为$b$的值关系到$f(x)$的计算，即关系到下次优化时$E_{i}$的计算。 
   
-  1.如果 $$0  \\lt \\alpha_{1}^{new} \\lt C$$, 由KKT条件 $$y1(wTx1+b)=1$$ ,得到 $$\\sum \\limits_{i=1}^{N} \\alpha_{i} y_{i} K_{i1} + b = y_{1}$$,由此得:
+  1.如果 $0  \\lt \\alpha_{1}^{new} \\lt C$, 由KKT条件 $y1(wTx1+b)=1$ ,得到 $\\sum \\limits_{i=1}^{N} \\alpha_{i} y_{i} K_{i1} + b = y_{1}$,由此得:
   
   $$b_{1}^{new} = y_{1} - \\sum \\limits_{i=3}^{N} \\alpha_{i} y_{i} K_{i1}  - \\alpha_{1}^{new} y_{1}K_{11} - \\alpha_{2}^{new} y_{2} K_{21}$$
   
@@ -387,13 +394,13 @@ content: '''
   
   $$b_{1}^{new} = - E_{1} - y_{1} K_{11}(\\alpha_{1}^{new} - \\alpha_{1}^{old})- y_{2}K_{21}(\\alpha_{2}^{new} - \\alpha_{2}^{old}) + b^{old}$$
   
-  2.如果$$0 \\lt \\alpha_{2}^{new} \\lt C$$，则
+  2.如果$0 \\lt \\alpha_{2}^{new} \\lt C$，则
   
   $$b_2^{new} = - E_{2} - y_{1}K_{12} (\\alpha_{1}^{new} - \\alpha_{1}^{old}) - y_{2}K_{22} (\\alpha_{2}^{new} - \\alpha_{2}^{old}) + b^{old}$$
   
-  3.如果同时满足$$0 \\lt \\alpha_{i}^{new} \\lt C$$,则$$b_{1}^{new} = b_{2}^{new}$$
+  3.如果同时满足$0 \\lt \\alpha_{i}^{new} \\lt C$,则$b_{1}^{new} = b_{2}^{new}$
   
-  4.如果同时不满足 $$0 \\lt \\alpha_{i}^{ne} \\lt C$$，则 $$b_{1}^{new}$$ 与 $$b_{2}^{new}$$ 以及它们之间的数都满足KKT阈值条件，这时选择它们的中点。
+  4.如果同时不满足 $0 \\lt \\alpha_{i}^{ne} \\lt C$，则 $b_{1}^{new}$$ 与 $$b_{2}^{new}$ 以及它们之间的数都满足KKT阈值条件，这时选择它们的中点。
   
   
 '''
@@ -401,4 +408,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-26T09:56:10.572Z"
-updatedAt: "2017-12-27T03:55:42.025Z"
+updatedAt: "2018-01-23T14:25:52.790Z"
