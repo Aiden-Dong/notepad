@@ -1,0 +1,134 @@
+createdAt: "2018-01-30T03:48:38.532Z"
+updatedAt: "2018-01-30T05:38:56.881Z"
+type: "MARKDOWN_NOTE"
+folder: "011719f8b2cad6f90a1d"
+title: "4-Druid segment 组织方式"
+content: '''
+  ### 4-Druid segment 组织方式
+  
+  ---
+  
+  
+  #### 1.1 segment 划分配置．
+  
+  segment 的组织方式是通过时间戳跟粒度来定义的．
+  
+  在任务文档中, segment　是通过[**granularitySpec**](http://druid.io/docs/latest/ingestion/index.html)来配置属性的．
+  
+  例如 :
+  
+  ```
+  "granularitySpec" : {
+    "type" : "uniform",
+    "segmentGranularity" : "day",
+    "queryGranularity" : "none",
+    "rollup" : false,
+    "intervals" : ["2017-03-09/2017-03-10"]
+  }
+  ```
+  
+  在这里再次详细说明一下：
+  
+  - type               : 用来指定粒度的类型使用　uniform, arbitrary(尝试创建大小相等的段).
+  - segmentGranularity : 用来确定每个segment包含的时间戳范围
+  - intervals          : 用来确定总的要获取的文件时间戳的范围
+  
+  如上的配置说明了接受　09-10 这一天的数据，　然后按天来划分　segment, 所以总共只有一个　segment.
+  
+  #### 1.2 partition 划分：
+  
+  为了使druid在重查询负载下运行良好，对于段文件大小在推荐的300mb-700mb范围内是重要的。我们使用　[**partitionsSpec**](http://druid.io/docs/latest/ingestion/batch-ingestion.html)来调整分区大小
+  
+  ```
+  "partitionsSpec" : {
+    "type" : "hashed",
+    "targetPartitionSize" : 5000000,
+    "maxPartitionSize" : 7500000,
+    "assumeGrouped" : false,
+    "numShards" : -1,
+    "partitionDimensions" : [ ]
+  }
+  ```
+  
+  分区支持单维分区跟哈系分区两种分区类型，
+  
+  - targetPartitionSize : 	要在分区中包括的目标行数，应该是以500MB〜1GB为目标的数字。
+  - 分区中要包括的最大行数。默认为比targetPartitionSize大50％.
+  
+  ## 2. segment 的逻辑组成
+  
+  segment 的命名方式为: **`.../${TableName}/${StartTime_StopTime}/${TimeVersion}/${BucketNum}/${SegmentFile}`**
+  
+  形如　`/user/druid/wikiticker/20150912T000000.000+0800_20150913T000000.000+0800/2018-01-29T18_15_05.814+08_00/0/..`
+  
+  每一个segment 都有一个　`descriptor.json`,与　`index.zip`构成.
+  
+  - descriptor.json记录了关于这个table的元信息说明:
+  
+  ![image.png](http://upload-images.jianshu.io/upload_images/10402860-d007f32547caa002.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  里面记录了这个segment 的**时间范围**，还有**维度列**与**指标列**的说明，以及**位置**，**大小**，**版本**等.
+  
+  - index.zip 则是数据文件:
+  
+  当Historical 服务启动后，他将会根据 **coordinator** 的信息，去**hdfs**或者**s3**上去下载相关的**segment**.
+  
+  也就是指的这个`index.zip`文件，当文件下载后，将他解压到本地路径中`.../${druid_dir}/var/druid/segment-cache/${TableName}`.
+  
+  在　index.zip 中有三类文件:
+  
+  ![image.png](http://upload-images.jianshu.io/upload_images/10402860-f41e73bd9744063f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  version.bin : 记录segment版本
+  meta.smooth : 记录元信息
+  ![image.png](http://upload-images.jianshu.io/upload_images/10402860-1b824e662e9002f3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  第一列为列名称，第二列为所占文件数量，第三列为起始位置索引，第四列为结束位置索引
+  从上面也可以文件是按列维护存储.
+  
+  
+  
+  
+  #### 2.1 数据结构
+  
+  druid 的每张表都分为　**timestamp** , **dimensions**, **metrics** 三部分组成.
+  
+  timestamp 与　metrics ，根据它的数据方式及查询特点，　每个都是用LZ4压缩的整数或浮点值数组。　
+  
+  dimensions 的数据维护方式较为复杂，　因为在查询过程中，　维度字段经常是被用来进行分组或过滤，所以维度字段的数据维护方式对查询的效率具有很大的影响.
+  
+  ![image.png](http://upload-images.jianshu.io/upload_images/10402860-0ba74bdd965b6f39.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  在duid 中，首先要将维度中的每个值(视为字符串)，映射到整数字典，　然后将维度信息构造成位图信息．
+  
+  例如：对于　page 列：
+  
+  ```
+  value="Justin Bieber": [1,1,0,0]
+  value="Ke$ha":         [0,0,1,1]
+  ```
+  
+  #### 2.2 数据查询．
+  
+  使用位图维护的倒排索引在查找过程大致如下：
+  
+  ```
+  select CharactersAdd from m_table where page=Ke$ha and Gender=Male;
+  ```
+  
+  对于如上查询语句，　只需要在位图中找到 类似如下的数据，然后取交便得出第三行与第四行数据．
+  ```
+  value="Ke$ha":         [0,0,1,1]
+  value="Male":          [1,1,1,1]
+  ```
+  
+  这时候再从　CharactersAdd　的数组中解压提取从第三行与第四行数据便可
+  
+  ```
+  1953
+  3194
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
