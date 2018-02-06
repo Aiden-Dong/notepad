@@ -1,0 +1,28 @@
+createdAt: "2018-02-02T04:02:52.450Z"
+updatedAt: "2018-02-02T04:09:16.072Z"
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "spark 优化"
+content: '''
+  ### spark 优化
+  
+  ---
+  
+  
+  #### - 修改默认的 InputFormat:
+  
+  RDD　的设置方式:
+  
+  ```
+  val rdd = sc.newAPIHadoopFile[LongWritable, Text, CombineTextInputFormat]("s3://mob-emr-test/dongtao/mobvista/ods_adn_trackingnew/2017/02/*/23")
+  ```
+  
+  spark-sql 的设置方式:
+  
+  ```
+  set spark.sql.hive.inputformat=org.apache.hadoop.mapred.lib.CombineTextInputFormat;
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
