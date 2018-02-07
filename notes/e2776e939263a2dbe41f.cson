@@ -1,0 +1,85 @@
+createdAt: "2018-02-07T03:11:02.430Z"
+updatedAt: "2018-02-07T06:51:22.239Z"
+type: "MARKDOWN_NOTE"
+folder: "7b5f71e13e8949dc60be"
+title: "3- 手机号抓取工具"
+content: '''
+  ### 3- 手机号抓取工具
+  
+  ---
+  
+  ### 主网站:
+  
+  https://m.10010.com/queen/tencent/new-fill.html?product=0&channel=28&rid=3muq7vi96yqem0oy&openid=oMwiavxM99Kocb6X-JJ-rrRh5iQE
+  
+  事例:
+  
+  ```
+  链接  ：https://m.10010.com/queen/tencent/new-fill.html(Get）
+  data : product=0&channel=28&rid=3muq7vi96yqem0oy&openid=oMwiavxM99Kocb6X-JJ-rrRh5iQE
+  
+  cookie:
+  
+  gipgeo          11|110
+  mallcity        11%7C110
+  KUT             c180334a-73b9-4c1b-a6ab-f18f56e169ce
+  TC_CD           3691b13e-3225-4f42-8eec-d3aa7274f4aa
+  SHOP_PROV_CITY
+  ```
+  
+  ### 省份ID来源:
+  
+  [https://m.10010.com/king/kingNumCard/init?product=0&channel=28&rid=3muq7vi96yqem0oy&openid=oMwiavxM99Kocb6X-JJ-rrRh5iQE](https://m.10010.com/king/kingNumCard/init?product=0&channel=28&rid=3muq7vi96yqem0oy&openid=oMwiavxM99Kocb6X-JJ-rrRh5iQE)
+  
+  
+  ### 手机号订单:
+  
+  https://m.10010.com/NumApp/NumberCenter/qryNum?callback=jsonp_queryMoreNums&provinceCode=11&cityCode=110&monthFeeLimit=0&groupKey=85236889&searchCategory=3&net=01&amounts=200&codeTypeCode=&searchValue=&qryType=02&goodsNet=4&_=1517984258987
+  
+  ```
+  链接: https://m.10010.com/NumApp/NumberCenter/qryNum(Get)
+  
+  data : callback=jsonp_queryMoreNums&provinceCode=11&cityCode=110&monthFeeLimit=0&groupKey=85236889&searchCategory=3&net=01&amounts=200&codeTypeCode=&searchValue=&qryType=02&goodsNet=4&_=1517977692027
+  
+  callback=jsonp_queryMoreNums&provinceCode=11&cityCode=110&monthFeeLimit=0&groupKey=85236889&searchCategory=3&net=01&amounts=200&codeTypeCode=&searchValue=&qryType=02&goodsNet=4&_=1517984258987
+  
+  返回:
+  
+  --手机号信息
+  
+  
+  ```
+  
+  ### 锁定手机号:
+  
+  https://m.10010.com/king/kingNumBuy/occupy
+  
+  事例:
+  
+  ```
+  提交链接:  
+  
+  https://m.10010.com/king/kingNumBuy/occupy(POST)
+  
+  data:  
+  
+  provinceCode=11&cityCode=110&numID=17611419682&goodsId=111610241535
+  
+  cookies:
+  
+   gipgeo          11|110
+   mallcity        11%7C110
+   KUT             c180334a-73b9-4c1b-a6ab-f18f56e169ce
+   TC_CD           3691b13e-3225-4f42-8eec-d3aa7274f4aa
+   SHOP_PROV_CITY
+   
+   返回值:
+   
+   "SUCCESS"
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
