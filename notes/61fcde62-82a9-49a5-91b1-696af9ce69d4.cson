@@ -1,0 +1,147 @@
+createdAt: "2018-03-15T06:35:42.421Z"
+updatedAt: "2018-03-15T11:28:52.345Z"
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "6-hive源码分析之SQL解析："
+content: '''
+  ### 6-hive源码分析之SQL解析：
+  
+  ---
+  
+  
+  语法解析Parser 
+  
+  ![](http://img.blog.csdn.net/20170507124349883?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3pxNjU3ODcwMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+  
+  `tree = ParseUtils.parse(command, ctx);` 【源码】ParseUtils封装了ParseDriver 对sql的解析工作，ParseUtils的parse方法：
+  
+  ```
+    /** Parses the Hive query. */
+    public static ASTNode parse(
+        String command, Context ctx, boolean setTokenRewriteStream) throws ParseException {
+      ParseDriver pd = new ParseDriver();
+      ASTNode tree = pd.parse(command, ctx, setTokenRewriteStream);
+      tree = findRootNonNullToken(tree);
+      handleSetColRefs(tree);
+      return tree;
+    }
+  ```
+  
+  **ParseDriver** 对command进行词法分析和语法解析（统称为语法分析），返回一个抽象语法树AST，进入parseDriver的parse方法：
+  
+  ```
+  public ASTNode parse(String command, Context ctx, boolean setTokenRewriteStream)
+      throws ParseException {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Parsing command: " + command);
+    }
+  
+    HiveLexerX lexer = new HiveLexerX(new ANTLRNoCaseStringStream(command));//词法分析
+    TokenRewriteStream tokens = new TokenRewriteStream(lexer);//根据词法分析的结果得到tokens的，此时不只是单纯的字符串，而是具有特殊意义的字符串的封装，其本身是一个流。
+    if (ctx != null) {
+      if ( setTokenRewriteStream) {
+        ctx.setTokenRewriteStream(tokens);
+      }
+      lexer.setHiveConf(ctx.getConf());
+    }
+    HiveParser parser = new HiveParser(tokens);
+    if (ctx != null) {
+      parser.setHiveConf(ctx.getConf());
+    }
+    parser.setTreeAdaptor(adaptor);
+    HiveParser.statement_return r = null;
+    try {
+      r = parser.statement();
+    } catch (RecognitionException e) {
+      e.printStackTrace();
+      throw new ParseException(parser.errors);
+    }
+  
+    if (lexer.getErrors().size() == 0 && parser.errors.size() == 0) {
+      LOG.debug("Parse Completed");
+    } else if (lexer.getErrors().size() != 0) {
+      throw new ParseException(lexer.getErrors());
+    } else {
+      throw new ParseException(parser.errors);
+    }
+  
+    ASTNode tree = (ASTNode) r.getTree();//生成AST返回
+    tree.setUnknownTokenBoundaries();
+    return tree;
+  }
+  ```
+  
+  #### Antlr:
+  
+  Hive使用Antlr实现SQL的词法和语法解析。
+  
+  Antlr是一种语言识别的工具，可以用来构造领域语言。
+  
+  了解**Antlr**相关消息可以阅读这里 : [传送门](http://codemany.com/tags/antlr/)
+  
+  Antlr构造特定的语言只需要编写一个语法文件，定义词法和语法替换规则即可，Antlr完成了词法分析、语法分析、语义分析、中间代码生成的过程。
+  
+  Hive中语法规则的定义文件在0.10版本以前是Hive.g一个文件，随着语法规则越来越复杂，由语法规则生成的Java解析类可能超过Java类文件的最大上限.
+  0.11版本将Hive.g拆成了5个文件:
+  - 词法规则`HiveLexer.g`
+  - 语法规则的4个文件`SelectClauseParser.g`，`FromClauseParser.g`，`IdentifiersParser.g`，`HiveParser.g`。
+  
+  #### 抽象语法树AST Tree:
+  
+  经过词法和语法解析后，如果需要对表达式做进一步的处理，使用 Antlr 的抽象语法树语法Abstract Syntax Tree，在语法分析的同时将输入语句转换成抽象语法树，后续在遍历语法树时完成进一步的处理。
+  
+  下面的一段语法是Hive SQL中SelectStatement的语法规则，从中可以看出，SelectStatement包含select, from, where, groupby, having, orderby等子句。
+  （在下面的语法规则中，箭头表示对于原语句的改写，改写后会加入一些特殊词标示特定语法，比如TOK_QUERY标示一个查询块）
+  
+  ```
+  selectStatement
+     :
+     selectClause
+     fromClause
+     whereClause?
+     groupByClause?
+     havingClause?
+     orderByClause?
+     clusterByClause?
+     distributeByClause?
+     sortByClause?
+     limitClause? -> ^(TOK_QUERY fromClause ^(TOK_INSERT ^(TOK_DESTINATION ^(TOK_DIR TOK_TMP_FILE))
+                       selectClause whereClause? groupByClause? havingClause? orderByClause? clusterByClause?
+                       distributeByClause? sortByClause? limitClause?))
+     ;
+  ```
+  
+  样例SQL
+  
+  为了详细说明SQL翻译为MapReduce的过程，这里以一条简单的SQL为例，SQL中包含一个子查询，最终将数据写入到一张表中
+  
+  ```
+  FROM
+  ( 
+    SELECT
+      p.datekey datekey,
+      p.userid userid,
+      c.clienttype
+    FROM
+      detail.usersequence_client c
+      JOIN fact.orderpayment p ON p.orderid = c.orderid
+      JOIN default.user du ON du.userid = p.userid
+    WHERE p.datekey = 20131118 
+  ) base
+  INSERT OVERWRITE TABLE `test`.`customer_kpi`
+  SELECT
+    base.datekey,
+    base.clienttype,
+    count(distinct base.userid) buyer_count
+  GROUP BY base.datekey, base.clienttype
+  ```
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-42a93d0b62d44b61.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  这里注意一下内层子查询也会生成一个TOK_DESTINATION节点。请看上面SelectStatement的语法规则，这个节点是在语法改写中特意增加了的一个节点。原因是Hive中所有查询的数据均会保存在HDFS临时的文件中，无论是中间的子查询还是查询最终的结果，Insert语句最终会将数据写入表所在的HDFS目录下。
+'''
+tags: [
+  "源码分析"
+]
+isStarred: false
+isTrashed: false

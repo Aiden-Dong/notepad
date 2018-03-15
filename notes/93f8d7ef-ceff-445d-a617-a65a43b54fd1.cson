@@ -1,0 +1,74 @@
+createdAt: "2018-03-15T11:29:17.067Z"
+updatedAt: "2018-03-15T11:47:27.370Z"
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "7-hive源码分析之生成QueryBlock"
+content: '''
+  ### 7-hive源码分析之生成QueryBlock
+  
+  ---
+  
+  AST Tree生成QueryBlock的过程是一个递归的过程，先序遍历AST Tree，遇到不同的Token节点，保存到相应的属性中，主要包含以下几个过程
+  
+  TOK_QUERY => 创建QB对象，循环递归子节点
+  TOK_FROM => 将表名语法部分保存到QB对象的aliasToTabs等属性中
+  TOK_INSERT => 循环递归子节点
+  TOK_DESTINATION => 将输出目标的语法部分保存在QBParseInfo对象的nameToDest属性中
+  TOK_SELECT => 分别将查询表达式的语法部分保存在destToSelExpr、destToAggregationExprs、destToDistinctFuncExprs三个属性中
+  TOK_WHERE => 将Where部分的语法保存在QBParseInfo对象的destToWhereExpr属性中
+  
+  ```
+  boolean genResolvedParseTree(ASTNode ast, PlannerContext plannerCtx) throws SemanticException {
+      ASTNode child = ast;
+      this.ast = ast;
+      viewsExpanded = new ArrayList<String>();
+      ctesExpanded = new ArrayList<String>();
+      /* ------------------- 产生 QueryBlock ----------------------------*/
+      // 1. analyze and process the position alias
+      processPositionAlias(ast);
+      // 处理 create table 命令
+      // 2. analyze create table command
+      if (ast.getToken().getType() == HiveParser.TOK_CREATETABLE) {
+        // if it is not CTAS, we don't need to go further and just return
+        if ((child = analyzeCreateTable(ast, qb, plannerCtx)) == null) { // 填充 创建表所需要的相关属性， 填充到 rootTask -> work -> createTableDesc 的相关信息中
+          return false;
+        }
+      } else {
+        SessionState.get().setCommandType(HiveOperation.QUERY);
+      }
+  
+      // 3. analyze create view command
+      if (ast.getToken().getType() == HiveParser.TOK_CREATEVIEW
+          || (ast.getToken().getType() == HiveParser.TOK_ALTERVIEW && ast.getChild(1).getType() == HiveParser.TOK_QUERY)) {
+        child = analyzeCreateView(ast, qb);
+        SessionState.get().setCommandType(HiveOperation.CREATEVIEW);
+        if (child == null) {
+          return false;
+        }
+        viewSelect = child;
+        // prevent view from referencing itself
+        viewsExpanded.add(createVwDesc.getViewName());
+      }
+  
+      // 4. continue analyzing from the child ASTNode.
+      Phase1Ctx ctx_1 = initPhase1Ctx();
+      preProcessForInsert(child, qb);
+      if (!doPhase1(child, qb, ctx_1, plannerCtx)) {
+        // 如果doPhase1执行成功那么就会得到一个QB if phase1Result false return
+        return false;
+      }
+      LOG.info("Completed phase 1 of Semantic Analysis");
+      // doPhase1执行完毕之后得到QB，QB里边的只是一些关键字还有一些表的名字，但是和hdfs的文件路径对应不起来，所以需要metaData映射关系，之后在SemanticAnalyzer中调用了 getMetaData
+      // 5. Resolve Parse Tree
+      getMetaData(qb); //从数据库中获得相关信息
+      LOG.info("Completed getting MetaData in Semantic Analysis");
+  
+      plannerCtx.setParseTreeAttr(child, ctx_1);
+  
+      return true;
+    }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

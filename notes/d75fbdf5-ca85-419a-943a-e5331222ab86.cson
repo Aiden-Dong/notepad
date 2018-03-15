@@ -1,0 +1,24 @@
+createdAt: "2018-03-15T11:44:07.763Z"
+updatedAt: "2018-03-15T11:51:50.300Z"
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "8-Hive 源码分析之Operator Tree:"
+content: '''
+  ### 8-Hive 源码分析之Operator Tree:
+  
+  ---
+  
+  QueryBlock生成Operator Tree就是遍历上一个过程中生成的QB和QBParseInfo对象的保存语法的属性，包含如下几个步骤：
+  
+  - QB#aliasToSubq => 有子查询，递归调用
+  - QB#aliasToTabs => TableScanOperator
+  - QBParseInfo#joinExpr => QBJoinTree => ReduceSinkOperator + JoinOperator
+  - QBParseInfo#destToWhereExpr => FilterOperator
+  - QBParseInfo#destToGroupby => ReduceSinkOperator + GroupByOperator
+  - QBParseInfo#destToOrderby => ReduceSinkOperator + ExtractOperator
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
