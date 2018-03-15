@@ -1,0 +1,42 @@
+createdAt: "2018-03-13T10:20:20.538Z"
+updatedAt: "2018-03-13T12:07:55.475Z"
+type: "MARKDOWN_NOTE"
+folder: "312348b473d25bc30401"
+title: "2- Kafka 基础"
+content: '''
+  #### 2- Kafka 基础
+  
+  ---
+  
+  在深入了解Kafka之前，您必须了解**Topic**，**Brocker**，**Producers**和 **Consumer** 等主要术语。 下图说明了主要术语，表格详细描述了图表组件。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b4fa0394e32cd362.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  在上图中，主题配置为三个**partition**:
+  
+  partition 1 具有两个偏移因子 0 和 1. 
+  partition 2 具有四个偏移因子 0 , 1 ,2 和 3. 
+  partition 3 具有一个偏移因子0.
+  
+  副本的id与承载它的服务器的id相同。
+  
+  假设，如果 **topic** 的复制因子设置为3，那么Kafka将创建每个分区的3个相同的副本，并将它们放在集群中以使其可用于其所有操作。 为了平衡集群中的负载，每个代理都存储一个或多个这些分区。 
+  
+  多个**生产者**和**消费者**可以同时发布和检索消息。
+  
+  组件 | 说明
+  --- | ---
+  Topics | 属于特定类别的消息流称为Topic。 数据存储在Topic中。Topic被拆分成partition。 对于每个Topic，Kafka保存一个partition的数据。 每个这样的partition包含不可变有序序列的消息。分区被实现为具有相等大小的一组分段文件。
+  Partition | 主题可能有许多分区，因此它可以处理任意数量的数据。
+  Partition offset |　每个分区消息具有称为 "offset" 的唯一序列标识。
+  Replicas of partition | 副本只是一个分区的备份。 副本从不读取或写入数据。 它们用于防止数据丢失。
+  Brokers | brokers 是负责维护发布数据的简单系统。 每个 brokers 中的每个 topitc 可以具有零个或多个　partition 。 假设，如果在一个topic和N个brocker中有N个partition ，每个brocker将有一个partition。 假设在一个 topic 中有N个 partition 并且多于N个 brocker (n + m)，则第一个N brocker将具有一个分区，并且下一个M brocker 将不具有用于该特定 topic 的任何分区。 假设在一个 topic 中有N个partition并且小于N个brocker(n-m)，每个brocker将在它们之间具有一个或多个partition共享。 由于brocker之间的负载分布不相等，不推荐使用此方案。
+  Kafka Cluster | Kafka有多个brocker被称为Kafka集群。 可以扩展Kafka集群，无需停机。 这些集群用于管理消息数据的持久性和复制。
+  Producers | 生产者是发送给一个或多个Kafka主题的消息的发布者。 生产者向Kafka brocker发送数据。 每当生产者将消息发布给代理时，代理只需将消息附加到最后一个段文件。 实际上，该消息将被附加到分区。 生产者还可以向他们选择的分区发送消息。
+  Consumers | Consumers 从 brocker处读取数据。 消费者订阅一个或多个主题，并通过从代理中提取数据来使用已发布的消息。
+  Leader | Leader 是负责给定分区的所有读取和写入的节点。 每个分区都有一个服务器充当Leader
+  Follower | 跟随领导者指令的节点被称为Follower。 如果领导失败，一个追随者将自动成为新的领导者。 跟随者作为正常消费者，拉取消息并更新其自己的数据存储。
+'''
+tags: []
+isStarred: false
+isTrashed: false

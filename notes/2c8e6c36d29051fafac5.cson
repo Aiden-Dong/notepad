@@ -178,9 +178,25 @@ content: '''
   SELECT /*+ MAPJOIN(smalltable)*/  .key,value
   FROM smalltable JOIN bigtable ON smalltable.key = bigtable.key
   ```
+  
+  
+  #### 18-优化实例
+  
+  ```
+  set mapreduce.input.fileinputformat.split.maxsize = 134217728;
+  set mapreduce.input.fileinputformat.split.minsize = 134217728;
+  set mapred.min.split.size.per.node=134217728;
+  set mapred.min.split.size.per.rack=134217728;
+  set hive.exec.parallel=true;
+  set hive.map.aggr=true;
+  set hive.groupby.mapaggr.checkinterval = 100000;
+  set hive.exec.reducers.bytes.per.reducer=300000000;
+  set hive.auto.convert.join=true;
+  
+  ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-27T10:10:20.353Z"
-updatedAt: "2018-01-12T03:16:42.355Z"
+updatedAt: "2018-03-14T11:45:53.845Z"

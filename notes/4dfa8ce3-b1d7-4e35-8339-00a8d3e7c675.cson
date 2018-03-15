@@ -1,0 +1,26 @@
+createdAt: "2018-03-14T03:03:37.105Z"
+updatedAt: "2018-03-14T09:01:37.323Z"
+type: "MARKDOWN_NOTE"
+folder: "312348b473d25bc30401"
+title: "3- kafka 集群"
+content: '''
+  ### 3- kafka 集群
+  
+  ---
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4a4a554217d7a0a1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  > 集群组件:
+  
+  
+  组件 | 说明
+  --- | ---
+  Broker | Kafka集群通常由多个代理组成以保持负载平衡。 Kafka代理是无状态的，所以他们使用ZooKeeper来维护它们的集群状态。 一个Kafka代理实例可以每秒处理数十万次读取和写入，每个Broker可以处理TB的消息，而没有性能影响。 Kafka经纪人领导选举可以由ZooKeeper完成。
+  ZooKeeper  | ZooKeeper用于管理和协调Kafka代理。 ZooKeeper服务主要用于通知生产者和消费者Kafka系统中存在任何新代理或Kafka系统中代理失败。 根据Zookeeper接收到关于代理的存在或失败的通知，然后产品和消费者采取决定并开始与某些其他代理协调他们的任务。
+  Producers | 生产者将数据推送给经纪人。 当新代理启动时，所有生产者搜索它并自动向该新代理发送消息。 Kafka生产者不等待来自代理的确认，并且发送消息的速度与代理可以处理的一样快。
+  Consumers | 因为Kafka代理是无状态的，这意味着消费者必须通过使用分区偏移来维护已经消耗了多少消息。 如果消费者确认特定的消息偏移，则意味着消费者已经消费了所有先前的消息。 消费者向代理发出异步拉取请求，以具有准备好消耗的字节缓冲区。 消费者可以简单地通过提供偏移值来快退或跳到分区中的任何点。 消费者偏移值由ZooKeeper通知。
+'''
+tags: []
+isStarred: false
+isTrashed: false
