@@ -1,5 +1,5 @@
 createdAt: "2018-03-15T11:29:17.067Z"
-updatedAt: "2018-03-15T11:47:27.370Z"
+updatedAt: "2018-03-16T09:16:27.338Z"
 type: "MARKDOWN_NOTE"
 folder: "ef3e1850a2ffff04209d"
 title: "7-hive源码分析之生成QueryBlock"
@@ -7,6 +7,11 @@ content: '''
   ### 7-hive源码分析之生成QueryBlock
   
   ---
+  
+  参考自：[http://blog.csdn.net/wzq6578702/article/details/71331123](http://blog.csdn.net/wzq6578702/article/details/71331123)　欢迎阅读原作者内容。
+  参考自:[https://www.iteblog.com/archives/1527.html](https://www.iteblog.com/archives/1527.html) 欢迎阅读原作者内容.
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-dc92a2f190c7f242.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
   AST Tree生成QueryBlock的过程是一个递归的过程，先序遍历AST Tree，遇到不同的Token节点，保存到相应的属性中，主要包含以下几个过程
   
@@ -68,6 +73,86 @@ content: '''
       return true;
     }
   ```
+  
+  如果doPhase1执行成功那么就会得到一个QB，进入doPhase1方法：
+  
+  ```
+    /**
+     * Phase 1: (including, but not limited to):
+     * 1. Gets all the aliases for all the tables / subqueries and makes the
+     * appropriate mapping in aliasToTabs, aliasToSubq 2. Gets the location of the
+     * destination and names the clause "inclause" + i 3. Creates a map from a
+     * string representation of an aggregation tree to the actual aggregation AST
+     * 4. Creates a mapping from the clause name to the select expression AST in
+     * destToSelExpr 5. Creates a mapping from a table alias to the lateral view
+     * AST's in aliasToLateralViews
+     *
+     * @param ast
+     * @param qb
+     * @param ctx_1
+     * @throws SemanticException
+     */
+    @SuppressWarnings({"fallthrough", "nls"})
+    public boolean doPhase1(ASTNode ast, QB qb, Phase1Ctx ctx_1, PlannerContext plannerCtx)
+        throws SemanticException {
+              。。。。。。。。。。。。。。。。略。。。。。。。。
+          case HiveParser.TOK_SELECT://select类型的token
+          qb.countSel();//对qb做标记
+          qbp.setSelExprForClause(ctx_1.dest, ast);
+          。。。。。。。。。。。。。。。。。略。。。。。。
+         case HiveParser.TOK_WHERE://where类型token
+         //对where的孩子进行处理，为什么是ast.getChild(0)？这个是和之前的HiveParser.g结构相辅相成的。
+          qbp.setWhrExprForClause(ctx_1.dest, ast);
+          if (!SubQueryUtils.findSubQueries((ASTNode) ast.getChild(0)).isEmpty())
+              queryProperties.setFilterWithSubQuery(true);
+          break;
+        。。。。。。。。。。。。。。。。略。。。。。。。。
+        case HiveParser.TOK_GROUPBY:
+        case HiveParser.TOK_ROLLUP_GROUPBY:
+        case HiveParser.TOK_CUBE_GROUPBY:
+        case HiveParser.TOK_GROUPING_SETS:
+        。。。。。。。。。。。。略。。。。。。。。
+            if (!skipRecursion) {
+        // Iterate over the rest of the children
+        int child_count = ast.getChildCount();
+        for (int child_pos = 0; child_pos < child_count && phase1Result; ++child_pos) {
+          // Recurse
+          phase1Result = phase1Result && doPhase1(
+              (ASTNode)ast.getChild(child_pos), qb, ctx_1, plannerCtx);
+        }
+      }
+      。。。。。。。。。。。。。。。略。。。。。。。。。
+  ```
+  
+  参数qb是一个空的**QB**，在不同case类型下对齐进行填满。
+  doPhase1对**ASTTree**中的每个元素的**TOK**类型进行case，针对于不同的case对节点数据进行填充。 
+  for遍历整棵**ASTTree**，中间对每个元素递归调用**doPhase1**，这种方式是一种深度优先搜索的算法。 
+  经过一轮深度优先遍历，不带元数据的QB树就生成了。 
+  doPhase1执行完毕之后得到QB，QB里边的只是一些关键字还有一些表的名字，但是和hdfs的文件路径对应不起来，所以需要metaData映射关系，之后在SemanticAnalyzer中调用了 getMetaData 
+  
+  ```
+    public void getMetaData(QB qb) throws SemanticException {
+      getMetaData(qb, false);
+    }
+  
+    public void getMetaData(QB qb, boolean enableMaterialization) throws SemanticException {
+      try {
+        if (enableMaterialization) {
+          getMaterializationMetadata(qb);
+        }
+        getMetaData(qb, null);
+      } catch (HiveException e) {
+        // Has to use full name to make sure it does not conflict with
+        // org.apache.commons.lang.StringUtils
+        LOG.error(org.apache.hadoop.util.StringUtils.stringifyException(e));
+        if (e instanceof SemanticException) {
+          throw (SemanticException)e;
+        }
+        throw new SemanticException(e.getMessage(), e);
+      }
+    }
+  ```
+  getMetaData又会递归的去取元数据（从mysql中），经过doPhase1和getMetaData得到一个完整的QB.
 '''
 tags: []
 isStarred: false

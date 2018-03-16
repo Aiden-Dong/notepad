@@ -1,5 +1,5 @@
 createdAt: "2018-03-15T06:35:42.421Z"
-updatedAt: "2018-03-15T11:28:52.345Z"
+updatedAt: "2018-03-16T09:16:15.366Z"
 type: "MARKDOWN_NOTE"
 folder: "ef3e1850a2ffff04209d"
 title: "6-hive源码分析之SQL解析："
@@ -7,7 +7,8 @@ content: '''
   ### 6-hive源码分析之SQL解析：
   
   ---
-  
+  参考自：[http://blog.csdn.net/wzq6578702/article/details/71331123](http://blog.csdn.net/wzq6578702/article/details/71331123)　欢迎阅读原作者内容。
+  参考自:[https://www.iteblog.com/archives/1527.html](https://www.iteblog.com/archives/1527.html) 欢迎阅读原作者内容.
   
   语法解析Parser 
   

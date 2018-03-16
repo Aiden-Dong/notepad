@@ -1,0 +1,176 @@
+createdAt: "2018-03-16T05:54:43.599Z"
+updatedAt: "2018-03-16T09:19:47.726Z"
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "9-hive源码分析-物理执行计划"
+content: '''
+  ### 9-hive源码分析-物理执行计划
+  
+  ---
+  参考自：[http://blog.csdn.net/wzq6578702/article/details/71331123](http://blog.csdn.net/wzq6578702/article/details/71331123)　欢迎阅读原作者内容。
+  参考自:[https://www.iteblog.com/archives/1527.html](https://www.iteblog.com/archives/1527.html) 欢迎阅读原作者内容.
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-077e64b18f3c69eb.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ##### 相关配置:
+  
+  hive.execution.engine - Hive执行引擎 
+  ```
+  mr - 在MapReduce上执行 
+  tez - 在Tez上执行 
+  spark - 在Spark上执行 
+  ```
+  hive.execution.mode – Hive执行模式 
+  ```
+  container - 在Yarn Container内执行Query Fragments 
+  llap – 在LLAP内执行Query Fragments 
+  ```
+  
+  ##### 物理执行计划和逻辑执行计划的区别 :
+  
+  逻辑执行计划是一个Operator图 
+  物理执行计划是一个Task图 
+  物理执行计划是把逻辑执行计划切分成子图 
+  物理执行计划图的每个Task结点内是一个Operator结点的子图
+  
+  举个例子 : `SELECT * FROM a JOIN b ON a.id=b.id;`
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-7414ba2b03a375ad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ##### 物理执行计划的Task类型:
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4f91111d37328ce3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ```
+  if (LOG.isDebugEnabled()) {
+      LOG.debug("Before logical optimization\\n" + Operator.toString(pCtx.getTopOps().values()));
+    }
+    Optimizer optm = new Optimizer();
+    optm.setPctx(pCtx);
+    optm.initialize(conf);
+    pCtx = optm.optimize();//fetchTask在逻辑执行计划最后一步生成
+    if (pCtx.getColumnAccessInfo() != null) {
+      // set ColumnAccessInfo for view column authorization
+      setColumnAccessInfo(pCtx.getColumnAccessInfo());
+    }
+    FetchTask origFetchTask = pCtx.getFetchTask();//fetchTask是物理执行计划的开始
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("After logical optimization\\n" + Operator.toString(pCtx.getTopOps().values()));
+    }
+  ```
+  
+  开始搞物理执行计划 :
+  
+  ```
+  if (!ctx.getExplainLogical()) {
+    TaskCompiler compiler = TaskCompilerFactory.getCompiler(conf, pCtx);  // Spark，Tez, MR 等　
+    compiler.init(conf, console, db);
+    compiler.compile(pCtx, rootTasks, inputs, outputs);     // 不同引擎生成不同的物理执行计划
+    fetchTask = pCtx.getFetchTask();  // 物理执行计划的开始
+  }
+  ```
+  
+  TaskCompilerFactory是编译器的工厂类:
+  
+  ```
+  public static TaskCompiler getCompiler(HiveConf conf, ParseContext parseContext) {
+    if (HiveConf.getVar(conf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")) {
+      return new TezCompiler();   // Tez 编译引擎
+    } else if (HiveConf.getVar(conf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
+      return new SparkCompiler(); // Spark 编译引擎
+    } else {
+      return new MapReduceCompiler(); // MapRed 编译引擎
+    }
+  }
+  ```
+  
+  
+  TaskCompiler:
+  
+  ```
+  //生成物理执行计划
+  generateTaskTree(rootTasks, pCtx, mvTask, inputs, outputs);
+  
+  // For each task, set the key descriptor for the reducer
+  for (Task<? extends Serializable> rootTask : rootTasks) {
+    GenMapRedUtils.setKeyAndValueDescForTaskTree(rootTask);
+  }
+  
+  // If a task contains an operator which instructs bucketizedhiveinputformat
+  // to be used, please do so
+  for (Task<? extends Serializable> rootTask : rootTasks) {
+    setInputFormat(rootTask);
+  }
+  //物理优化
+  optimizeTaskPlan(rootTasks, pCtx, ctx);
+  ```
+  不同的引擎有不同的物理计划与物理优化:
+  
+  TaskCompiler.generateTaskTree() 
+  MapReduceCompler.generateTaskTree() 
+  SparkCompler.generateTaskTree() 
+  TezCompler.generateTaskTree()
+  
+  
+  TaskCompiler.optimizeTaskPlan() 
+  MapReduceCompler.optimizeTaskPlan() 
+  SparkCompler.optimizeTaskPlan() 
+  TezCompler.optimizeTaskPlan()
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-f87e901caf5caa36.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 作业的提交:
+  
+  MR:
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-08a05f703ba77574.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  Spark:
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-c9ea7ff72176f36f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  Tez:
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-ccaf815394d7c463.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  作业调用执行:
+  
+  ```
+  public int execute() throws CommandNeedRetryException {
+      ...
+      while (!destroyed && driverCxt.isRunning()) {
+  
+        // Launch upto maxthreads tasks
+        Task<? extends Serializable> task;
+        while ((task = driverCxt.getRunnable(maxthreads)) != null) {
+          perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.TASK + task.getName() + "." + task.getId());
+          TaskRunner runner = launchTask(task, queryId, noName, jobname, jobs, driverCxt);
+          if (!runner.isRunning()) {
+            break;
+          }
+        }
+    .....
+  
+    return (0);
+  }
+  ```
+  
+  调用Task:
+  
+  ```
+  public void runSequential() {
+    int exitVal = -101;
+    try {
+      exitVal = tsk.executeTask();
+    } catch (Throwable t) {
+      if (tsk.getException() == null) {
+        tsk.setException(t);
+      }
+      t.printStackTrace();
+    }
+    result.setExitVal(exitVal, tsk.getException());
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

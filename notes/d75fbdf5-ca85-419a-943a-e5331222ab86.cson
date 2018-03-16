@@ -1,5 +1,5 @@
 createdAt: "2018-03-15T11:44:07.763Z"
-updatedAt: "2018-03-15T11:51:50.300Z"
+updatedAt: "2018-03-16T09:17:46.771Z"
 type: "MARKDOWN_NOTE"
 folder: "ef3e1850a2ffff04209d"
 title: "8-Hive 源码分析之Operator Tree:"
@@ -7,6 +7,13 @@ content: '''
   ### 8-Hive 源码分析之Operator Tree:
   
   ---
+  
+  参考自：[http://blog.csdn.net/wzq6578702/article/details/71331123](http://blog.csdn.net/wzq6578702/article/details/71331123)　欢迎阅读原作者内容。
+  参考自:[https://www.iteblog.com/archives/1527.html](https://www.iteblog.com/archives/1527.html) 欢迎阅读原作者内容.
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-df0011fb5abe9c2b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ![](http://img.blog.csdn.net/20170507142034604?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvd3pxNjU3ODcwMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
   
   QueryBlock生成Operator Tree就是遍历上一个过程中生成的QB和QBParseInfo对象的保存语法的属性，包含如下几个步骤：
   
@@ -17,6 +24,86 @@ content: '''
   - QBParseInfo#destToGroupby => ReduceSinkOperator + GroupByOperator
   - QBParseInfo#destToOrderby => ReduceSinkOperator + ExtractOperator
   
+  大体的递归过程：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-662d9cd7081cb41d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 例子：
+  
+  ```
+  SELECT
+    p.datekey datekey,
+    p.userid userid,
+    c.clienttype
+  FROM
+    detail.usersequence_client c
+    JOIN fact.orderpayment p ON p.orderid = c.orderid
+    JOIN default.user du ON du.userid = p.userid
+  WHERE p.datekey = 20131118 
+  ```
+  
+  1. 首先根据 QueryBlock `QB#aliasToTabs{du=dim.user, c=detail.usersequence_client, p=fact.orderpayment}` 生成 **TableScanOperator**
+  
+  ```
+  TableScanOperator(“dim.user”) TS[0]
+  TableScanOperator(“detail.usersequence_client”) TS[1]
+  TableScanOperator(“fact.orderpayment”) TS[2]
+  ```
+  
+  2. 先序遍历 `QBParseInfo#joinExpr` 生成 `QBJoinTree` ，类`QBJoinTree`也是一个树状结构，QBJoinTree保存左右表的ASTNode和这个查询的别名，最终生成的查询树如下
+  
+  ```
+      base
+      /  \\
+     p    du
+    / \\
+   c   p
+  ```
+  2.1: 前序遍历QBJoinTree，先生成`detail.usersequence_client`和`fact.orderpayment`的Join操作树
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-aa6962c2d2c75e16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  图中 TS=**TableScanOperator** RS=**ReduceSinkOperator** JOIN=**JoinOperator**
+  
+  2.2 : 生成中间表与dim.user的Join操作树
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2b43de6280a5daf7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  根据QB `QBParseInfo#destToWhereExpr` 生成`FilterOperator`。此时QB2遍历完成。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-cc3431b421e6f72b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  图中 FIL= FilterOperator SEL= SelectOperator
+  
+  
+  #### 逻辑层优化器
+  
+  大部分逻辑层优化器通过变换OperatorTree，合并操作符，达到减少MapReduce Job，减少shuffle数据量的目的。
+  
+  名称 | 字段
+  --- | ---
+  ② SimpleFetchOptimizer | 优化没有GroupBy表达式的聚合查询
+  ② MapJoinProcessor | MapJoin，需要SQL中提供hint，0.11版本已不用
+  ② BucketMapJoinOptimizer  | BucketMapJoin
+  ② GroupByOptimizer | Map端聚合
+  ① ReduceSinkDeDuplication | 合并线性的OperatorTree中partition/sort key相同的reduce
+  ① PredicatePushDown | 谓词前置
+  ① CorrelationOptimizer | 利用查询中的相关性，合并有相关性的Job，HIVE-2206
+  ColumnPruner | 字段剪枝
+  
+  表格中①的优化器均是一个Job干尽可能多的事情/合并。②的都是减少shuffle数据量，甚至不做Reduce。
+  
+  - PredicatePushDown优化器
+  
+  断言判断提前优化器将OperatorTree中的FilterOperator提前到TableScanOperator之后
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-3e55738c2c6b2903.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  - NonBlockingOpDeDupProc优化器
+  
+  NonBlockingOpDeDupProc优化器合并SEL-SEL 或者 FIL-FIL 为一个Operator
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-f9e4252e56789f61.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
 '''
 tags: []
