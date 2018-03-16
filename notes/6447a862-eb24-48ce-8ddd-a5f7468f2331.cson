@@ -1,0 +1,135 @@
+createdAt: "2018-03-16T10:05:13.686Z"
+updatedAt: "2018-03-16T10:45:42.473Z"
+type: "MARKDOWN_NOTE"
+folder: "312348b473d25bc30401"
+title: "6-Kafka 基本操作:"
+content: '''
+  ### 6-Kafka 基本操作:
+  
+  ---
+  
+  #### 单节点 - 单代理配置:
+  
+  在此配置中，您有一个ZooKeeper和代理id实例。 以下是配置它的步骤:
+  
+  ```
+  bin/kafka-server-start.sh config/server.properties
+  ```
+  
+  - **创建Kafka主题**:
+  
+  Kafka提供了一个名为 kafka-topics.sh 的命令行实用程序，用于在服务器上创建主题:
+  
+  > 模板：
+  
+  ```
+  bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor ${Replication-Num} --partitions ${PartitionNum} --topic ${TopicName}
+  
+  --zookeeper          : 元信息
+  --replication-factor : 副本因子
+  --partitions         : 分区数量
+  --topic              : topic 名称
+  ```
+  
+  
+  例如:
+  
+  ```
+  bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1  --partitions 1 --topic Hello-Kafka
+  ```
+  
+  - **主题列表**
+  
+  要获取Kafka服务器中的主题列表，可以使用以下命令
+  
+  > 语法:
+  
+  ```
+  bin/kafka-topics.sh --list --zookeeper localhost:2181
+  ```
+  
+  输出:
+  
+  ```
+  Hello-Kafka
+  ```
+  由于我们已经创建了一个 Topic，它将仅列出 `Hello-Kafka`。 假设，如果创建多个主题，您将在输出中获取Topic名称。
+  
+  - **启动生产者以发送消息**
+  
+  > 语法:
+  
+  ```
+  bin/kafka-console-producer.sh --broker-list ${Brocker}:${Port} --topic ${topic-name}
+  ```
+  
+  --brocker-list :  Brocker 列表
+  --topic:　订阅Topic
+  
+  实例:
+  
+  ```
+  bin/kafka-console-producer.sh --broker-list localhost:9092 --topic Hello-Kafka
+  ```
+  
+  - **启动消费者以接收消息**
+  
+  与生产者类似，在 `config/consumer.properties` 文件中指定了缺省使用者属性。 打开一个新终端并键入以下消息消息语法。
+  
+  > 语法:
+  
+  ```
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 —topic topic-name --from-beginning
+  ```
+  
+  例如:
+  
+  ```
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 —topic Hello-Kafka --from-beginning
+  ```
+  #### 单节点多代理配置:
+  
+  在进入多个代理集群设置之前，首先启动ZooKeeper服务器。
+  
+  创建多个Kafka Brokers. 我们在配置 server.properties中已有一个Kafka代理实例。
+  
+  现在我们需要多个代理实例，因此将现有的server.properties文件复制到两个新的配置文件中，并将其重命名为`server_one.properties`和`server_two.properties`。
+  
+  然后编辑这两个新文件并分配以下更改:
+  
+  - config/server-one.properties:
+  
+  ```
+  # The id of the broker. This must be set to a unique integer for each broker.
+  broker.id=1
+  # The port the socket server listens on
+  port=9093
+  # A comma seperated list of directories under which to store log files
+  log.dirs=/tmp/kafka-logs-1
+  ```
+  
+  - config/server-two.properties
+  
+  ```
+  # The id of the broker. This must be set to a unique integer for each broker.
+  broker.id=2
+  # The port the socket server listens on
+  port=9094
+  # A comma seperated list of directories under which to store log files
+  log.dirs=/tmp/kafka-logs-2
+  ```
+  
+  启动多个代理 - 在三台服务器上进行所有更改后，打开三个新终端，逐个启动每个代理。
+  
+  ```
+  Broker1
+  bin/kafka-server-start.sh config/server.properties
+  Broker2
+  bin/kafka-server-start.sh config/server-one.properties
+  Broker3
+  bin/kafka-server-start.sh config/server-two.properties
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

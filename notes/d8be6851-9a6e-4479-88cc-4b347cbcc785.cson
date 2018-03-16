@@ -1,0 +1,49 @@
+createdAt: "2018-03-16T10:00:57.654Z"
+updatedAt: "2018-03-16T10:05:05.306Z"
+type: "MARKDOWN_NOTE"
+folder: "312348b473d25bc30401"
+title: "5- Kafka 安装"
+content: '''
+  ### 5- Kafka 安装
+  
+  ---
+  
+  #### 依赖:
+  
+  - java 1.8
+  - zookeeper
+  - kafka
+  
+  #### 启动服务器(Kafka Brocker):
+  
+  ```
+  bin/kafka-server-start.sh config/server.properties
+  ```
+  
+  服务器启动后，您会在屏幕上看到以下响应:
+  
+  ```
+  $ bin/kafka-server-start.sh config/server.properties
+  [2016-01-02 15:37:30,410] INFO KafkaConfig values:
+  request.timeout.ms = 30000
+  log.roll.hours = 168
+  inter.broker.protocol.version = 0.9.0.X
+  log.preallocate = false
+  security.inter.broker.protocol = PLAINTEXT
+  …………………………………………….
+  …………………………………………….
+  ```
+  
+  #### 停止服务器:
+  
+  执行所有操作后，可以使用以下命令停止服务器:
+  
+  ```
+  bin/kafka-server-stop.sh config/server.properties
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
