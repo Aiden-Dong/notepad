@@ -1,0 +1,193 @@
+createdAt: "2018-03-16T11:14:02.957Z"
+updatedAt: "2018-03-16T11:40:12.873Z"
+type: "MARKDOWN_NOTE"
+folder: "312348b473d25bc30401"
+title: "7-kafka 简单生产者实例:"
+content: '''
+  ### 7-kafka 简单生产者实例:
+  
+  ---
+  
+  让我们使用Java客户端创建一个用于发布和使用消息的应用程序。 Kafka生产者客户端包括以下API。
+  
+  #### KafkaProducer API:
+  
+  让我们了解本节中最重要的一组Kafka生产者API。 KafkaProducer API的中心部分是 KafkaProducer 类。
+  
+  KafkaProducer类提供了一个选项，用于将其构造函数中的Kafka代理连接到以下方法。
+  
+  KafkaProducer类提供send方法以异步方式将消息发送到主题。 send()的签名如下:
+  
+  ```
+  producer.send(new ProducerRecord<byte[],byte[]>(topic, partition, key1, value1) , callback);
+  ```
+  
+  - **ProducerRecord** : 生产者管理等待发送的记录的缓冲区
+  - **回调** : 当服务器确认记录时执行的用户提供的回调(null表示无回调)
+  
+  KafkaProducer类提供了一个flush方法，以确保所有先前发送的消息都已实际完成。 
+  flush方法的语法如下:
+  
+  ```
+  public void flush()
+  ```
+  
+  KafkaProducer类提供了partitionFor方法，这有助于获取给定主题的分区元数据。 
+  这可以用于自定义分区。 这种方法的签名如下:
+  
+  ```
+  public Map metrics()
+  ```
+  
+  它返回由生产者维护的内部度量的映射。
+  
+  ```
+  public void close()
+  ```
+  
+  KafkaProducer类提供关闭方法块，直到所有先前发送的请求完成。
+  
+  #### 生产者API:
+  
+  生产者API的中心部分是生产者类。 生产者类提供了一个选项，通过以下方法在其构造函数中连接**Kafka Brocker**。
+  
+  - **生产者类**:
+  
+  生产者类提供send方法以使用以下签名向单个或多个Topic发送消息。
+  
+  ```
+  public void send(KeyedMessaget<k,v> message) 
+  - sends the data to a single topic,par-titioned by key using either sync or async producer.
+  
+  public void send(List<KeyedMessage<k,v>>messages)
+  - sends data to multiple topics.
+  
+  Properties prop = new Properties();
+  prop.put(producer.type,"async")
+  ProducerConfig config = new ProducerConfig(prop);
+  ```
+  
+  有两种类型的生产者 - **同步**和**异步**:
+  
+  相同的API配置也适用于同步生产者。 它们之间的区别是:
+  同步生成器直接发送消息，但在后台发送消息。 当您想要更高的吞吐量时，异步生产者是首选。 
+  
+  在以前的版本，如0.8，一个异步生产者没有回调send()注册错误处理程序。 这仅在当前版本0.9中可用。
+  
+  ```
+  public void close()
+  ```
+  生产者类提供关闭方法以关闭与所有Kafka代理的生产者池连接。
+  
+  #### 配置设置:
+  
+  下表列出了Producer API的主要配置设置，以便更好地理解:
+  
+  配置设置 | 说明
+  --- | ---
+  client.id | 标识生产者应用程序
+  producer.type | 同步或异步 
+  acks | acks配置控制生产者请求下的标准是完全的。
+  retries | 如果生产者请求失败，则使用特定值自动重试。
+  bootstrapping | 代理列表。
+  linger.ms | 如果你想减少请求的数量，你可以将linger.ms设置为大于某个值的东西。
+  key.serializer | 序列化器接口的键。
+  value.serializer | 值。
+  batch.size | 缓冲区大小。
+  buffer.memory | 控制生产者可用于缓冲的存储器的总量。
+  
+  #### ProducerRecord API:
+  
+  ProducerRecord是发送到`Kafka cluster.ProducerRecord`类构造函数的键/值对，用于使用以下签名创建具有分区，键和值对的记录。
+  
+  ```
+  public ProducerRecord (string topic, int partition, k key, v value)
+  public ProducerRecord (string topic, k key, v value)
+  public ProducerRecord (string topic, v value)
+  ```
+  - topic : 将附加到记录的用户定义的主题名称
+  - partition : 分区技术
+  - key : 将包含在记录中的键
+  - value : 记录内容
+  
+  类方法描述:
+  
+  类方法　| 描述
+  public string topic() | 主题将附加到记录。
+  public K key() | 将包括在记录中的键。 如果没有这样的键，null将在这里重新打开。
+  public V value() | 记录内容。
+  partition() | 记录的分区计数
+  
+  #### SimpleProducer应用程序
+  
+  ```
+  /import util.properties packages
+  import java.util.Properties;
+  
+  //import simple producer packages
+  import org.apache.kafka.clients.producer.Producer;
+  
+  //import KafkaProducer packages
+  import org.apache.kafka.clients.producer.KafkaProducer;
+  
+  //import ProducerRecord packages
+  import org.apache.kafka.clients.producer.ProducerRecord;
+  
+  //Create java class named “SimpleProducer"
+  public class SimpleProducer {
+     
+     public static void main(String[] args) throws Exception{
+        
+        // Check arguments length value
+        if(args.length == 0){
+           System.out.println("Enter topic name");
+           return;
+        }
+        
+        //Assign topicName to string variable
+        String topicName = args[0].toString();
+        
+        // create instance for properties to access producer configs   
+        Properties props = new Properties();
+        
+        //Assign localhost id
+        props.put("bootstrap.servers", “localhost:9092");
+        
+        //Set acknowledgements for producer requests.      
+        props.put("acks", “all");
+        
+        //If the request fails, the producer can automatically retry,
+        props.put("retries", 0);
+        
+        //Specify buffer size in config
+        props.put("batch.size", 16384);
+        
+        //Reduce the no of requests less than 0   
+        props.put("linger.ms", 1);
+        
+        //The buffer.memory controls the total amount of memory available to the producer for buffering.   
+        props.put("buffer.memory", 33554432);
+        
+        props.put("key.serializer", 
+           "org.apache.kafka.common.serializa-tion.StringSerializer");
+           
+        props.put("value.serializer", 
+           "org.apache.kafka.common.serializa-tion.StringSerializer");
+        
+        Producer<String, String> producer = new KafkaProducer
+           <String, String>(props);
+              
+        for(int i = 0; i < 10; i++)
+           producer.send(new ProducerRecord<String, String>(topicName, 
+              Integer.toString(i), Integer.toString(i)));
+                 System.out.println(“Message sent successfully");
+                 producer.close();
+     }
+  }
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
