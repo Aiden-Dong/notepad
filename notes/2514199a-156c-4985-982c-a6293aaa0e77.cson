@@ -1,0 +1,85 @@
+createdAt: "2018-03-20T09:30:42.476Z"
+updatedAt: "2018-03-20T09:31:02.614Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "4-Servlet处理Http请求报头"
+content: '''
+  ### 4-Servlet处理Http请求报头
+  
+  ---
+  
+  ### 1.请求报头
+  ```
+  > HttpServletRequest
+  
+  ---获取请求报头的内容
+  getCookies()            --- 返回cookies报头的内容
+  getContentLenght()      --- 返回Content-Length 报头的值
+  getContentType()        --- 返回Content-Type报头的值
+  getHeaderNames()        --- 返回所有的报头名称
+  getHeaders()            --- 枚举指定报头每次出现所对应的值
+  
+  --- 获取主请求行自身的内容
+  getMethod()             --- 返回主请求的方法
+  getRequestURI()         --- 返回URL中主机和端口之后，但在表单数据之前的部分
+  getRequestURL()         --- 返回客户请求的URL
+  getQueryString()        --- 返回表单数据
+  getProtocol()           --- 返回请求行的第三部分
+  ```
+  
+  ### 2.应用实例
+  ```
+  import java.io.IOException;
+  import javax.servlet.ServletException;
+  import javax.servlet.http.HttpServlet;
+  import javax.servlet.http.HttpServletRequest;
+  import javax.servlet.http.HttpServletResponse;
+  
+  public class HttpRequest extends HttpServlet{
+  
+  	public static void main(String[] args){
+  		
+  	}
+  	@Override
+  	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  		// TODO Auto-generated method stub
+  		// super.doGet(req, resp);
+  		
+  		/*
+  		 * 获取请求表头内容
+  		 */
+  		// 获取cookies
+  		System.out.println(req.getCookies());
+  		// 获取 ContentLength
+  		System.out.println(req.getContentLength());
+  		// 获取 ContentType
+  		System.out.println(req.getContentType());
+  		// 获取 所有的报头属性名
+  		System.out.println(req.getHeaderNames());
+  		// 获取Header头对应的值
+  		//System.out.println(req.getHeader());
+  		
+  		
+  		/*
+  		 *	获取主请求行自身的内容 
+  		 */
+  
+  		// 1- 获取主请求的方法
+  		System.out.println(req.getMethod());
+  		// 2- 获取主请求的URL
+  		System.out.println(req.getRequestURL());
+  		// 3- 获取请求的URI
+  		System.out.println(req.getRequestURI());
+  		// 4- 获取请求的表单数据
+  		System.out.println(req.getQueryString());
+  		// 5- 获取行的第三部分
+  		System.out.println(req.getProtocol());
+  	}
+  }
+  ```
+  ![image](http://ww3.sinaimg.cn/mw1024/e91aafadjw1f7hb8jvvr4j20ed04e74q.jpg)
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

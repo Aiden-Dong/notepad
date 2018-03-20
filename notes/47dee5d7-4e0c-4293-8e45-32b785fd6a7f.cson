@@ -1,0 +1,96 @@
+createdAt: "2018-03-20T09:30:19.881Z"
+updatedAt: "2018-03-20T09:30:30.339Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "3-servlet 处理表单数据"
+content: '''
+  ### 3-servlet 处理表单数据
+  
+  ---
+  
+  #### 表单数据的作用
+  
+  1. 使用FORM元素创建HTML表单
+  2. 使用输入元素收集客户信息 
+  3. 在接近表单尾部放置提交按钮
+  
+  > 说明：
+  
+      1. 在URL中使用?后面跟表单的明值对
+      2. 名值对使用&分隔开
+      3. 必须对URL进行解码
+  ---
+  #### 在servlet中读取表单数据
+  
+  - getParameter                              // 单个值的读取
+  - getParameterValues                        // 多个值的读取
+  - getParameterNames | getParameterMap       // 获取参数名
+  ```
+  String      HttpServletRequest.getParemeter(String args);
+  String[]    HttpServletRequest.getParameterValues(String args);
+  Enumeration HttpServletRequest.getParameterNames();
+  Map         HttpServletRequest.getParameterMap();
+  ```
+  
+  #### 实例
+  ```
+  import java.io.IOException;
+  import java.util.Enumeration;
+  import java.util.Map;
+  import java.util.Set;
+  
+  import javax.servlet.ServletConfig;
+  import javax.servlet.ServletException;
+  import javax.servlet.http.HttpServlet;
+  import javax.servlet.http.HttpServletRequest;
+  import javax.servlet.http.HttpServletResponse;
+  
+  public class ServMain extends HttpServlet {
+  	public static void main(String[] args){
+  		
+  	}
+  	@Override
+  	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  		// TODO Auto-generated method stub
+  		System.out.println("Post 方法");
+  		this.doGet(req, resp);
+  	}
+  
+  	@Override
+  	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  		// TODO Auto-generated method stub
+  		
+  		String name = req.getParameter("name");
+  		String value = req.getParameter("passwd");
+  		String[] checks = req.getParameterValues("check");
+  		
+  		System.out.println("name : " + name);
+  		System.out.println("passwd : " + value);
+  		for(String str : checks){
+  			System.out.println("check : " + " : " + str);
+  		}
+  		System.out.println("=========================================");
+  		
+  		// 遍历1 
+  		@SuppressWarnings("unchecked")
+  		Enumeration<String> gather = req.getParameterNames();
+  		while(gather.hasMoreElements()){
+  			String param = gather.nextElement();
+  			
+  			String[] val = req.getParameterValues(param);
+  			for(int i = 0; i < val.length; i++){
+  				System.out.println(param + ":" + val[i]); 
+  			}
+  		}
+  	
+  		System.out.println("Get 方法");
+  		//super.doGet(req, resp);
+  	}
+  }
+  
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

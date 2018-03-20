@@ -1,0 +1,116 @@
+createdAt: "2018-03-20T09:32:38.518Z"
+updatedAt: "2018-03-20T09:33:19.416Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "7-Session"
+content: '''
+  ### 7-Session
+  
+  ---
+  
+  1. ### 会话跟踪的三种形式
+  
+  ```
+  1. cookie 方式
+  2. URL 重写方式
+  3. 隐藏表单域
+  4. servlet Session 
+  ```
+  
+  2. ### 会话跟踪方法
+  1. 访问与当前请求相关联的会话对象
+  ```
+  HttpSession session = request.getSession();
+  // 在后台，系统从cookie或附加URL数据中提取用户ID，之后以该ID为键，访问之前创建的HttpSession对象组成的表、
+  // 只能在发送任何文档内容到客户端之前调用request.getSession()
+  // 当session为空时， 默认创建一个新的session， 但可以通过faluse来设置
+  
+  HttpSession session = request.getSession(faluse);
+  if(session == null){
+  }
+  ```
+  2. 查找与会话相关联的信息
+  ```
+  HttpSession session = request.getSession(faluse);
+  if(session != null){
+      SomeClass value = (SomeClass)session.getAttribute("someIdentified");
+      // 也可调用getAttributeNames(); 获取所有的属性名
+  }
+  ```
+  3. 存储会话中的信息
+  ```
+   HttpSession session = request.getSession(faluse);
+  if(session != null){
+      SomeClass value = new SomeClass();
+      session.setAttribute("someIdentified", value);
+  }
+  ```
+  4. 废弃会话数据
+  ```
+  只移除自己编写的servlet创建的数据               --- removeAttribute
+  删除整个会话                                   --- invalidate
+  将用户从系统中注销并删除所有属于他的会话         --- logout
+  ```
+  3. ### 会话跟踪API
+  ```
+  public Object getAttribute(String name);
+  public Enumeration getAttributeNames();
+  public void setAttribute(String name, Object value);
+  public void removeAttribute(String name);
+  public void invalidate();
+  public void logout();
+  public String getId();
+  public boolean isNew();
+  public long getCreationTime();
+  public long getLastAccessedTime();
+  public int getMaxInactiveInterval();
+  public void setMaxInactiveInterval(int secound);
+  ```
+  4. ### 对发往客户的URL进行编码
+  1. servlet生成的web页面中含有潜入的URL
+  ```
+  String originalURL  = someURL;
+  String encodeURL    = response.encodeURL(originalURL);
+  ```
+  2. 在sendRedirect调用
+  ```
+  String origianlURL  = someURL;
+  String encodeURL    = response.encodeRedirectURL(originalURL);
+  response.sendRedirect(encodeURL);
+      ```
+  ### 实例
+  ```
+  import java.io.IOException;
+  import javax.servlet.ServletException;
+  import javax.servlet.http.HttpServlet;
+  import javax.servlet.http.HttpServletRequest;
+  import javax.servlet.http.HttpServletResponse;
+  import javax.servlet.http.HttpSession;
+  
+  public class Session extends HttpServlet{
+  	@Override
+  	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  		HttpSession session = req.getSession(false);
+  		
+  		if(session == null){
+  			int count = 0;
+  			session = req.getSession();
+  			session.setAttribute("count", (Integer)count);
+  			System.out.println("ID : " + session.getId());
+  			System.out.println("Is new : " + session.isNew());
+  			System.out.println("Create Time : " + session.getCreationTime());
+  			System.out.println("Access Time : " + session.getLastAccessedTime());
+  			System.out.println("Inactive Time : " + session.getMaxInactiveInterval());
+  		}else{
+  			int count = (Integer)session.getAttribute("count");
+  			System.out.println("count : "+ count);
+  			session.setAttribute("count",(Integer)(count+1));
+  		}
+  	}
+  }
+  ```
+  ![image](http://ww2.sinaimg.cn/mw1024/e91aafadjw1f7hl7nbbtoj20f708zq3q.jpg)
+'''
+tags: []
+isStarred: false
+isTrashed: false

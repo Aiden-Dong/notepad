@@ -79,6 +79,11 @@
       "key": "312348b473d25bc30401",
       "color": "#30D5C8",
       "name": "Apache Kafka"
+    },
+    {
+      "key": "5ebd9b00f5963387cb73",
+      "color": "#30D5C8",
+      "name": "JavaEE"
     }
   ],
   "version": "1.0"

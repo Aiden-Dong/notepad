@@ -1,0 +1,38 @@
+createdAt: "2018-03-20T09:31:15.571Z"
+updatedAt: "2018-03-20T09:31:49.841Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "5-服务器响应Http"
+content: '''
+  ### 5-服务器响应Http
+  
+  ---
+  
+  #### 5.1 状态代码的指定
+  
+  1. 设置任意状态代码：setStatus
+  
+  ```
+  void HttpServletResponse.setStauts(int args);
+  void HttpServletResponse.setStauts(int args, String argv);
+  ```
+  
+  2. 设置302和404状态代码
+  
+  ```
+  public void sendRedirect(String url);               // 网页跳转
+  public void sendError(int code, String message);    // 反回错误状态代码，以及一个提示 
+  ```
+  
+  #### 5.2 服务器响应报头常用的方法:
+  
+  ```
+  pubilc void setContentType(String mimeType);
+  public void setContentLength(int length);
+  public void addCookie(Cookie c);
+  pbulic void sendRedirect(String URL);
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

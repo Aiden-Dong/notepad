@@ -1,0 +1,62 @@
+createdAt: "2018-03-20T09:36:20.133Z"
+updatedAt: "2018-03-20T09:36:37.175Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "5- JSP 与 JavaBean"
+content: '''
+  ### 5- JSP 与 JavaBean
+  
+  ---
+   
+  - ##### Bean
+  
+  > bean 是按照某种标准格式编写的 **Java类**
+  
+  - Bean类必须要有一个零参数构造函数
+  - Bean类不应该有公开的字段
+  - 持续性的值应该通过 getXxx 和 setXxx (普通类型) isXxx 和 setXxx (Boolean 类型)
+  - 类应该声明为 **public** 类型， 并且应该**打包**
+  
+  - ##### Bean 基本任务
+  - **jsp:useBean:**
+  ```
+      <jsp:useBean id="beanName" class="javaClass" scope="scopeType" />
+  ```
+  - **jsp:getProperty:**
+  ```
+      <jsp:getProperty name="beanName" property="propertyName" />
+  ```
+  - **jsp: setproperty:**
+  ```
+  <jsp:setProperty name="beanName" property="propertyName" value="propertyValue"/>
+  ```
+  
+  - ##### Bean 高级
+  1. 将单个属性与输入参数关联:
+  
+  > String 属性的值设置比较容易， 但是其他类型的值的设置则存在很多问题；
+  可以使用 param 属性代替 value属性来容易的完成赋值
+  
+  ```
+  <jsp:setProperty name="beanName" property="propertyName" param="propertyValue" />
+  ```
+  
+  2. 将所有的属性与请求参数关联：
+  
+  > 将所有的属性与同名的请求参数关联起来
+  
+  ```
+  <jsp:setProperty name="beanName" property="*" />
+  ```
+  
+  - ##### Bean 共享 -- scope 值的设定
+  ```
+  1> page 	    : 仅涵盖使用 javaBean的页面
+  2> request	    ：有效范围仅限于使用 JavaBean的请求 -- 在forward请求中显示
+  3> session 	    : 有效范围在用于整个链接过程中
+  4> application      : 有效范围涵盖整个应用程序 
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

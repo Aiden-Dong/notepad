@@ -1,0 +1,115 @@
+createdAt: "2018-03-20T09:31:58.694Z"
+updatedAt: "2018-03-20T09:32:31.108Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "6-Cookie管理"
+content: '''
+  ### 6-Cookie管理
+  
+  ---
+  
+  ### 1. cookie的发送和接受
+  - #### 向客户程序发送Cookie
+  1. 创建cookie对象
+  ```
+  Cookie c = new Cookie("userID", "a1234");
+  ```
+  2. 设置最大时效
+  ```
+  c.setMaxAge(60*60*24*7);    // One week
+  ```
+  3. 将cookie放入到HTTP响应报头
+  ```
+  response.addCookie(c);
+  ```
+  
+  - #### 从客户程序中接受cookie
+  1. 获取Cookie数组
+  ```
+  Cookie[] arr = request.getCookies();
+  ```
+  2. 对数组进行循环，调用每一个cookie的getName方法，知道找到感兴趣的Cookie为止
+  ```
+  for(int i = 0; i < arr.length; i++){
+      if(arr[i] == "userID")
+          break;
+  }
+  ```
+  ### 2.使用Cookie属性
+  ```
+  public void setComment(String comment);         // 添加注释
+  public String getComment();
+  
+  public void setDomain(String domainPattern);    // 设置cooket试用的域
+  public String getDomain();
+  
+  public void setPath(String path);               // 设置cookie所使用的路径
+  public String getPath();
+  
+  public void setMaxAge(int lifetime);            // 设置生存时间
+  public int getMaxAge();
+  
+  public String getName();                        // 获取cookie的名
+  
+  public void setValue(String cookieValue);       // 指定与该cookie相关联的值
+  public String getValue();
+  ```
+  ### 3.会话Cookie与持续性Cookie
+  - ##### 会话Cookie
+  > 依赖当前会话，不设置setMaxAge (取默认值 -1)
+  - ##### 持续性Cookie
+  > 依赖于设置的时间， 通过setMaxAge设置时间限制
+  ```
+  import java.io.*;
+  import javax.servlet.*;
+  import javax.servlet.http.*;
+  public class Cookie extends HttpServlet{
+  
+  	public static void main(String[] args){
+  		
+  	}
+  	@Override
+  	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+  		
+  		int flag = 0;
+  		
+  		javax.servlet.http.Cookie[] arr = req.getCookies();
+  		
+  		if(arr == null){
+  			for(int i = 0; i < 2; i++){
+  				javax.servlet.http.Cookie one = new javax.servlet.http.Cookie("cookie-session-"+i, "cookie-session-"+i);
+  				javax.servlet.http.Cookie two = new javax.servlet.http.Cookie("cookie-"+i, "cookie-"+i);
+  				two.setMaxAge(60*5);
+  				resp.addCookie(one);
+  				resp.addCookie(two);
+  			}
+  		}else{
+  			for(javax.servlet.http.Cookie cookie : arr){
+  				System.out.println(cookie.getName() + " : " + cookie.getValue());
+  				if(cookie.getName().equals("count")){
+  					flag = 1;
+  					int count = Integer.parseInt(cookie.getValue());
+  					cookie.setValue(String.valueOf(count+1));
+  					resp.addCookie(cookie);
+  					// 修改cookie属性后必须使用addCookie来覆盖原cookie来生效
+  				}
+  			}
+  		}
+  		
+  		if(flag == 0){
+  			int count = 0;
+  			javax.servlet.http.Cookie cook = new javax.servlet.http.Cookie("count", String.valueOf(count));
+  			resp.addCookie(cook);
+  		}
+  		
+  		System.out.println("====================================================");
+  	}
+  		
+  }
+  
+  ```
+  ![image](http://ww1.sinaimg.cn/mw1024/e91aafadjw1f7hjtvnis3j20ht0b4jsv.jpg)
+'''
+tags: []
+isStarred: false
+isTrashed: false

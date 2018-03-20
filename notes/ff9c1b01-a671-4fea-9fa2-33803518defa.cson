@@ -1,0 +1,32 @@
+createdAt: "2018-03-20T09:34:08.578Z"
+updatedAt: "2018-03-20T09:34:27.084Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "9-Jsp 介绍"
+content: '''
+  ### 9-Jsp 介绍
+  
+  ---
+  
+  - jsp概述
+  1. jsp 实际上就是servlet: jsp 页面最终要转换成serlvet,并进行编译，在请求期间执行的实际上是编译后的servlet.
+  2. 并不能意味着jsp页面与servlet在任何情况下都同等试用
+  
+  - Tomcat 中 jsp的位置
+  
+  ```
+  主位置:
+      Install_Dir/webapps/ROOT
+  对应的URL:
+      http://host/SomeFile.jsp
+  更具体的位置:
+      Install_Dir/webapps/ROOT/someDirectory
+  对应的URL :
+      http://host/someDirectory/someFile.jsp
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

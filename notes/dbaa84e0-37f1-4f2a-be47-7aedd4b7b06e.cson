@@ -1,0 +1,37 @@
+createdAt: "2018-03-20T09:33:34.655Z"
+updatedAt: "2018-03-20T09:33:50.122Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "8-关于页面跳转的方式介绍"
+content: '''
+  ### 8-关于页面跳转的方式介绍
+  
+  ---
+  
+  > #### RequestDispatcher.forward()
+  
+  在服务器端运行。 采用请求转发， request 对象始终存在，不会重新创建，前后共享一个request. 重定向后地址栏 URL 不变。
+  
+  ```
+  public void doPost(HttpServletRequest request,HttpServletResponse response) throws ServletException,IOException
+  {
+  　response.setContentType("text/html; charset=gb2312");
+  　request.getRequestDispatcher("/index.JSP").forward(request, response);
+  }
+  ```
+  
+  > #### response.sendRedirect()
+  
+  在用户浏览器工作。重新定向， 前后页面不共享一个 request. 重定向后浏览前会出现重定向页面的 URL 。
+  
+  ```
+  public void doPost(HttpServletRequest request,HttpServletResponse response) throws ServletException,IOException
+  {
+  　response.setContentType("text/html; charset=gb2312");
+  　response.sendRedirect("/index.JSP");
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

@@ -1,0 +1,41 @@
+createdAt: "2018-03-20T09:35:53.137Z"
+updatedAt: "2018-03-20T09:36:13.206Z"
+type: "MARKDOWN_NOTE"
+folder: "5ebd9b00f5963387cb73"
+title: "12-JSP动作"
+content: '''
+  ### 12-JSP动作
+  
+  ---
+  
+  - #### jsp:include 
+  
+  > jsp:include 动作在主页被请求时，将次级页面的输出包含进来。尽管被包含的页面的输出中不能含有 jsp, 但这些页面可以是其他资源所产生的结果。因此这个URL可以是servlet或jsp页面
+  
+  1. **page 属性**： 指定所包含的页面
+  
+      ```
+      <jsp:include page="relative-path-to-resource" />
+      ```
+  
+      说明:
+  
+      > 如果相对 URL 不以斜杠开头， 则将其解释为相对于主页面的位置 。以斜杠开头的相对于URL被解释为相对于web应用的根目录。
+  
+  2. **jsp:param 元素** :增加请求参数
+  
+      ```
+      <jsp:include page="relative-path-to-resource">
+          <jsp:param name="paramName" value="paramValue" />
+      </jsp:include>        
+      ```
+  
+  - #### jsp:forward
+  
+  ```
+  <jsp:forward page="pageurl" />
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
