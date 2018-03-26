@@ -53,6 +53,11 @@ content: '''
   ```
   alter table table_name drop foreign key(外键别名);
   ```
+  6. 重命名列名：
+  
+  ```
+  alter table table_name change oldname newname varchar(15);
+  ```
   #### 1.5 表的约束：
   
   > Mysql 支持的完整性约束：
@@ -147,4 +152,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-08-28T05:39:25.018Z"
-updatedAt: "2017-11-07T10:08:58.578Z"
+updatedAt: "2018-03-21T06:59:02.159Z"

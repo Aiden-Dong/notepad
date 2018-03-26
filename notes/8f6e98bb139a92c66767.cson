@@ -2,7 +2,7 @@ type: "MARKDOWN_NOTE"
 folder: "50a801ae3cc972d1a4c3"
 title: "16-scala 类型与类型转换"
 content: '''
-  16-scala 类型与类型转换
+  ### 16-scala 类型与类型转换
   
   ---
   
@@ -65,4 +65,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2018-01-18T03:26:46.104Z"
-updatedAt: "2018-01-18T03:35:27.583Z"
+updatedAt: "2018-03-25T03:26:12.171Z"

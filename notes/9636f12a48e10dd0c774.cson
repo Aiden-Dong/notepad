@@ -196,6 +196,39 @@ content: '''
   #### 5.提交
   
   ```
+  $ spark-submit --help
+  
+  Usage: spark-submit [options] <app jar | python file> [app options]
+  Options:
+    --master MASTER_URL         spark://host:port, mesos://host:port, yarn, or local.
+    --deploy-mode DEPLOY_MODE   driver运行之处，client运行在本机，cluster运行在集群
+    --class CLASS_NAME          应用程序包的要运行的class
+    --name NAME                 应用程序名称
+    --jars JARS                 用逗号隔开的driver本地jar包列表以及executor类路径
+    --py-files PY_FILES         用逗号隔开的放置在Python应用程序PYTHONPATH上的.zip, .egg, .py文件列表
+    --files FILES               用逗号隔开的要放置在每个executor工作目录的文件列表
+    --properties-file FILE      设置应用程序属性的文件放置位置，默认是conf/spark-defaults.conf
+    --driver-memory MEM         driver内存大小，默认512M
+    --driver-java-options       driver的java选项
+    --driver-library-path       driver的库路径Extra library path entries to pass to the driver
+    --driver-class-path         driver的类路径，用--jars 添加的jar包会自动包含在类路径里
+    --executor-memory MEM       executor内存大小，默认1G
+  
+  Spark standalone with cluster deploy mode only:
+    --driver-cores NUM          driver使用内核数，默认为1
+    --supervise                 如果设置了该参数，driver失败是会重启
+  
+  Spark standalone and Mesos only:
+    --total-executor-cores NUM  executor使用的总核数
+  
+  YARN-only:
+    --executor-cores NUM        每个executor使用的内核数，默认为1
+    --queue QUEUE_NAME          提交应用程序给哪个YARN的队列，默认是default队列
+    --num-executors NUM         启动的executor数量，默认是2个
+    --archives ARCHIVES         被每个executor提取到工作目录的档案列表，用逗号隔开
+  ```
+  
+  ```
   spark-submit --class main.DerbyCount \\
   --master yarn \\
   --deploy-mode cluster \\
@@ -210,4 +243,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-31T06:51:40.047Z"
-updatedAt: "2017-10-31T09:29:15.030Z"
+updatedAt: "2018-03-23T03:11:31.067Z"
