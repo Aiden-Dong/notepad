@@ -1,15 +1,15 @@
 type: "MARKDOWN_NOTE"
 folder: "50a801ae3cc972d1a4c3"
-title: "4-数组映射与元组"
+title: "3-数组映射与元组"
 content: '''
-  ### 4-数组映射与元组
+  ### 3-数组映射与元组
   ---
   
   ### 1. 数组
   
   > 说明:
   
-  2. 1. 若数组长度固定使用　Array, 若长度发生变化使用　ArrayBuffer
+  1. 若数组长度固定使用　Array, 若长度发生变化使用　ArrayBuffer
   2. 如果提供初始值不能使用new 关键字.
   3. 使用() 来访问元素．
   4. 使用 for(ele <- arr) 来遍历元素
@@ -96,4 +96,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-07T08:15:32.869Z"
-updatedAt: "2017-09-07T12:11:40.134Z"
+updatedAt: "2018-03-27T08:48:11.481Z"

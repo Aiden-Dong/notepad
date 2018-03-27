@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "50a801ae3cc972d1a4c3"
-title: "3-控制结构和函数"
+title: "4-控制结构和函数"
 content: '''
-  ### 3-控制结构和函数
+  ### 4-控制结构和函数
   ---
   
   ### 1.块表达式和赋值
@@ -173,4 +173,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-06T09:45:54.707Z"
-updatedAt: "2017-09-30T03:55:29.103Z"
+updatedAt: "2018-03-27T08:48:02.946Z"
