@@ -1,5 +1,5 @@
 createdAt: "2018-02-02T04:02:52.450Z"
-updatedAt: "2018-03-23T05:50:24.107Z"
+updatedAt: "2018-04-02T03:25:25.071Z"
 type: "MARKDOWN_NOTE"
 folder: "d218c9600accb5c277d2"
 title: "10-spark 优化"
@@ -28,6 +28,15 @@ content: '''
   
   ```
   spark.sql.shuffle.partitions  # 增加shuffle 阶段的并行度
+  ```
+  
+  #### 作业容错机制
+  
+  ```
+  spark.task.maxFailures              10
+  spark.shuffle.io.retryWait          5
+  spark.shuffle.io.maxRetries         20
+  spark.stage.maxConsecutiveAttempts  10
   ```
 '''
 tags: []
