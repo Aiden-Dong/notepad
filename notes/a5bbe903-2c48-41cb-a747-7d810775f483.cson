@@ -1,0 +1,169 @@
+createdAt: "2018-04-04T02:55:04.804Z"
+updatedAt: "2018-04-04T03:52:44.257Z"
+type: "MARKDOWN_NOTE"
+folder: "826d02692db86deab330"
+title: "9-使用 typesafe.config 管理你的配置文件"
+content: '''
+  ### 9-使用 typesafe.config 管理你的配置文件
+  
+  ---
+  
+  Git : [GitHub - lightbend/config: A type-safe configuration library for JVM languages](https://github.com/lightbend/config)
+  
+  mvn:
+  
+  ```
+  <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>1.3.2</version>
+  </dependency>
+  ```
+  
+  
+  #### 使用演示:
+  
+  > **${configfile}.conf**:
+  
+  ```
+  # 线下环境
+  azkaban-offline{
+    mysql.url="jdbc:mysql://localhost:3306/azkaban?user=saligia&password=360628836989&useUnicode=true&characterEncoding=UTF8"
+    azkaban.url = "http://localhost:8081"
+    azkaban.userName = "admin"
+    azkaban.password = "admin"
+  }
+  
+  # 线上环境
+  azkaban-online{
+    mysql.url="jdbc:mysql://localhost:3306/azkaban?user=saligia&password=360628836989&useUnicode=true&characterEncoding=UTF8"
+    azkaban.url = "http://localhost:8081"
+    azkaban.userName = "admin"
+    azkaban.password = "admin"
+  }
+  
+  # yarn 环境地址
+  yarn{
+    mysql.url="jdbc:mysql://localhost:3306/javademo?user=root&password=root&useUnicode=true&characterEncoding=UTF8"
+  }
+  
+  # 信息维护地址
+  homepage{
+    mysql.url="jdbc:mysql://localhost:3306/data_homepage?user=saligia&password=360628836989&useUnicode=true&characterEncoding=UTF8"
+  }
+  
+  # kafka
+  kafka{
+    bootstrap.servers = "localhost:9092"
+    acks = "acks"
+    retries = 3
+    batch.size = 16384
+    linger.ms = 1
+    buffer.memory = 33554432
+    key.serializer = "org.apache.kafka.common.serializa-tion.StringSerializer"
+    value.serializer = "org.apache.kafka.common.serializa-tion.StringSerializer"
+  }
+  ```
+  
+  > 代码演示:
+  
+  ```
+  public static void parseConfig(){
+      /**
+       * 方法 ConfigFactory.load() 属性加载来源:
+       * system properties
+       * application.conf (all resources on classpath with this name)
+       * application.json (all resources on classpath with this name)
+       * application.properties (all resources on classpath with this name)
+       * reference.conf (all resources on classpath with this name)
+       */
+      Config config = ConfigFactory.load();
+  
+      // 获取单个元素的值
+      String azkbanOffUrl = config.getString("azkaban-offline.mysql.url");
+      System.out.println(azkbanOffUrl);
+  
+      /**
+       * 包含用户自定义属性:
+       *  -- 用户自定义属性如: azkaban-offline.azkaban.userName
+       *  -- 系统环境属性如　: sun.jnu.encoding
+       */
+      for(Map.Entry<String, ConfigValue> entry : config.entrySet()){
+          System.out.println(">>> " + entry.getKey());
+      }
+  
+  
+      /**
+       * 获取配置子集
+       */
+      Config configNode = config.getConfig("kafka");
+  }
+  ```
+  
+  #### 可选的覆盖配置方案
+  
+  > **Java System Properties**
+  
+  Java 系统属性，通过 -D 标签传递给命令行来达到覆盖配置的目的：
+  
+  ```
+  java -Dsys_args=value com.cyou.fz.config
+  ```
+  
+  > **使用环境变量**:
+  
+  现在来看看我们的 HOCON 配置：
+  
+  ```
+  app {
+   db {
+    host = localhost	// 默认参数
+    host = ${?DB_PORT_3306_TCP_ADDR}	// 环境变量 DB_PORT_3306_TCP_ADDR 有设置，将会替换 host 的值
+    port = "3306"
+    port = ${?DB_PORT_3306_TCP_PORT}
+   }
+  }
+  ```
+  
+  > **HOCON 中使用 include:**
+  
+  首先我们将系统配置以文件形式存储和统一管理，下面是的数据库连接串管理：
+  
+  ```
+  # 生产环境数据库配置
+  # 路径 /usr/local/etc/db.conf
+  db {
+  	jdbcUrl = "jdbc:mysql://0.0.0.0:3306/MyDatabase"
+  	user = "dba"
+  	pass = "pass"
+  }
+  ```
+  
+  这时，你只需要在你的 `resoures` 中的配置文件引入我们公用的配置：
+  
+  ```
+  # src/main/scala/resources/application.conf
+  include "/usr/local/etc/db.conf"
+  ```
+  
+  另外，另外你觉得路径太长太丑，你也可以使用：
+  
+  ```
+  include classpath("db.conf")
+  ```
+  
+  你要把你的配置文件追加到 classpath 中，这边，我需要这么操作：
+  
+  ```
+  export CLASSPATH = /usr/local/etc/:$CLASSPATH
+  ```
+  
+  你还可以通过 web 服务，来统一管理配置，那么你就可以直接试用 Url 引入配置：
+  
+  ```
+  include url("http://0.0.0.0/db.conf")
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

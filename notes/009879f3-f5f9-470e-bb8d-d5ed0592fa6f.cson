@@ -1,5 +1,5 @@
 createdAt: "2018-03-21T08:17:49.535Z"
-updatedAt: "2018-04-03T08:57:29.253Z"
+updatedAt: "2018-04-03T09:27:59.302Z"
 type: "MARKDOWN_NOTE"
 folder: "199632a5d0d7fd0aac09"
 title: "2-常用命令介绍"
@@ -38,7 +38,7 @@ content: '''
   > 转换多个文件的编码:
   
   ```
-  
+  $ enca -L none -x utf-8 *
   ```
 '''
 tags: []
