@@ -1,5 +1,5 @@
 createdAt: "2018-03-16T10:05:13.686Z"
-updatedAt: "2018-03-16T10:45:42.473Z"
+updatedAt: "2018-04-08T04:09:34.831Z"
 type: "MARKDOWN_NOTE"
 folder: "312348b473d25bc30401"
 title: "6-Kafka 基本操作:"
@@ -79,13 +79,13 @@ content: '''
   > 语法:
   
   ```
-  bin/kafka-console-consumer.sh --zookeeper localhost:2181 —topic topic-name --from-beginning
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 -topic topic-name --from-beginning
   ```
   
   例如:
   
   ```
-  bin/kafka-console-consumer.sh --zookeeper localhost:2181 —topic Hello-Kafka --from-beginning
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 -topic Hello-Kafka --from-beginning
   ```
   #### 单节点多代理配置:
   
