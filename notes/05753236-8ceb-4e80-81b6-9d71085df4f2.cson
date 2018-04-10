@@ -1,0 +1,128 @@
+createdAt: "2018-04-10T14:00:36.776Z"
+updatedAt: "2018-04-10T14:18:01.008Z"
+type: "MARKDOWN_NOTE"
+folder: "ceae56396fb314adeed3"
+title: "1- 创建工程"
+content: '''
+  ### 1- 创建工程
+  
+  ---
+  
+  Spring Boot的每个发行版都提供了它支持的依赖关系的策略列表。
+  实际上，您不需要为您的构建配置中的任何这些依赖项提供版本，因为Spring Boot为您管理这些版本。
+  当您升级Spring Boot本身时，这些依赖关系也会以一致的方式升级。
+  
+  > 如果需要的话，你仍然可以指定一个版本并覆盖Spring Boot的建议。
+  > Spring Boot的每个版本都与Spring Framework的基本版本相关联。我们强烈建议您不要指定其版本。
+  
+  策划列表包含您可以在 Spring Boot 中使用的所有Spring模块以及第三方库的精炼列表。
+  该列表可用作标准的清单(`spring-boot-dependencies`, 可用于`Maven`和`Gradle`。
+  
+  
+  ### Maven:
+  
+  Maven用户可以从`spring-boot-starter-parent`项目中继承以获得合理的默认值。父项目提供以下功能：
+  - `Java 1.8`作为默认的编译器级别。
+  - `UTF-8`源码编码。
+  - 一个依赖管理部分，从`spring-boot-dependencies`继承POM，管理公共依赖的版本。这种依赖关系管理可以让您在自己的pom中使用这些依赖项时忽略`<version>标记`。
+  - 明确的资源过滤。
+  - 明确的插件配置（exec插件,Git commint id和 shade）。
+  - 明确的资源过滤`application.properties`和`application.yml` 包括配置文件特定的文件(例如`application-dev.properties`和 `application-dev.yml`
+  
+  
+  请注意，由于`application.properties`和`application.yml`文件接受Spring样式占位符（`${…​}`），Maven过滤被更改为使用`@..@`占位符。（你可以通过设置一个叫做Maven的属性来覆盖它`resource.delimiter`。）
+  
+  #### 1.继承初始父项
+  
+  要配置您的项目从中继承`spring-boot-starter-parent`，请设置`parent`如下：
+  
+  ```
+  <!-- Inherit defaults from Spring Boot -->
+  <parent>
+  	<groupId>org.springframework.boot</groupId>
+  	<artifactId>spring-boot-starter-parent</artifactId>
+  	<version>2.0.1.RELEASE</version>
+  </parent>
+  ```
+  
+  > 您应该只需在此依赖项上指定`Spring Boot`版本号。如果您导入额外的启动器，则可以安全地省略版本号。
+  
+  
+  通过该设置，您还可以通过覆盖自己项目中的属性来覆盖各个依赖项。例如，要升级到另一个`Spring Data`发行版，您需要将以下内容添加到您的`pom.xml`：
+  
+  ```
+  <properties>
+  	<spring-data-releasetrain.version>Fowler-SR2</spring-data-releasetrain.version>
+  </properties>
+  ```
+  
+  > 检查 spring-boot-dependenciespom 以获取支持的属性列表。
+  
+  
+  #### 2. 在没有Parent POM的情况下使用Spring Boot
+  
+  不是每个人都喜欢从`spring-boot-starter-parent` POM继承。您可能拥有自己的公司标准父项，或者您可能更愿意明确声明所有Maven配置。
+  
+  如果你不想使用它`spring-boot-starter-parent`，你仍然可以通过依赖来保持依赖管理的好处（但不是插件管理） `scope=import`，如下所示：
+  
+  
+  ```
+  <dependencyManagement>
+  		<dependencies>
+  		<dependency>
+  			<!-- Import dependency management from Spring Boot -->
+  			<groupId>org.springframework.boot</groupId>
+  			<artifactId>spring-boot-dependencies</artifactId>
+  			<version>2.0.1.RELEASE</version>
+  			<type>pom</type>
+  			<scope>import</scope>
+  		</dependency>
+  	</dependencies>
+  </dependencyManagement>
+  ```
+  如上所述，上述示例设置不会让您使用属性重写个别依赖关系。要达到相同的结果，您需要在输入之前在`dependencyManagement`项目中添加一个`dependency`。
+  
+  例如，要升级到另一个Spring Data发行版，您可以将以下元素添加到您的 : `spring-boot-dependenciespom.xml`
+  
+  ```
+  <dependencyManagement>
+  	<dependencies>
+  		<!-- Override Spring Data release train provided by Spring Boot -->
+  		<dependency>
+  			<groupId>org.springframework.data</groupId>
+  			<artifactId>spring-data-releasetrain</artifactId>
+  			<version>Fowler-SR2</version>
+  			<type>pom</type>
+  			<scope>import</scope>
+  		</dependency>
+  		<dependency>
+  			<groupId>org.springframework.boot</groupId>
+  			<artifactId>spring-boot-dependencies</artifactId>
+  			<version>2.0.1.RELEASE</version>
+  			<type>pom</type>
+  			<scope>import</scope>
+  		</dependency>
+  	</dependencies>
+  </dependencyManagement>
+  ```
+  
+  #### 3. 使用Spring Boot Maven插件
+  
+  `Spring Boot` 包含一个Maven插件，可以将项目打包为可执行的jar。
+  
+  ```
+  <build>
+  	<plugins>
+  		<plugin>
+  			<groupId>org.springframework.boot</groupId>
+  			<artifactId>spring-boot-maven-plugin</artifactId>
+  		</plugin>
+  	</plugins>
+  </build>
+  ```
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
