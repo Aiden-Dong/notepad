@@ -1,0 +1,57 @@
+createdAt: "2018-04-11T11:29:23.261Z"
+updatedAt: "2018-04-11T12:39:31.807Z"
+type: "MARKDOWN_NOTE"
+folder: "ceae56396fb314adeed3"
+title: "3-SpringApplication"
+content: '''
+  ### 3-SpringApplication
+  
+  ---
+  
+  `SpringApplication`类提供了一个方便的方式来引导该从开始Spring应用程序`main()`的方法。
+  在许多情况下，您可以委派给静态`SpringApplication.run()`方法，如以下示例所示：
+  
+  ```
+  public static void main(String[] args) {
+  	SpringApplication.run(MySpringConfiguration.class, args);
+  }
+  ```
+  
+  ### 自定义　Banner
+  
+  启动时打印的横幅可以通过将`banner.txt`文件添加到类路径中或通过将该`spring.banner.location`属性设置为此类文件的位置来更改.
+  如果文件的编码不是UTF-8，可以设置`spring.banner.charset`。
+  除了一个文本文件，你还可以添加一个`banner.gif`，`banner.jpg`或`banner.png`图像文件到类路径或设置`spring.banner.image.location`属性。
+  图像被转换成`ASCII`艺术表现形式并打印在任何文字横幅上方。
+  
+  
+  ### 自定义SpringApplication
+  
+  如果`SpringApplication`默认值不符合您的口味，您可以改为创建本地实例并对其进行自定义。
+  例如，要关闭Banner，你可以写：
+  
+  ```
+  public static void main(String[] args) {
+  	SpringApplication app = new SpringApplication(MySpringConfiguration.class);
+  	app.setBannerMode(Banner.Mode.OFF);
+  	app.run(args);
+  }
+  ```
+  
+  ### Fluent Builder API
+  
+  如果您需要构建`ApplicationContext`层次结构(具有父/子关系的多个上下文)，或者如果您更愿意使用“流利”构建器API，则可以使用SpringApplicationBuilder。
+  
+  在`SpringApplicationBuilder`让要链接的多个方法调用，并且包括 parent和child方法，让你创建层次结构，以显示在下面的例子：
+  
+  ```
+  new SpringApplicationBuilder()
+  		.sources(Parent.class)
+  		.child(Application.class)
+  		.bannerMode(Banner.Mode.OFF)
+  		.run(args);
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

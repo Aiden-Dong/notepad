@@ -12,7 +12,7 @@ content: '''
   
   #### 1. 调度器的选择：
   
-  在Yarn中有三种调度器可以选择：`FIFO Scheduler` ，`Capacity Scheduler`，`FairS cheduler`。
+  在Yarn中有三种调度器可以选择：`FIFO Scheduler` ，`Capacity Scheduler`，`Fair cheduler`。
   
   **FIFO Scheduler**把应用按提交的顺序排成一个队列，这是一个先进先出队列，在进行资源分配的时候，先给队列中最头上的应用进行分配资源，待最头上的应用需求满足后再给下一个分配，以此类推。
   
@@ -320,9 +320,16 @@ content: '''
   
   Fair调度器的配置文件位于类路径下的`fair-scheduler.xml`文件中，这个路径可以通过`yarn.scheduler.fair.allocation.file`属性进行修改。若没有这个配置文件，Fair调度器采用的分配策略，这个策略和3.1节介绍的类似：调度器会在用户提交第一个应用时为其自动创建一个队列，队列的名字就是用户名，所有的应用都会被分配到相应的用户队列中。
   
-  我们可以在配置文件中配置每一个队列，并且可以像Capacity 调度器一样分层次配置队列。比如，参考capacity-scheduler.xml来配置fair-scheduler： 
   
-  ![](http://img.blog.csdn.net/20151030112334518)
+  
+  #### 3.4 队列介绍（Queues）
+  
+  队列是YARN调度程序的组织结构，允许多个租户共享集群。当应用程序提交到YARN时，它们由调度程序分配到队列。根（root）队列是所有队列的父级。所有其他队列都是根队列或另一个队列（也称为分层队列）的子代。队列通常对应于用户，部门或优先级。
+  
+  
+  
+  
+  
   
   队列的层次是通过嵌套`<queue>`元素实现的。所有的队列都是root队列的孩子，即使我们没有配到`<root>`元素里。在这个配置中，我们把dev队列有分成了eng和science两个队列。
   
@@ -394,7 +401,6 @@ content: '''
     <value>false</value>
   </property>
   
-  <!--抢占配置-->
   <property>
     <name>yarn.scheduler.fair.allocation.file</name>
     <value>fair-scheduler.xml</value>
@@ -471,4 +477,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-13T13:57:42.403Z"
-updatedAt: "2017-10-14T10:12:49.920Z"
+updatedAt: "2018-04-12T09:09:12.424Z"

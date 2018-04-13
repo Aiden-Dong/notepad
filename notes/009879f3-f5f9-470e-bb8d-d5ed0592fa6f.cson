@@ -1,5 +1,5 @@
 createdAt: "2018-03-21T08:17:49.535Z"
-updatedAt: "2018-04-03T09:27:59.302Z"
+updatedAt: "2018-04-12T09:48:41.952Z"
 type: "MARKDOWN_NOTE"
 folder: "199632a5d0d7fd0aac09"
 title: "2-常用命令介绍"
@@ -39,6 +39,14 @@ content: '''
   
   ```
   $ enca -L none -x utf-8 *
+  ```
+  
+  
+  #### Linux 批量修改文件内容
+  
+  
+  ```
+  sed -i 's/${OLD_WORD}/${NEW_WORD}/g' `grep ${OLD_WOLD} -rl *`
   ```
 '''
 tags: []

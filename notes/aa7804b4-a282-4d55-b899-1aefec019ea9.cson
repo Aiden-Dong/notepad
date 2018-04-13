@@ -1,0 +1,367 @@
+createdAt: "2018-04-13T06:54:04.245Z"
+updatedAt: "2018-04-13T09:20:52.691Z"
+type: "MARKDOWN_NOTE"
+folder: "7671e01e5a4a4ee04aa9"
+title: "18-Yarn FairSheduler使用FairSharePolicy计算Fair Share的规则、原理和代码实现"
+content: '''
+  ### 18-Yarn FairSheduler使用FairSharePolicy计算Fair Share的规则、原理和代码实现
+  
+  ---
+  
+  ### 概述 ：
+  
+  想要对Yarn的`FairScheduler`队列资源管理、以及抢占规则有正确的理解，必须知道Yarn的`Fair Share`的含义。
+  
+  我们在yarn的管理页面里面，经常可以看到队列的`Instantaneous Fair Share`以及`Steady Fair Share`值，如果不对yarn的代码、抢占算法进行详细的研究，几乎很难理解他们的区别，，往往很容易对yarn的队列进行了错误的配置，导致系统运行异常、任务延迟、无法理解抢占规则、甚至宕机等等危险。
+  
+  因此，本博文从代码层面，对yarn的Instantaneous Fair Share 和Steady Fair的计算方式进行深入的解释。
+  
+  在Yarn中，如果不进行特殊说明，则如果提到`Fair Share`，指的是`Instantaneous Fair Share`。本文也默认使用该规则。
+  
+  **Fair Share**指的都是Yarn根据每个队列的权重、最大最小可运行资源计算的得到的可以分配给这个队列的最大可用资源。
+  
+  但是`Steady Fair Share`属于理论值，只要集群总体资源和队列配置不变，则每个队列的`Steady Fair Share`值是不变的，而`Instantaneous Fair Share`是动态变化值，代表了运行时每个队列可使用的最大资源，直观来讲，如果集群中有某一个队列完全没有应用运行了，那么这个队列所声明的资源可以被均分给其它队列，因此其它队列所分到的Instantaneous Fair Share都会有所增加。
+  
+  
+  ### 1. Steady Fair Share 原理和计算方式:
+  
+  队列的`Steady Fair`很少发生变动，它的变化只发生在集群的节点发生变化（如节点增加、队列配置文件发生变化等）的时候。我们来看`FairScheduler.addNode()`:
+  
+  ```
+  private synchronized void addNode(RMNode node) {
+    //省略
+    queueMgr.getRootQueue().setSteadyFairShare(clusterResource);
+    queueMgr.getRootQueue().recomputeSteadyShares();//重新计算所有queue的steady fair share
+    LOG.info("Added node " + node.getNodeAddress() +
+        " cluster capacity: " + clusterResource);
+  }
+  ```
+  
+  ```
+  public void recomputeSteadyShares() {
+    //默认情况下，FairScheduler所有队列的policy是
+    //org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.policies.FairSharePolicy
+    policy.computeSteadyShares(childQueues, getSteadyFairShare());//根据当前的policy计算子队列的steady fair share
+    for (FSQueue childQueue : childQueues) {
+      childQueue.getMetrics().setSteadyFairShare(childQueue.getSteadyFairShare());
+      if (childQueue instanceof FSParentQueue) {//递归进行计算
+        ((FSParentQueue) childQueue).recomputeSteadyShares();
+      }
+    }
+  }
+  ```
+  
+  `policy.computeSteadyShares()` 会负责计算root队列的所有子队列的`steady fair share`值。
+  由于`computeSteadyShares()`是policy的一个成员方法，可见，计算方式与FairScheduler调度器下面每个队列定义的Policy有关系。
+  FairScheduler在不进行特殊配置的情况下，默认使用的Policy是**FairSharePolicy**，Yarn官网上叫做`single-resource fairness policy`，因为这个Policy只根据内存进行资源分配，而不考虑vCore。
+  如果需要将vCores考虑在内，则需要使用基于**DRF**算法的Policy，名其实现类叫做`DominantResourceFairnessPolicy`，DRF算法和它的实现DominantResourceFairnessPolicy不是本文讨论的重点，有兴趣的同学可以自行google。
+  
+  本文只讨论默认FairSharePolicy，单一资源公平策略。
+  
+  
+  来看`FairSharePolicy.computeSteadyShares()`:
+  
+  ```
+  //当前的steady fair share
+  public void computeSteadyShares(Collection<? extends FSQueue> queues,
+      Resource totalResources) {
+    ComputeFairShares.computeSteadyShares(queues, totalResources,
+        ResourceType.MEMORY);//对于FairSharePolicy，只以内存作为参考值，不考虑vCore
+  }
+  ```
+  
+  ```
+  public static void computeSteadyShares(
+      Collection<? extends FSQueue> queues, Resource totalResources,
+      ResourceType type) {
+    computeSharesInternal(queues, totalResources, type, true);
+  }
+  ```
+  
+  有一点必须说明，我们计算`steady fair share`的时候，计算的都是加权值，即权重不同的队列，将获得不同的`steady fair share`，权重越大，获取的`steady fair share`越多，反之越小。
+  `steady fair share`和`instaneous fair share`的计算，其实就是根据队列的权重配置决定预分配给他们多少资源，同时，这个资源又在minShare和maxShare的限制之下。
+  
+  ```
+  private static void computeSharesInternal(
+      Collection<? extends Schedulable> allSchedulables,
+      Resource totalResources, ResourceType type, boolean isSteadyShare) {
+  
+    Collection<Schedulable> schedulables = new ArrayList<Schedulable>();
+    //所有计算完毕准备取走的resource
+    int takenResources = handleFixedFairShares(
+        allSchedulables, schedulables, isSteadyShare, type);
+  
+    if (schedulables.isEmpty()) {
+      return;
+    }
+    //找到一个我们准备用在二分查找的R的上限值，我们将R初始化为1，然后每次翻倍，直到所有的Schedulable
+    //已经用完了所有的资源或者所有Schedulables已经达到了自己的maxShare
+    // Find an upper bound on R that we can use in our binary search. We start
+    // at R = 1 and double it until we have either used all the resources or we
+    // have met all Schedulables' max shares.
+    int totalMaxShare = 0;//non-fix队列的所有max-share之和
+    for (Schedulable sched : schedulables) {//对于non-fixed队列，计算maxShare之和
+      int maxShare = getResourceValue(sched.getMaxShare(), type);
+      totalMaxShare = (int) Math.min((long)maxShare + (long)totalMaxShare,
+          Integer.MAX_VALUE);
+      if (totalMaxShare == Integer.MAX_VALUE) {
+        break;
+      }
+    }
+  
+    //集群总资源，减去 已经计算完毕的fix队列的资源，得到剩下的non-fix的资源总量，这一部分资源，是可分配的资源
+    int totalResource = Math.max((getResourceValue(totalResources, type) -
+        takenResources), 0);
+    //所有non-fix队列的maxShare加起来小于 totalResource（集群总资源减去fix队列资源量的和的剩余值）,则只需要所有maxShare的和就可以了，否则，需要totalResuorce（集群总资源减去fix队列资源量的和的剩余值）
+    totalResource = Math.min(totalMaxShare, totalResource);
+  
+    double rMax = 1.0;
+    while (resourceUsedWithWeightToResourceRatio(rMax, schedulables, type)
+        < totalResource) {
+      rMax *= 2.0;
+    }
+    //获取了一个最大值，可以在0和这个最大值之间进行二分查找了。二分查找结束以后，right 值就几乎逼近了non fix队列的可用资源值
+    //为了防止无限迭代下去，设置COMPUTE_FAIR_SHARES_ITERATIONS限制迭代次数
+    // Perform the binary search for up to COMPUTE_FAIR_SHARES_ITERATIONS steps
+    double left = 0;
+    double right = rMax;
+    for (int i = 0; i < COMPUTE_FAIR_SHARES_ITERATIONS; i++) {
+      double mid = (left + right) / 2.0;//折半查找
+      int plannedResourceUsed = resourceUsedWithWeightToResourceRatio(
+          mid, schedulables, type);
+      if (plannedResourceUsed == totalResource) {
+        right = mid;
+        break;
+      } else if (plannedResourceUsed < totalResource) {
+        left = mid;//折半查找，更新左侧下限值
+      } else {
+        right = mid;//折半查找，更新右侧上限值
+      }
+    }
+    //二分查找完毕，right中存放了正确的R值
+    // Set the fair shares based on the value of R we've converged to
+    for (Schedulable sched : schedulables) {
+      if (isSteadyShare) {//如果是计算steady fair share , 则设置这个steady fair share值
+        setResourceValue(computeShare(sched, right, type),
+            ((FSQueue) sched).getSteadyFairShare(), type);//根据全局的right值设置这个队列的steady fair share 值
+      } else {
+        setResourceValue(//否则，//根据全局的right值设置这个队列的 fair share 值
+            computeShare(sched, right, type), sched.getFairShare(), type);
+      }
+    }
+  }
+  ```
+  
+  `computeSharesInternal()`方法是计算**Instantaneous Fair Share**和**Steady Fair Share**的共用方法，最后一个参数isSteadyShare标记了目前是要计算Instantaneous Fair Share还是Steady Fair Share。
+  
+  整个计算逻辑可以总结为：给出一系列的`Schedulable`，在预先规定了各个`Schedulable`的minShare和maxShare的情况下，我们的目的，就是根据minShare和maxShare，综合整个集群的全部资源，为各个Schedulable进行最公平的分配。
+  
+  `Yarn FairScheduler`每个队列的weight值不一定相同，它代表了这个队列所能分配到的资源的比例(当然，最终分配给它的fair share值会受到minShare和maxShare限制)，因此，我们有必要了解加权的公平分配代表什么：如果所有Schedulable权重相同，并且minShare和maxShare也没有差异，那么它们通过均分集群资源得到属于自己的fair share。
+  但是当每个队列有了不同的minShare和maxShare，那么实际分配到的资源就出现差异了，因为yarn会满足队列的minShare的资源需求，同时，分配给他的资源也永远不会大于maxShare。
+  
+  > 我们假定如果存在这样一个R值，并满足以下条件，那么，我们认为完成了公平分配：
+  
+  对于一个`Schedulable`，如果它的`minShare > R * S.weight`，即实际分配到的资源竟然比自己的minShare还小，这种情况是自己本身完全不能容忍的，**那么这个Schedulable被分配的fair share 将是它的minShare**;
+  
+  如果它的**maxShare < R * S.weight**，即这个Scheduler分配到的资源竟然大于自己的maxShare，显然，这将造成资源浪费，那么**这个Schedulable被分配的fairShare是它的maxShare**;
+  
+  其它的Schedulable被分配的资源是R * S.weight。
+  
+  我们把R叫做`资源权重比值`，因为它把一个Schedulable的权重转换成为了Schedulable实际分配到的资源。
+  
+  我们计算一个Schedulable，就是通过找到一个合适的**资源权重比R** 来完成的。我们通过二分查找来得到R。给出一个R的启动值，我们计算总体使用资源，如果这个总体使用资源小于总资源，那么R太小了，需要增大；相反，R太大了， 需要减小。一步一步，R趋近理想值。
+  
+  开始二分查找前，我们设定R的`下限值`和`上限值`，下限值为0，意味着所有的`Schedulable`都只能分配到自己的`minShare`的资源(所有队列都能否分配到至少minShare的值是绝对有保障的.
+  
+  因为Yarn规定，在fair-scheduler.xml中配置的所有Schedulable的minShare之和必须小于Yarn的所有NodeManager的资源之和，否则fair-scheduler不生效)，而R的上限值则需要一个计算过程，从1开始逐步加倍，一直到所有的Scheduler得到的资源已经大于集群总资源（通过将R从1开始不断翻倍直到所有Schedulable分配到的资源大于集群总资源）。
+  
+  在`computeSharesInternal()`最前面，需要先计算固定队列所占用的资源，这部分固定队列的固定资源，是已经完全确定的，是不可动态分配的，因此需要预先把它们排除在外。
+  固定队列的定义对于`steady fair share` 和 `instaneous fair share`是不同的。
+  
+  我们看方法ComputeFairShare.handleFixedFairShares():
+  
+  ```
+  /**
+   * 计算fixed-schedulable的固定资源,fix-schedulable的资源不具有动态性，
+   * 因此可以直接进行计算。那么，什么叫做fixed-schedulable呢：
+   * 可以参考getFairShareIfFixed()方法的注解。
+   */
+  private static int handleFixedFairShares(
+      Collection<? extends Schedulable> schedulables,
+      Collection<Schedulable> nonFixedSchedulables,
+      boolean isSteadyShare, ResourceType type) {
+    int totalResource = 0;//所有队列的总资源求和
+  
+    for (Schedulable sched : schedulables) {
+      //如果是一个fixed队列，则fixedShare为该队列的minShare或者0
+      int fixedShare = getFairShareIfFixed(sched, isSteadyShare, type);
+      if (fixedShare < 0) {
+        //不是fixed，即maxShare 和weight不是0， 并且这个Schedulable是一个active的
+        //则将这个Schedulable保存在nonFixedSchedulables中返回
+        nonFixedSchedulables.add(sched);
+      } else {
+        //如果是fix队列，那么分两种情况：
+        // 如果isSteadyShare=true,即我们计算的是steady fairshares,则将其steady fair share设置为fixedShare,因为只有固定队列才将fixedShare计算在内
+        // 如果isSteadyShare=false,即我们计算的instaneous fair share,则将这个Schedulable的fairShare(
+        //即instaneous fair share)设置为fixedShare
+        setResourceValue(fixedShare,
+            isSteadyShare
+                ? ((FSQueue)sched).getSteadyFairShare()
+                : sched.getFairShare(),
+            type);
+        totalResource = (int) Math.min((long)totalResource + (long)fixedShare,
+            Integer.MAX_VALUE);
+      }
+    }
+    //返回我们计算得到的所有的 fix-schedulable的资源之和
+    return totalResource;
+  }
+  ```
+  
+  这个方法遍历所有的Schedulable，然后返回一个整数资源值（对于FairSharePolicy，只考虑内存），代表了固定队列的固定资源总量。
+  同时，如果是非固定队列，则保存在参数`nonFixedSchedulables`中返回给调用者`ComputeFairShares.computeSharesInternal()`，这个`nonFixedSchedulables`代表了非固定队列的list，这些队列会参与瓜分集群资源。
+  
+  `ComputeFaireShares.getFairShareIfFixed()`直接针对某个Schedulable来计算它的`fixed fair share`：
+  
+  ```
+  /* 如果这个队列的maxShare或者weight配置为0，显然，这个队列在任何时候都不会运行任何app，这个队列是固定队列，并且分配给他的fair share 或者instaneous fair share 都是0
+   * 如果我们当前计算的是instaneous fair share ，并且发现这个队列没有任何app在运行，那么，这个队列的instaneous fair share是0，并且，这个队列被判定为fix sheduler，即，这个队列不再参与
+   * instaneous fair share的计算
+   * 而如果当前我们计算的steady fair share，那么它的steady fair share值跟这个队列上是否有app正在运行无关，其steady fair share的值会瓜分集群资源
+   */
+  private static int getFairShareIfFixed(Schedulable sched,
+      boolean isSteadyShare, ResourceType type) {
+  
+    // Check if maxShare is 0
+      //检查最大资源数是否小于0，如果<0，说明是一个fixed队列，并且fixed资源是0
+    if (getResourceValue(sched.getMaxShare(), type) <= 0) {
+      return 0;
+    }
+  
+    //如果我们当前计算的是instaneous ,并且这个队列上没有任何运行的app，那么认为这是一个fix队列，并且fair scheduler是0
+    if (!isSteadyShare && //如果我们计算的是instaneous fair share，并且这个队列没有运行任何app，返回0
+        (sched instanceof FSQueue) && !((FSQueue)sched).isActive()) {
+      return 0;
+    }
+  
+    // Check if weight is 0
+    // 如果weight <= 0，也说明是一个fix队列，此时需要根据minShare的配置确定它的fair share
+    if (sched.getWeights().getWeight(type) <= 0) {
+      int minShare = getResourceValue(sched.getMinShare(), type);
+      return (minShare <= 0) ? 0 : minShare;
+    }
+  
+    //这个队列maxShare大于0 并且（isSteadyShare = true 或者 队列是活跃的 ）并且  weight > 0, 则返回 -1,代表这是一个non-fixed队列
+    return -1;
+  }
+  ```
+  
+  从`getFairShareIfFixed()`的代码中，我们可以很清楚地看到什么样的Schedulable才是一个fixed schedulable：
+  
+  - 对于`Steady Fair Share`，只要这个队列的maxShare配置合法(是一个大于0的数)并且weight值大于0，那么这个队列就应该参与瓜分`Steady Fair Share`，他就是non-fixed队列；由于Steady Fair Share中对于non-fixed的定义只和weight以及maxShare的配置相关，因此在yarn运行过程中一直保持不变；
+  
+  - 对于`Instaneous Fair Share`，除了他的maxShare 和 weight配置合法外，还必须要求它上面必须有正在运行的app，这样的队列才能够瓜分Instaneous Fair Share，即，如果一个队列上没有正在运行的app，那么它的Instaneous Fair Share是0，无法参与瓜分Instaneous Fair Share。因此，如果一个队列上运行的app全部运行完毕，其它队列会因此而分到更多的Instaneous Fair Share。
+  
+  
+  在`computeSharesInternal()`拿到了固定队列的固定资源以后，就从总资源中减去这个值，然后将剩余的资源按照最小最大公平调度算法在`non-fixed`队列中进行切分，即，只有non-fixed 队列才参与瓜分fair share。真正的对R值的计算开始了。
+  
+  
+  我们再回到`ComputeFairShares.computeSharesInternal()`中，看看R值的计算，记住，此时，我们已经计算得到了fix队列的固定资源值，同时也知道了动态队列有哪些，因此，从集群总资源中剔除这部分固定的、不可分配的资源，得到剩余的可分配的动态资源，对R值的计算，就是寻求一个合理分配规则，使得基于R计算得到的所有Schedulable的steady fair share之和，刚好等于集群可分配的动态资源，即资源刚好完全瓜分。计算步骤如下:
+  
+  1. 遍历所有的动态队列，获取他们所有的maxShare的总和`totalMaxShare`。
+  
+  2. 在`totalMaxShare`和`totalResource`(集群总资源减去固定资源的剩余的资源，即可以动态分配的资源)中间的较小值作为真正的`totalResource`。这样做是为了处理所有队列的maxShare之和竟然小于集群总资源的情况。正常情况下，一个正确配置的fair sheduler，所有Schedulable的maxResource之和应该大于集群总资源，这样才能实现集群整体资源的最大利用率。
+  
+  3. 开始寻找R的大致上限值。初始化rMax值为1，然后每次将rMax翻倍，直到：根据当前rMax值，得到的所有活动队列的share值（通过当前的r值获取所有活跃队列的share值，计算方法在下面会讲到），大于等于步骤2中的totalResource，此时R的上限rMax找到，停止查找。
+  
+  4. 根据已经确定的大致上限(rMax)和下限(0)，在这个区间内通过二分查找，得到精确的满足以下条件的R：即通过R值计算得到的所有队列分配到的资源，刚好等于集群剩余可用动态资源，即2中的`totalResource`。当然，这种完全吻合几乎不可能发生，因此在循环迭代二分查找的时候，通过`COMPUTE_FAIR_SHARES_ITERATIONS`限制迭代次数，防止无限逼近却永远无法相等的情况发生。`COMPUTE_FAIR_SHARES_ITERATIONS`的默认值是25，即使无法景区相等，最坏情况，迭代了25此，其实误差已经缩小到集群总资源的$\\frac{1}{2^{25}}$，已经很小了。
+  
+  5. R计算完毕，根据计算的R值，设置所有Schedulable的`steady fair share`值。
+  
+  
+  在步骤3中根据当前rMax计算所有Schedulable分到的资源，以及在步骤4的二分查找中根据当前的R值计算所有Schedulable分到的资源，都是用r值计算每一个Schedulable分到的资源然后求和。
+  那么，根据当前r值，怎么确定一个Schedulable能够分配到的资源呢，在方法ComputFairShares.computeShare()中：
+  
+  ```
+  /**
+   * 如果sched.getWeights().getWeight(type) * w2rRatio;介于minShare 和 maxShare之间，则直接返回sched.getWeights().getWeight(type) * w2rRatio;，
+   * 否则，如果sched.getWeights().getWeight(type) * w2rRatio;小于minShare , 则使用minShare
+   * 如果sched.getWeights().getWeight(type) * w2rRatio  > maxShare, 则使用maxShare
+   */
+  private static int computeShare(Schedulable sched, double w2rRatio,
+      ResourceType type) {
+    double share = sched.getWeights().getWeight(type) * w2rRatio;
+    share = Math.max(share, getResourceValue(sched.getMinShare(), type));//取share和minShare中的较大值
+    share = Math.min(share, getResourceValue(sched.getMaxShare(), type));//取share和maxShare中的较小值
+    return (int) share;
+  }
+  ```
+  
+  ### 2. Instantaneous Fair Share 原理和计算方式
+  
+  `Instantaneous Fair Share`指的是实时动态分配的资源，它的值是随着集群资源的变动而实时变动的。
+  
+  FairScheduler在启动的时候会启动一个叫做`UpdateThread`的独立线程，每隔一段时间，就对集群的所有队列的`Instantaneous Fair Share`进行一次更新。
+  下面就是FairScheduler通过UpdateThread进行 Instantaneous Fair Share计算的调用堆栈：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-f8fca038353bb698.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  由此可见，上文提到的`FairScheduler.UpdateThread`会尝试不停地更新所有Schedulable的instantaneous fair share值。
+  如果一个队列从active变成inactive，它的instantaneous fair share会变为0，这时候，这个队列的资源就可以被分配给其它队列作为instaneous fair share值来使用了，即其它队列的instaneous fair share 值通过瓜分就都有相应的增加。
+  
+  ```
+  private static void computeSharesInternal(
+        Collection<? extends Schedulable> allSchedulables,
+        Resource totalResources, ResourceType type, boolean isSteadyShare){}
+  ```
+  
+  方法的最后一个参数标记了我们是计算steady fair share(isSteadyShare == true) 还是计算Instantaneous Fair Share(isSteadyShare == false)。
+  从computeSharesInternal()代码里可以看到，计算逻辑，R的上限计算以及通过二分查找的方式进行逼近，这都一模一样，唯一的区别是方法是通过handleFixedFairShares计算nonFixedSchedulables，即哪些队列参与瓜分集群的资源。从进一步的方法调用getFairShareIfFixed()中代码片段：
+  
+  ```
+  if (!isSteadyShare &&(sched instanceof FSQueue) && !((FSQueue)sched).isActive()) {
+    return 0;
+  }
+  ```
+  
+  (该段代码上文已经贴出)，可以看到，如果是计算instantaneous fair share，并且发现这个队列是一个非活跃队列，直接返回0，代表这个队列不参与instantaneous fair share的瓜分了，而计算steady fair share在调用这个方法的时候则与队列是否活跃无关，属于一个静态理论值，非活跃队列只要`weight>0`并且maxShare合法，就存在理论上的应得资源。如果这个队列上没有正在运行的app，那么它的instantaneous fair share是0，而steady fair share却是一个在yarn启动的时候就根据weight确定、并受到minShare和maxShare约束的一个固定值。
+  
+  显然，非活跃队列越多，参与瓜分系统全体资源的队列越少，每个队列就能分配到更多的最大可使用资源，即剩余的活跃队列的instantaneous fair share会被重新计算并且instantaneous fair share都有所增加。
+  
+  ### 总结:
+  
+  Yarn中的`steady fair share`值和`Instaneous Fair Share`值都代表了当前分配给这个队列的最大资源值，也是队列在任何时候资源使用量不可以超过的值 ，但是他们存在区别。
+  
+  对于`steady fair share`，是一个静态值，是Yarn根据每个队列的minShare、maxShare和weight的配置计算得到的理论上应该分配给这个队列的最大资源，它与这个队列当前是否有app正在运行无关，只和我们在fair-scheduler.xml中的配置有关。
+  
+  而`Instaneous fair share`则不同，它是根据当前集群中队列的运行状态的变化而实时变化的，即，如果一个队列上没有任何一个app在运行，即这个队列是inactive队列，那么，这个队列的instaneous fair share值是0，剩余的active队列会对集群资源进行瓜分，显然，如果集群中有队列从active变为inactive，那么剩余这些队列瓜分到的instaneous fair shared都会随之变大，反之，如果有一个队列从inactive变为active，则剩余每个队列的instaneous fair share会随之变小，即instaneous fair share会变小。
+  
+  因此，yarn运行过程中实际上是用instaneous fair share值作为队列当前最大可使用的资源。比如，我们在为一个ApplicationMaster分配container的时候，必须保证不超过我们配置的maxAMShare值：
+  
+  
+  ```
+  /**
+   * 判断当前队列是否能够运行一个ApplicationMaster应用
+   * @param amResource 需要运行的am的资源量
+   * @return true if this queue can run
+   */
+  public boolean canRunAppAM(Resource amResource) {
+    float maxAMShare = //获取队列的maxAMShare参数,即队列允许用来运行AM的资源总量
+        scheduler.getAllocationConfiguration().getQueueMaxAMShare(getName());
+    if (Math.abs(maxAMShare - -1.0f) < 0.0001) { //如果配置的值为-1.0f，则说明没有限制
+      return true;
+    }
+    //计算队列中可以用来运行AM的最大资源量，即，用队列的FairShare * maxAMShare，这里的fair share指的是instaneous fair share值
+    Resource maxAMResource = Resources.multiply(getFairShare(), maxAMShare);
+    Resource ifRunAMResource = Resources.add(amResourceUsage, amResource); //计算如果运行了这个am以后这个队列所有的am的资源使用量
+    return !policy
+        .checkIfAMResourceUsageOverLimit(ifRunAMResource, maxAMResource);  //对于默认的FairSharePolicy,判断如果运行了这个am，是否超过了maxAMShare的限制
+  }
+  ```
+  
+  `Resource maxAMResource = Resources.multiply(getFairShare(), maxAMShare);`
+  用的就是**Instaneous fair share**作为当前队列最大可使用资源，然后乘以maxAMShare，获得队列最大可用来运行ApplicationMaster的资源量。
+'''
+tags: []
+isStarred: false
+isTrashed: false
