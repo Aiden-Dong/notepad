@@ -1,0 +1,50 @@
+createdAt: "2018-04-20T15:34:17.484Z"
+updatedAt: "2018-04-20T15:39:29.837Z"
+type: "MARKDOWN_NOTE"
+folder: "ceae56396fb314adeed3"
+title: "4-Spring web MVC　框架"
+content: '''
+  ### 4-Spring web MVC　框架
+  
+  ---
+  
+  **Spring MVC**是一个丰富的"模型视图控制器"Web框架。
+  Spring MVC 允许您创建特殊`@Controller`或`@RestControllerbean`来处理传入的HTTP请求。
+  您的控制器中的方法通过使用`@RequestMapping`注释映射到HTTP。
+  
+  以下代码显示了`@RestController`提供JSON数据的典型代码
+  
+  ```
+  @RestController
+  @RequestMapping(value="/users")
+  public class MyRestController {
+  
+  	@RequestMapping(value="/{user}", method=RequestMethod.GET)
+  	public User getUser(@PathVariable Long user) {
+  		// ...
+  	}
+  
+  	@RequestMapping(value="/{user}/customers", method=RequestMethod.GET)
+  	List<Customer> getUserCustomers(@PathVariable Long user) {
+  		// ...
+  	}
+  
+  	@RequestMapping(value="/{user}", method=RequestMethod.DELETE)
+  	public User deleteUser(@PathVariable Long user) {
+  		// ...
+  	}
+  
+  }
+  ```
+  
+  ### 1.Spring MVC自动配置
+  
+  **Spring Boot** 为 Spring MVC 提供了自动配置，可与大多数应用程序配合使用。
+  
+  自动配置会在Spring的默认设置之上添加以下功能：
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

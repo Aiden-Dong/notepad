@@ -1,5 +1,5 @@
 createdAt: "2018-04-11T11:29:23.261Z"
-updatedAt: "2018-04-11T12:39:31.807Z"
+updatedAt: "2018-04-20T15:29:46.944Z"
 type: "MARKDOWN_NOTE"
 folder: "ceae56396fb314adeed3"
 title: "3-SpringApplication"
@@ -17,7 +17,7 @@ content: '''
   }
   ```
   
-  ### 自定义　Banner
+  ### 1.自定义　Banner
   
   启动时打印的横幅可以通过将`banner.txt`文件添加到类路径中或通过将该`spring.banner.location`属性设置为此类文件的位置来更改.
   如果文件的编码不是UTF-8，可以设置`spring.banner.charset`。
@@ -25,7 +25,7 @@ content: '''
   图像被转换成`ASCII`艺术表现形式并打印在任何文字横幅上方。
   
   
-  ### 自定义SpringApplication
+  ### 2.自定义SpringApplication
   
   如果`SpringApplication`默认值不符合您的口味，您可以改为创建本地实例并对其进行自定义。
   例如，要关闭Banner，你可以写：
@@ -38,7 +38,7 @@ content: '''
   }
   ```
   
-  ### Fluent Builder API
+  ### 3.Fluent Builder API
   
   如果您需要构建`ApplicationContext`层次结构(具有父/子关系的多个上下文)，或者如果您更愿意使用“流利”构建器API，则可以使用SpringApplicationBuilder。
   
@@ -50,6 +50,63 @@ content: '''
   		.child(Application.class)
   		.bannerMode(Banner.Mode.OFF)
   		.run(args);
+  ```
+  
+  > 创建`ApplicationContext`层次结构时有一些限制。例如，Web组件必须包含在子上下文中，并且`Environment`父组件和子上下文都使用相同的 组件。
+  > 查看 `SpringApplicationBuilder` Javadoc 获取完整的细节。
+  
+  
+  ### 4. 应用程序事件和监听器:
+  
+  除了通常的Spring框架的事件，比如 `ContextRefreshedEvent`，一个`SpringApplication`发送一些附加的应用程序事件。
+  
+  
+  有些事件实际上`ApplicationContext`是在创建之前触发的，因此您无法在这些事件上注册侦听器`@Bean`。
+  您可以使用`SpringApplication.addListeners(...)`方法或 `SpringApplicationBuilder.listeners(...)`方法注册它们 。
+  如果您希望自动注册这些侦听器，而不管创建应用程序的方式如何，则可以将 `META-INF/spring.factories` 文件添加到项目中并使用该`org.springframework.context.ApplicationListener`键引用侦听器 ，如以下示例中所示：
+  `org.springframework.context.ApplicationListener = com.example.project.MyListener`
+  
+  
+  > 随着您的应用程序运行，应用程序事件按以下顺序发送：
+  
+  1. **ApplicationStartingEvent** 在运行开始时但在任何处理之前发送，除了注册监听器和初始化器之外。
+  2. **ApplicationEnvironmentPreparedEvent** 当 **Environment** 在上下文中使用时，但在创建上下文之前发送.
+  3. **ApplicationPreparedEvent** 在刷新开始之前但在bean定义加载之后发送一个。
+  4. **ApplicationStartedEvent** 在上下文刷新之后但在任何应用程序和命令行参数被调用之前发送
+  5. **ApplicationReadyEvent** 在任何应用程序和命令行运行程序被调用后发送。它表示应用程序已准备好为请求提供服务。
+  6. **ApplicationFailedEvent** 如果启动时发生异常，则发送
+  
+  > 您通常不需要使用应用程序事件，但可以方便地知道它们存在。在内部，Spring Boot使用事件来处理各种任务.
+  
+  应用程序事件通过使用 **Spring Framework** 的事件发布机制发送。
+  该机制的一部分确保发布给子上下文中侦听器的事件也发布给任何祖先上下文中的侦听器。
+  因此，如果您的应用程序使用SpringApplication实例层次结构，则侦听器可能会收到同一类型应用程序事件的多个实例。
+  
+  为了让你的监听器区分它的上下文事件和后代上下文事件，它应该请求它的应用上下文被注入，然后比较注入的上下文和事件的上下文。
+  上下文可以通过实现注入，ApplicationContextAware或者如果侦听器是bean，则可以通过使用 注入@Autowired。
+  
+  #### 5. 访问应用程序参数:
+  
+  如果您需要访问传递给的应用程序参数，则 SpringApplication.run(...)可以注入一个 `org.springframework.boot.ApplicationArguments`bean。
+  该`ApplicationArguments` 接口提供对原始 String[] 参数以及解析 option 和 non-option 参数的访问.
+  如以下示例所示:
+  
+  ```
+  import org.springframework.boot.*;
+  import org.springframework.beans.factory.annotation.*;
+  import org.springframework.stereotype.*;
+  
+  @Component
+  public class MyBean {
+  
+  	@Autowired
+  	public MyBean(ApplicationArguments args) {
+  		boolean debug = args.containsOption("debug");
+  		List<String> files = args.getNonOptionArgs();
+  		// if run with "--debug logfile.txt" debug=true, files=["logfile.txt"]
+  	}
+  
+  }
   ```
 '''
 tags: []

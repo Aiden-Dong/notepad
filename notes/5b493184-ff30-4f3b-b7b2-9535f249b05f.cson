@@ -1,5 +1,5 @@
 createdAt: "2018-04-17T02:59:39.918Z"
-updatedAt: "2018-04-17T07:04:14.149Z"
+updatedAt: "2018-04-18T03:57:07.928Z"
 type: "MARKDOWN_NOTE"
 folder: "7e52a01ed824a11f4a8d"
 title: "9-平衡二叉树"
@@ -112,7 +112,7 @@ content: '''
   ### 代码:
   
   ```
-  <strong>#include <stdio.h>    
+  #include <stdio.h>    
   #include <stdlib.h>   
    
   #define OK 1
