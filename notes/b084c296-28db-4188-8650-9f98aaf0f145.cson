@@ -1,0 +1,65 @@
+createdAt: "2018-04-25T03:47:34.399Z"
+updatedAt: "2018-04-25T03:52:07.366Z"
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "12-Hive分区"
+content: '''
+  ### 12-Hive分区
+  
+  ---
+  
+  #### 分区表:
+  
+  > 分区建表分为2种，一种是单分区，也就是说在表文件夹目录下只有一级文件夹目录。另外一种是多分区，表文件夹下出现多文件夹嵌套模式。
+  
+  1. 单分区建表语句：`create table test_table (id int, content string) partitioned by (dt string);` 单分区表，按天分区，在表结构中存在id，content，dt三列。
+  
+  2. 双分区建表语句：`create table test_table_2 (id int, content string) partitioned by (dt string, hour string);`双分区表，按天和小时分区，在表结构中新增加了dt和hour两列。
+  
+  > 说明:
+  
+  1. 一个表可以拥有一个或者多个分区，每个分区以文件夹的形式单独存在表文件夹的目录下。
+  2. hive的表和列名不区分大小写(故建表时，都是小写)
+  3. 分区是以字段的形式在表结构中存在，通过"desc table_name"命令可以查看到字段存在，该字段仅是分区的标识。
+  4. 建表的语法（建分区可参见PARTITIONED BY参数）：
+  
+  ```
+  CREATE [EXTERNAL] TABLE [IF NOT EXISTS] table_name [(col_name data_type [COMMENT col_comment], ...)] [COMMENT table_comment] 
+  [PARTITIONED BY (col_name data_type [COMMENT col_comment], ...)] 
+  [CLUSTERED BY (col_name, col_name, ...) [SORTED BY (col_name [ASC|DESC], ...)] INTO num_buckets BUCKETS] 
+  [ROW FORMAT row_format]
+  [STORED AS file_format] 
+  [LOCATION hdfs_path]
+  ```
+  
+  
+  
+  #### 添加分区
+  
+  ```
+  ALTER TABLE table_name ADD PARTITION (partCol = 'value1') location 'loc1'; //示例
+  ALTER TABLE table_name ADD IF NOT EXISTS PARTITION (dt='20130101') LOCATION '/user/hadoop/warehouse/table_name/dt=20130101'; //一次添加一个分区
+  
+  ALTER TABLE page_view ADD PARTITION (dt='2008-08-08', country='us') location '/path/to/us/part080808' PARTITION (dt='2008-08-09', country='us') location '/path/to/us/part080809';  //一次添加多个分区
+  ```
+  
+  #### 删除分区
+  
+  ```
+  ALTER TABLE login DROP IF EXISTS PARTITION (dt='2008-08-08');
+  
+  ALTER TABLE page_view DROP IF EXISTS PARTITION (dt='2008-08-08', country='us')
+  ```
+  
+  #### 修改分区
+  
+  ```
+  ALTER TABLE table_name PARTITION (dt='2008-08-08') SET LOCATION "new location";
+  ALTER TABLE table_name PARTITION (dt='2008-08-08') RENAME TO PARTITION (dt='20080808');
+  ```
+  
+  #### 
+'''
+tags: []
+isStarred: false
+isTrashed: false
