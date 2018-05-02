@@ -1,5 +1,5 @@
 createdAt: "2018-04-28T06:29:30.640Z"
-updatedAt: "2018-04-28T10:46:59.133Z"
+updatedAt: "2018-05-02T05:20:14.213Z"
 type: "MARKDOWN_NOTE"
 folder: "7e52a01ed824a11f4a8d"
 title: "19-选择排序"
@@ -142,44 +142,123 @@ content: '''
   
   ### 2. 堆排序
   
-  **堆(二叉树)** 可以视为一棵完全的二叉树，完全二叉树的一个“优秀”的性质是，除了最底层之外，每一层都是满的，这使得堆可以利用数组来表示（普通的一般的二叉树通常用链表作为基本容器表示），每一个结点对应数组中的一个元素。
-  如下图，是一个堆和数组的相互关系
+  作为选择排序的改进版，堆排序可以把每一趟元素的比较结果保存下来，以便我们在选择**最小/大元素**时对已经比较过的元素做出相应的调整。
   
-  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-03798953d31c290a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  堆排序是一种树形选择排序，在排序过程中可以把元素看成是一颗完全二叉树，每个节点都大（小）于它的两个子节点
   
-  对于给定的某个结点的下标 i，可以很容易的计算出这个结点的父结点、孩子结点的下标：
+  当每个节点都大于等于它的两个子节点时，就称为大顶堆，也叫堆有序;
+  当每个节点都小于等于它的两个子节点时，就称为小顶堆。
   
-  - **i 的父节点下标**: $Parent(i)=floor(i/2)$ 
-  - **i 的左子节点下标:** $Left(i) = 2i$         
-  - **i 的右子节点下标:** $Right(i) = 2i + 1$
-  
-  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-e89eb5aecf241a7c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-3bdc3d19139f9abd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
   
-  > 二叉堆一般分为两种：最大堆和最小堆:
+  #### 算法思想(以大顶堆为例)：
   
-  **最大堆**:
+  1. 将长度为n的待排序的数组进行堆有序化构造成一个大顶堆
+  2. 将根节点与尾节点交换并输出此时的尾节点
+  3. 将剩余的n -1个节点重新进行堆有序化
+  4. 重复步骤2，步骤3直至构造成一个有序序列
   
-  - 最大堆中的最大元素值出现在根结点（堆顶）
-  - 堆中每个父节点的元素值都大于等于其孩子结点（如果存在）
+  #### 举例:
   
-  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-3a8970134ddc4807.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  假设待排序数组为[20,50,10,30,70,20,80]
+  
+  > **构造堆**:
+  
+  在构造有序堆时，我们开始只需要扫描一半的元素（n/2-1 ~ 0）即可，为什么?
+  因为(n/2-1)~0的节点才有子节点，如图1，n=8,(n/2-1) = 3  即3 2 1 0这个四个节点才有子节点
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b757943c2529ac13.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
   
-  **最小堆:**
+  所以接下来就是将3 2 1 0这四个节点从下到上，从右到左的与它自己的子节点比较并调整最终形成大顶堆，过程如下：
+   
+  第一次for循环将节点3和它的子节点7 8的元素进行比较，最大者作为父节点（即元素60作为父节点）
   
-  - 最小堆中的最小元素值出现在根结点（堆顶）
-  - 堆中每个父节点的元素值都小于等于其孩子结点（如果存在）
+  **[红色表示交换后的状态]**
   
-  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-dd2e92c22a2b99af.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-e702dca57fe572ed.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
-  ### 3.  堆排序原理:
+  接下来将节点2和它的子节点5 6的元素进行比较，最大者为父节点（元素80作为父节点）
   
-  堆排序就是把最大堆堆顶的最大数取出，将剩余的堆继续调整为最大堆，再次将堆顶的最大数取出，这个过程持续到剩余数只有一个时结束。在堆中定义以下几种操作：
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-d87f9b509969acc2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
-  最大堆调整（Max-Heapify）：将堆的末端子节点作调整，使得子节点永远小于父节点
-  创建最大堆（Build-Max-Heap）：将堆所有数据重新排序，使其成为最大堆
-  堆排序（Heap-Sort）：移除位在第一个数据的根节点，并做最大堆调整的递归运算
+  然后将节点1和它的子节点3 4的元素进行比较，最大者为父节点（元素70作为父节点）
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2755adc7ce664042.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  最后将节点0和它的子节点1 2的元素进行比较，最大者为父节点（元素80作为父节点）
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2831783190dfe440.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  至此有序堆已经构造好了！如下图：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-a1dd09397ff4c4f3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  > **调整堆**
+  
+  1）堆顶元素80和尾40交换后-->调整堆
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b53b535af42bee97.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  2）堆顶元素70和尾30交换后-->调整堆
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2decd61542d0ea82.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  4）其他依次类推，最终已排好序的元素如下：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4a6f2a66792bc44d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 代码实现:
+  
+  ```
+  public class HeapSort {
+      private static void heapSort(int[] arr) {
+          int len = arr.length -1;
+          for(int i = len/2 - 1; i >=0; i --){ //堆构造
+              heapAdjust(arr,i,len);
+          }
+          while (len >=0){
+              swap(arr,0,len--);    //将堆顶元素与尾节点交换后，长度减1，尾元素最大
+              heapAdjust(arr,0,len);    //再次对堆进行调整
+          }
+      }
+   
+  public static  void heapAdjust(int[] arr,int i,int len){
+      int left,right,j ;
+      while((left = 2*i+1) <= len){    //判断当前父节点有无左节点（即有无孩子节点，left为左节点）
+          right = left + 1;  //右节点
+          j = left;   //j"指针指向左节点"
+          if(j < len && arr[left] < arr[right])    //右节点大于左节点
+              j ++;     //当前把"指针"指向右节点
+          if(arr[i] < arr[j])    //将父节点与孩子节点交换（如果上面if为真，则arr[j]为右节点，如果为假arr[j]则为左节点）
+              swap(arr,i,j);
+          else         //说明比孩子节点都大，直接跳出循环语句
+              break;
+          i = j;
+      }
+  }
+      public static  void swap(int[] arr,int i,int len){
+               int temp = arr[i];
+                arr[i] = arr[len];
+               arr[len] = temp;
+      }
+      public static void main(String[] args) {
+          int array[] = {20,50,20,40,70,10,80,30,60};
+          System.out.println("排序之前：");
+          for(int element : array){
+              System.out.print(element+" ");
+          }
+          heapSort(array);
+          System.out.println("\\n排序之后：");
+          for(int element : array){
+              System.out.print(element+" ");
+          }
+      }
+  }
+  ```
 '''
 tags: []
 isStarred: false
