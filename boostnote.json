@@ -94,6 +94,11 @@
       "key": "ceae56396fb314adeed3",
       "color": "#30D5C8",
       "name": "SpringBoot"
+    },
+    {
+      "key": "becbb124877573c964e3",
+      "color": "#E8D252",
+      "name": "JVM"
     }
   ],
   "version": "1.0"
