@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
-folder: "011719f8b2cad6f90a1d"
-title: "2. RADStack：用于交互式分析的开源Lambda架构"
+folder: "3d96f15f77c92116ffd3"
+title: "6-RADStack：用于交互式分析的开源Lambda架构"
 content: '''
-  ### 2. RADStack：用于交互式分析的开源Lambda架构
+  ### 6-RADStack：用于交互式分析的开源Lambda架构
   
   ---
   
@@ -420,4 +420,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-08-31T05:48:30.629Z"
-updatedAt: "2017-08-31T05:49:38.109Z"
+updatedAt: "2018-05-06T03:43:04.824Z"
