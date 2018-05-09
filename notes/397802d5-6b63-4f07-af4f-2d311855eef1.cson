@@ -1,5 +1,5 @@
 createdAt: "2018-05-04T03:02:39.918Z"
-updatedAt: "2018-05-04T06:52:39.750Z"
+updatedAt: "2018-05-09T05:32:48.984Z"
 type: "MARKDOWN_NOTE"
 folder: "becbb124877573c964e3"
 title: "2-HotSpot 虚拟机对象探秘"
@@ -72,6 +72,7 @@ content: '''
   它节省了一次指针定位的时间开销(相对于句柄来说),由于对象的访问在java中十分频繁，所以这种定位效率较高。
   
   > 在Sun HotSpot 中，使用的是**直接指针**的访问 方式。
+  
 '''
 tags: []
 isStarred: false

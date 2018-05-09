@@ -1,5 +1,5 @@
 createdAt: "2018-05-03T02:24:58.537Z"
-updatedAt: "2018-05-03T06:23:03.848Z"
+updatedAt: "2018-05-09T05:52:45.767Z"
 type: "MARKDOWN_NOTE"
 folder: "becbb124877573c964e3"
 title: "1-java运行时数据区域"
@@ -92,6 +92,133 @@ content: '''
   **直接内存**并不是虚拟机运行时数据区的一部分，也不是java虚拟机规范中定义的内存区域。
   
   在 JDK 1.4 中新加入了NIO类，引入了一种**基于通道与缓冲区的I/O方式**,他可以使用Native函数库直接分配堆外内存，然后通过一个存储在Java堆中**DirectByteBuffer**对象作为这块内存的引用进行操作。
+  
+  
+  ### OutOfMemoryError:
+  
+  #### 1.Java堆溢出
+  
+  > 参数信息:
+  
+  `-Xms`：最小堆大小
+  `-Xmx`：最大堆大小
+  `-XX:+HeapDumpOnOutOfMemoryError` : 打印堆信息
+  
+  ```
+  /***
+   * <pre>
+   *     -Xms20m -Xmx20m -XX:+HeapDumpOnOutOfMemoryError
+   *
+   *     java -Xmx20m -Xms20m -XX:+HeapDumpOnOutOfMemoryError -cp jvm-study-1.0.jar com.saligia.HeapOOM
+   *     java.lang.OutOfMemoryError: GC overhead limit exceeded
+   *     Dumping heap to java_pid1530.hprof ...
+   *     Heap dump file created [36732326 bytes in 0.165 secs]
+   *     Exception in thread "main" java.lang.OutOfMemoryError: GC overhead limit exceeded
+   * 	    at java.util.LinkedList.linkLast(LinkedList.java:142)
+   * 	    at java.util.LinkedList.add(LinkedList.java:338)
+   * 	    at com.saligia.HeapOOM.main(HeapOOM.java:23)
+   * </pre>
+   * @user : saligia
+   * @date : 2018-05-09
+   */
+  public class HeapOOM {
+      static class OOMObject{
+        // 空对象在堆中还需要分配对象头信息(对象类信息引用,持有锁，对象hash码, gc分代年龄等)
+      }
+  
+      public static void main(String[]  args){
+  
+          List<OOMObject> list = new LinkedList<OOMObject>();
+  
+          while(true){
+              list.add(new OOMObject());
+          }
+  
+      }
+  }
+  ```
+  
+  错误信息:`java.lang.OutOfMemoryError: GC overhead limit exceeded`
+  
+  出现异常提示信息：java.lang.OutOfMemoryError: GC overhead limit exceeded，这里没有提示说堆还是持久代有问题，虚拟机只是告诉你你的程序花在垃圾回收上的时间太多了，却没有什么见效。默认的话，如果你98%的时间都花在GC上并且回收了才不到2%的空间的话，虚拟机才会抛这个异常。
+  
+  #### 2. 栈溢出(虚拟机栈,本地方法栈)
+  
+  > 参数信息:
+  
+  `-Xss` 栈大小
+  
+  ```
+  package com.saligia;
+  
+  /***
+   * <pre>
+   *     java -Xss128k
+   *
+   *     java -Xss256k -cp jvm-study-1.0.jar com.saligia.JavaVMStackSOF
+   *     stack length : 2293
+   *      Exception in thread "main" java.lang.StackOverflowError
+   * 	      at com.saligia.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:14)
+   * 	      at com.saligia.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:14)
+   * 	      at com.saligia.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:14)
+   * 	      at com.saligia.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:14)
+   * 	      at com.saligia.JavaVMStackSOF.stackLeak(JavaVMStackSOF.java:14)
+   * </pre>
+   * @user : saligia
+   * @date : 2018-05-09
+   */
+  public class JavaVMStackSOF {
+      private int stackLength = 1;
+  
+      public void stackLeak(){
+          stackLength ++;
+          stackLeak();
+      }
+  
+      public static void main(String [] args) throws Throwable {
+          JavaVMStackSOF oom  = new JavaVMStackSOF();
+  
+          try{
+              oom.stackLeak();
+          }catch (Throwable e){
+              System.out.println("stack length : " + oom.stackLength);
+              throw e;
+          }
+      }
+  }
+  ```
+  
+  错误信息:`Exception in thread "main" java.lang.StackOverflowError`
+  
+  
+  > 通过不断建立线程的方式也是可以产生内存溢出异常：
+  
+  系统分配各每个进程的空间都是有限的，**总的内存** - **Xmx(最大堆)** - **MaxPerSize(最大方法区容量)**, 剩下的内存就基本被虚拟机栈和本地方法区瓜分了。
+  
+  每个线程的虚拟机栈空间越大，允许创建的线程数量就越少，建立线程时就容易把剩下的内存耗尽。
+  
+  所以，如果是**建立过多线程导致的内存溢出，再不能减少线程数的情况下，就只能通过减少栈容量来换取更多的线程** 。
+  
+  
+  ####  3.方法区和运行时常量池溢出:
+  
+  
+  错误现象:`Exception in thread "main" java.lang.OutOfMemoryError: PermGen space`
+  
+  方法区溢出也是一种比较常见的现象:
+  
+  1. 程序使用了CGLib字节码增强和动态扩展语言外
+  2. 大量的jsp 或动态产生JSP文件的应用
+  3. 基于OSGi的应用。
+  
+  
+  #### 4. 本机直接内存溢出:
+  
+  DirectMemory 容量可以通过-XX:MaxDirectMemorySize指定，如果不指定，默认是与java堆大小相等。
+  
+  由DirectMemory 导致的内存溢出，一个明显的特征就是在Heap Dump 文件中不会看见明显的异常，如果读者发现OOM之后Dump文件很小，而程序中有直接或间接的使用了NIO, 就可以考虑这方面的问题。
+  
+  
 '''
 tags: []
 isStarred: false

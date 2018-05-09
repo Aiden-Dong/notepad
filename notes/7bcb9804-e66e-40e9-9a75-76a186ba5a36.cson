@@ -1,0 +1,51 @@
+createdAt: "2018-05-08T02:55:11.157Z"
+updatedAt: "2018-05-08T03:05:06.915Z"
+type: "MARKDOWN_NOTE"
+folder: "e6c9bd1f0c13e9eccb37"
+title: "10-virtualenv"
+content: '''
+  ### 10-virtualenv
+  
+  ---
+  
+  这种情况下，每个应用可能需要各自拥有一套“独立”的Python运行环境。virtualenv就是用来为一个应用创建一套“隔离”的Python运行环境。
+  
+  首先，我们用pip安装virtualenv：
+  
+  ```
+  $ pip3 install virtualenv
+  ```
+  
+  
+  第二步，创建一个独立的Python运行环境，命名为venv：
+  
+  ```
+  virtualenv -p /usr/local/python3.6.5/bin/python3  venv
+  ```
+  
+  新建的Python环境被放到当前目录下的venv目录。有了venv这个Python环境，可以用source进入该环境：
+  
+  ```
+  $source venv/bin/activate
+  ```
+  
+  下面正常安装各种第三方包，并运行python命令：
+  
+  ```
+  (venv)Mac:myproject michael$ pip install jinja2
+  ...
+  Successfully installed jinja2-2.7.3 markupsafe-0.23
+  (venv)Mac:myproject michael$ python myapp.py
+  ...
+  ```
+  
+  
+  退出当前的venv环境，使用deactivate命令：
+  
+  ```
+  $ deactivate 
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
