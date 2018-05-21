@@ -1,5 +1,5 @@
 createdAt: "2018-04-11T11:29:23.261Z"
-updatedAt: "2018-04-20T15:29:46.944Z"
+updatedAt: "2018-05-16T03:24:10.763Z"
 type: "MARKDOWN_NOTE"
 folder: "ceae56396fb314adeed3"
 title: "3-SpringApplication"
@@ -107,6 +107,77 @@ content: '''
   	}
   
   }
+  ```
+  
+  
+  #### 6.自定义启动端口
+  
+  spring boot本身内置tomcat,我们不需要进行tomcat的配置,只需要引入tomcat的依赖即可.
+  
+  ```
+  <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-tomcat</artifactId>
+  </dependency>
+  ```
+  
+  **方法一:**
+  
+  spring boot中自定义端口需要入口类实现ConfigurableEmbeddedServletContainer接口.如下代码
+  
+  ```
+  @RestController
+  @EnableAutoConfiguration
+  public class CustomPortController implements EmbeddedServletContainerCustomizer {
+      /**
+       * 自定义端口
+       * @param container
+       */
+      public void customize(ConfigurableEmbeddedServletContainer container) {
+          container.setPort(8888);
+      }
+  
+      @RequestMapping("/")
+      public String setPort(){
+          return "自定义端口:8888";
+      }
+  
+      public static void main(String[] args) {
+          SpringApplication.run(CustomPortController.class,args);
+      }
+  }
+  ```
+  
+  **方法二:**
+  
+  
+  直接自定义`ConfigurableEmbeddedServletContainer`.通过自己注册`TomcatEmbeddedServletContainerFactory`， 
+  `JettyEmbeddedServletContainerFactory`或`UndertowEmbeddedServletContainerFactory`
+  
+  ```
+  @Bean
+  public EmbeddedServletContainerFactory servletContainer() {
+      TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory();
+      factory.setPort(9000);
+      factory.setSessionTimeout(10, TimeUnit.MINUTES);
+      factory.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/notfound.html");
+      return factory;
+  }
+  ```
+  
+  
+  **方法三:**
+  
+  在配置文件中设置 
+  
+  - 使用application.properties
+  ```
+  server.port=8888
+  ```
+  - 使用application.yml
+  ```
+  server:
+    port: 8888
   ```
 '''
 tags: []

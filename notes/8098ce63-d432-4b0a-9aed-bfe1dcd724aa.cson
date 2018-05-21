@@ -1,5 +1,5 @@
 createdAt: "2018-04-10T15:00:23.111Z"
-updatedAt: "2018-04-11T12:23:33.777Z"
+updatedAt: "2018-05-16T03:44:58.434Z"
 type: "MARKDOWN_NOTE"
 folder: "ceae56396fb314adeed3"
 title: "2-第一个Spring Boot应用程序"
@@ -178,7 +178,7 @@ content: '''
   
   > 也可以这样启动
   
-  $ java -cp target/myproject-0.0.1-SNAPSHOT.jar -Dloader.main=com.mobvista. org.springframework.boot.loader.PropertiesLauncher
+  $ java -cp target/myproject-0.0.1-SNAPSHOT.jar -Dloader.main=com.mobvista.TestApplication org.springframework.boot.loader.PropertiesLauncher
   ```
 '''
 tags: []
