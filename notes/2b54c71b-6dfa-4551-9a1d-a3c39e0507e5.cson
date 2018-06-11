@@ -1,0 +1,208 @@
+createdAt: "2018-06-05T06:44:52.917Z"
+updatedAt: "2018-06-05T07:15:12.651Z"
+type: "MARKDOWN_NOTE"
+folder: "d218c9600accb5c277d2"
+title: "4-spark元数据抓取:"
+content: '''
+  ### 4-spark元数据抓取:
+  
+  ---
+  
+  #### 1. spark-event :
+  
+  - **SparkListenerJobStart** :
+  
+  - **SparkListenerStageCompleted**:
+  
+  `internal.metrics.input.recordsRead` : 读取字节数量
+  `internal.metrics.output.bytesWritten` : 写出的字节数量
+  
+  ```
+  {
+      "Event": "SparkListenerStageCompleted",
+      "Stage Info": {
+          "Stage ID": 1,
+          "Stage Attempt ID": 0,
+          "Stage Name": "saveAsTextFile at CombinerApplication.scala:39",
+          "Number of Tasks": 200,
+          "RDD Info": [
+              {
+                  "RDD ID": 4,
+                  "Name": "MapPartitionsRDD",
+                  "Scope": "{\\"id\\":\\"4\\",\\"name\\":\\"saveAsTextFile\\"}",
+                  "Callsite": "saveAsTextFile at CombinerApplication.scala:39",
+                  "Parent IDs": [
+                      3
+                  ],
+                  "Storage Level": {
+                      "Use Disk": false,
+                      "Use Memory": false,
+                      "Deserialized": false,
+                      "Replication": 1
+                  },
+                  "Number of Partitions": 200,
+                  "Number of Cached Partitions": 0,
+                  "Memory Size": 0,
+                  "Disk Size": 0
+              },
+              {
+                  "RDD ID": 3,
+                  "Name": "ShuffledRDD",
+                  "Scope": "{\\"id\\":\\"3\\",\\"name\\":\\"reduceByKey\\"}",
+                  "Callsite": "reduceByKey at CombinerApplication.scala:37",
+                  "Parent IDs": [
+                      2
+                  ],
+                  "Storage Level": {
+                      "Use Disk": false,
+                      "Use Memory": false,
+                      "Deserialized": false,
+                      "Replication": 1
+                  },
+                  "Number of Partitions": 200,
+                  "Number of Cached Partitions": 0,
+                  "Memory Size": 0,
+                  "Disk Size": 0
+              }
+          ],
+          "Parent IDs": [
+              0
+          ],
+          "Details": "org.apache.spark.rdd.RDD.saveAsTextFile(RDD.scala:1468)\\ntest.CombinerApplication$.main(CombinerApplication.scala:39)\\ntest.CombinerApplication.main(CombinerApplication.scala)\\nsun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\\nsun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\\nsun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\\njava.lang.reflect.Method.invoke(Method.java:498)\\norg.apache.spark.deploy.yarn.ApplicationMaster$$anon$2.run(ApplicationMaster.scala:635)",
+          "Submission Time": 1528180625257,
+          "Completion Time": 1528180645787,
+          "Accumulables": [
+              {
+                  "ID": 50,
+                  "Name": "internal.metrics.executorRunTime",
+                  "Value": 392260,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 59,
+                  "Name": "internal.metrics.shuffle.read.remoteBlocksFetched",
+                  "Value": 1347119,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 62,
+                  "Name": "internal.metrics.shuffle.read.localBytesRead",
+                  "Value": 84154212,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 53,
+                  "Name": "internal.metrics.jvmGCTime",
+                  "Value": 79908,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 71,
+                  "Name": "internal.metrics.output.recordsWritten",
+                  "Value": 2858069,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 56,
+                  "Name": "internal.metrics.diskBytesSpilled",
+                  "Value": 0,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 64,
+                  "Name": "internal.metrics.shuffle.read.recordsRead",
+                  "Value": 2858070,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 55,
+                  "Name": "internal.metrics.memoryBytesSpilled",
+                  "Value": 0,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 49,
+                  "Name": "internal.metrics.executorDeserializeCpuTime",
+                  "Value": 1717065591,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 70,
+                  "Name": "internal.metrics.output.bytesWritten",
+                  "Value": 977845822,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 52,
+                  "Name": "internal.metrics.resultSize",
+                  "Value": 249765,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 61,
+                  "Name": "internal.metrics.shuffle.read.remoteBytesRead",
+                  "Value": 758965337,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 60,
+                  "Name": "internal.metrics.shuffle.read.localBlocksFetched",
+                  "Value": 149558,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 54,
+                  "Name": "internal.metrics.resultSerializationTime",
+                  "Value": 7,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 63,
+                  "Name": "internal.metrics.shuffle.read.fetchWaitTime",
+                  "Value": 4769,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 48,
+                  "Name": "internal.metrics.executorDeserializeTime",
+                  "Value": 4736,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 57,
+                  "Name": "internal.metrics.peakExecutionMemory",
+                  "Value": 1994818790,
+                  "Internal": true,
+                  "Count Failed Values": true
+              },
+              {
+                  "ID": 51,
+                  "Name": "internal.metrics.executorCpuTime",
+                  "Value": 114602718510,
+                  "Internal": true,
+                  "Count Failed Values": true
+              }
+          ]
+      }
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
