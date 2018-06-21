@@ -1,0 +1,106 @@
+createdAt: "2018-06-14T05:20:11.736Z"
+updatedAt: "2018-06-14T05:29:48.348Z"
+type: "MARKDOWN_NOTE"
+folder: "e6c9bd1f0c13e9eccb37"
+title: "11-用Python实现多线程:"
+content: '''
+  ### 11-用Python实现多线程:
+  
+  ---
+  
+  
+  ### 1. Python中的多线程编程
+  
+  在实现生产者消费者模式之前，我们先学习下Python中的多线程编程。
+  线程是操作系统直接支持的执行单元，高级语言通常都内置多线程的支持，Python也不例外，并且Python的线程是真正的Posix Thread，而不是模拟出来的线程。
+  Python的标准库提供了两个模块：_thread和threading，_thread是低级模块，threading是高级模块，对_thread进行了封装。绝大多数情况下，我们只需要使用threading这个高级模块。
+  
+  下面我们先看一段在Python中实现多线程的代码。
+  
+  ```
+  import time,threading
+  #线程代码
+  class TaskThread(threading.Thread):
+      def __init__(self,name):
+          threading.Thread.__init__(self,name=name)
+      def run(self):
+          print('thread %s is running...' % self.getName())
+  
+          for i in range(6):
+              print('thread %s >>> %s' % (self.getName(), i))
+              time.sleep(1)
+  
+          print('thread %s finished.' % self.getName())
+  
+  taskthread = TaskThread('TaskThread')
+  
+  taskthread.start()
+  taskthread.join()
+  ```
+  
+  > 下面是程序的执行结果：
+  
+  ```
+  thread TaskThread is running...
+  thread TaskThread >>> 0
+  thread TaskThread >>> 1
+  thread TaskThread >>> 2
+  thread TaskThread >>> 3
+  thread TaskThread >>> 4
+  thread TaskThread >>> 5
+  thread TaskThread finished.
+  ```
+  
+  > TaskThread类继承自threading模块中的Thread线程类。构造函数的name参数指定线程的名字，通过重载基类run函数实现具体任务。
+  
+  
+  在简单熟悉了Python的线程后，下面我们实现一个生产者消费者模shi。
+  
+  ```
+  from Queue import Queue
+  import random,threading,time
+  
+  #生产者类
+  class Producer(threading.Thread):
+      def __init__(self, name,queue):
+          threading.Thread.__init__(self, name=name)
+          self.data=queue
+  
+      def run(self):
+          for i in range(5):
+              print("%s is producing %d to the queue!" % (self.getName(), i))
+              self.data.put(i)
+              time.sleep(random.randrange(10)/5)
+          print("%s finished!" % self.getName())
+  
+  #消费者类
+  class Consumer(threading.Thread):
+      def __init__(self,name,queue):
+          threading.Thread.__init__(self,name=name)
+          self.data=queue
+      def run(self):
+          for i in range(5):
+              val = self.data.get()
+              print("%s is consuming. %d in the queue is consumed!" % (self.getName(),val))
+              time.sleep(random.randrange(10))
+          print("%s finished!" % self.getName())
+  
+  def main():
+      queue = Queue()
+      producer = Producer('Producer',queue)
+      consumer = Consumer('Consumer',queue)
+  
+      producer.start()
+      consumer.start()
+  
+      producer.join()
+      consumer.join()
+      print 'All threads finished!'
+  
+  if __name__ == '__main__':
+      main()
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false

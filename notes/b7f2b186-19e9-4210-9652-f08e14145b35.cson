@@ -1,0 +1,465 @@
+createdAt: "2018-06-21T03:41:56.838Z"
+updatedAt: "2018-06-21T07:09:03.762Z"
+type: "MARKDOWN_NOTE"
+folder: "826d02692db86deab330"
+title: "11-java调度框架Quartz"
+content: '''
+  ### 11-java调度框架Quartz
+  
+  ---
+  
+  转载自: [深入解读Quartz任务调度器 - 掘金](https://juejin.im/post/5a0c08c5f265da4335624c8f) 欢迎阅读原创作者。
+  
+  ### 1. 概要:
+  
+  
+  `Quartz` 是OpenSymphony提供的强大的开源任务调度框架。　　
+  
+  官网：www.quartz-scheduler.org
+  
+  纯`Java`实现，精细控制排程。
+  
+  **Quartz特点:**
+  1. 强大的调度能力
+  2. 灵活的分布式应用
+  3. 强大的分布式和集群能力
+  
+  **Quartz设计模式**
+  
+  
+  1. Builder 模式
+  2. 组件模式
+  3. Factory 模式
+  4. 链式写法
+  
+  ### 2.Quartz体系结构:
+  
+  三大核心:
+  
+  - 调度器
+  - 任务
+  - 触发器
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-6d782d8466b545e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  ### 3. 任务:
+  
+  #### 3.1 Job ：
+  
+  表示一个工作，要执行的具体内容。此接口中只有一个方法。要创建一个任务，必须得实现这个接口。
+  
+  该接口只有一个execute方法，任务每次被调用的时候都会执行这个execute方法的逻辑，类似TimerTask的run方法，在里面编写业务逻辑。
+  
+  ```
+  package org.quartz;
+  
+  import org.quartz.JobExecutionContext;
+  import org.quartz.JobExecutionException;
+  
+  public interface Job {
+      void execute(JobExecutionContext var1) throws JobExecutionException;
+  }
+  ```
+  
+  **实现**:
+  
+  ```
+   public class TestJob implements Job {
+    /**把要执行的操作，写在execute方法中  */
+    @Override
+    public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        System.out.println("I can do something...");
+        System.out.println(sdf.format(new Date()));
+    }
+  }
+  ```
+  
+  **生命周期**:
+  
+  在每次调度器执行job时，它在调用execute方法前会创建一个新的job实例.
+  当调用完成之后，关联的job对象实例会被释放，释放的实例会被垃圾回收机制回收。
+  
+  #### 3.2 JobBuilder ：
+  
+  可向任务传递数据,通常情况下,我们使用它就可向任务类发送数据了，如有特别复杂的传递参数,它提供了一个传递递:JobDataMap对象的方法
+  
+  ```
+  JobDetail jobDetail =  JobBuilder.newJob(TestJob.class).withIdentity("testJob","group1").build();
+  ```
+  
+  #### 3.3 JobDetail:
+  
+  用来保存我们任务的详细信息。一个JobDetail可以有多个Trigger，但是一个Trigger只能对应一个JobDetail。
+  下面是JobDetail的一些常用的属性和含义：　
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b8ebb0ef95f0bfd0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 3.4 JobStore:
+  
+  负责跟踪所有你给scheduler的“工作数据”：`jobs`, `triggers`, `calendars`, 等。
+  
+  **RAMJobStore** 是使用最简单的也是最高效(依据CPU时间)的JobStore 。RAMJobStore 正如它名字描述的一样，**它保存数据在RAM**。
+  缺点是你的应用结束之后所有的数据也丢失了--**这意味着RAMJobStore 不具有保持job和trigger持久的能力**。
+  对于一些程序是可以接受的，甚至是期望的，但对于其他的程序可能是灾难性的。使用RAMJobStore配置Quartz：配置如下：
+  
+  ```
+  org.quartz.jobStore.class = org.quartz.simpl.RAMJobStore 
+  ```
+  
+  **JDBCJobStore**：以JDBC的方式保存数据在数据库中。它比RAMJobStore的配置复杂一点，也没有RAMJobStore快。然而,性能缺点不是糟透了,特别是如果你在数据库表主键上建立了索引。
+  在机器之间的LAN(在scheduler 和数据库之间)合理的情况下，检索和更新一个被触发的Trigger花费的时间少于10毫秒。几乎适用于所有的数据库，广泛用于 Oracle。PostgreSQL, MySQL, MS SQLServer, HSQLDB, 和DB2。
+  使用JDBCJobStore之前你必须首先创建一系列Quartz要使用的表。你可以发现表创建语句在Quartz发布目录的 “docs/dbTables”下面。你需要确定你的应用要使用的事务类型。
+  如果你不想绑定调度命令(例如增加和移除Trigger)到其他的事务，你可以使用**JobStoreTX (最常用的选择)** 作为你的Jobstore。
+  如果你需要Quartz和其他的事务(例如在J2EE应用服务器中)一起工作，你应该使用JobStoreCMT ，Quartz 将让应用服务器容器管理这个事务。使用JobStoreTx配置Quartz：
+  
+  ```
+  org.quartz.jobStore.class = org.quartz.impl.jdbcjobstore.JobStoreTX  
+  org.quartz.jobStore.driverDelegateClass = org.quartz.impl.jdbcjobstore.StdJDBCDelegate  
+  #配置表的前缀  
+  org.quartz.jobStore.tablePrefix = QRTZ_  
+  #使用JNDI数据源的时候，数据源的名字  
+  org.quartz.jobStore.dataSource = myDS  
+  ```
+  
+  **TerracottaJobStore**：提供了一个方法：在不使用数据库的情况下使它具有收缩性和强壮性。
+  可以是集群的也可以是非集群的，在这两种情况下为你的job数据提供了一个存储机制用于应用程序重启之间持久,因为数据是存储在Terracotta服务器。它的性能比使用数据库访问JDBCJobStore好一点儿(大约是一个数量级)，但是明显比RAMJobStore慢。
+  使用TerracottaJobStore配置Quartz
+  
+  ```
+  org.quartz.jobStore.class = org.terracotta.quartz.TerracottaJobStore  
+  org.quartz.jobStore.tcConfigUrl = localhost:9510 
+  ```
+  
+  
+  #### 3.5 JobDataMap：
+  
+  中可以包含不限量的（序列化的）数据对象，在job实例执行的时候，可以使用其中的数据；
+  JobDataMap是Java Map接口的一个实现，额外增加了一些便于存取基本类型的数据的方法。
+  
+  
+  **存**:
+  
+  ```
+  JobDetail jobDetail =  JobBuilder.newJob(TestJob.class).withIdentity("testJob","group1").usingJobData("date1","存内容").build(); 
+  ```
+  
+  **取**:
+  
+  ```
+  public class TestJob implements Job {
+      /**把要执行的操作，写在execute方法中  */
+      @Override
+      public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+          JobKey key = jobExecutionContext.getJobDetail().getKey();
+          JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
+          String date1 = jobDataMap.getString("date1");
+      }
+  }
+  ```
+  
+  ### 4. 触发器:
+  
+  用来触发执行Job
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-6456dba3d45defdd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  #### 4.1 触发器的属性:
+  
+  **Jobkey**：表示job实例的标识，触发器被触发时，该指定的job实例会被执行
+  **StartTime**：表示触发器的时间表首次被触发的时间，它的值类型为：java.util.Date
+  **EndTime**：指定触发器的不再被触发的时间，它的值类型为：java.util.Date
+  
+  #### 4.2 触发器的类型:
+  
+  - **SimpleTrigger**:
+  
+   主要是针对一些相对简单的时间触发进行配置使用，比如在指定的时间开始然后在一定的时间间隔之内重复执行一个Job，同时可以任意指定重复的次数。
+   下面就是使用一个SimpleTrigger的例子:
+   
+  ```
+  //创建触发器 每3秒钟执行一次(无开始时间和结束时间)
+  Trigger trigger = TriggerBuilder.newTrigger()
+            .withIdentity("trigger1", "group3")
+            .withSchedule(
+            SimpleScheduleBuilder.simpleSchedule()
+            .withIntervalInSeconds(3).repeatForever()).build();
+  //创建触发器 每3秒钟执行一次(有开始时间和结束时间)
+  long now = new Date().getTime();
+  Date start = new Date(now+6000);
+  Date end = new Date(now+12000);
+  //创建触发器 每3秒钟执行一次
+  Trigger trigger = TriggerBuilder.newTrigger()
+                  .withIdentity("trigger1", "group3")
+                  .startAt(start)
+                  .endAt(end)
+                  .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(3).repeatForever()).build();
+  ```
+  
+  **SimpleTrigger** 具有丰富的构造函数，根据业务需求构造不同的构造函数。
+  
+  - **CronTrigger**:
+  
+  可以配置更复杂的触发时刻表，基于日历的作业触发器，而不像**SimpleTrigger**那样精确指定间隔时间，比SimpleTrigger更加常用。
+  
+  ```
+  Trigger trigger2 = TriggerBuilder.newTrigger() 
+                           .withIdentity("cron trigger", "test")
+                           .withSchedule(
+                           //这里我们演示的是CronTrigger触发器，所以要使用CronScheduleBuilder.cronSchedule()方来创建
+                           //每5秒执行一次
+   CronScheduleBuilder.cronSchedule("0/5 * * ? * *")).build();
+  ```
+  
+  **Cron表达式**：用于配置CronTrigger实例，是由7个表达式组成的字符串，描述了时间表的详细信息。
+  
+  格式为：`[秒][分][时][日][月][周][年]`
+  
+  **Cron表达式特殊字符意义对应表**：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-71cc92111617e08c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  **通配符说明**：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-334118d20431944f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  **Cron表达式例子**：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-a0a26c24b212da48.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  ```
+  TriggerBuilder.newTrigger().withIdentity("trigger2","group2")
+              .withSchedule(CronScheduleBuilder.cronSchedule("0 0 9 ? * 6L *")).build();
+  ```
+  
+  **Cron表达式小技巧**:
+  
+  1. `L`和`W`可以一起组合使用
+  2. 周字段英文字母不区分大小写即`MOM`与`mom`相同
+  3. 利用工具，在线生成cron表达式：`cron.qqe2.com/`
+  
+  
+  - NthIncludedDayTrigger:
+  
+  是 Quartz 开发团队最新加入到框架中的一个 Trigger。
+  它设计用于在每一间隔类型的第几天执行 Job。
+  例如，你要在每个月的 15 号执行开票的 Job，用 NthIncludedDayTrigger就再合适不过了。
+  
+  ```
+  NthIncludedDayTrigger trigger = new NthIncludedDayTrigger("NthIncludedDayTrigger",Scheduler.DEFAULT_GROUP);
+              trigger.setN(15);
+              trigger.setIntervalType(NthIncludedDayTrigger.INTERVAL_TYPE_MONTHLY);
+  ```
+  
+  
+  ### 4.调度器 Scheduler
+  
+  代表一个`Quartz`的独立运行容器，`Trigger` 和 `JobDetail` 可以注册到**Scheduler**中，两者在Scheduler中拥有各自的`组`及`名称`，**组及名称是Scheduler查找定位容器中某一对象的依据**.
+  **Trigger**的组及名称必须唯一，**JobDetail** 的组和名称也必须唯一（但可以和 **Trigger** 的组和名称相同，因为它们是不同类型的）。
+  **Scheduler** 定义了多个接口方法，允许外部通过组及名称访问和控制容器中**Trigger**和**JobDetail**。
+  
+  Scheduler 可以将 Trigger 绑定到某一 JobDetail 中，这样当 Trigger 触发时，对应的Job就被执行。
+  **一个Job可以对应多个Trigger，但一个Trigger只能对应一个Job。**
+  
+  可以通过**SchedulerFactory**创建一个**Scheduler**实例。
+  **Scheduler**拥有一个**SchedulerContext**，它类似于**ServletContext**，保存着**Scheduler**上下文信息，**Job**和**Trigger**都可以访问**SchedulerContext**内的信息。
+  
+  **SchedulerContext** 内部通过一个Map，以键值对的方式维护这些上下文数据，**SchedulerContext**为保存和获取数据提供了多个`put()`和`getXxx()`的方法。可以通过`Scheduler# getContext()`获取对应的SchedulerContext实例；
+  
+  ```
+  SchedulerFactory schedulerfactory=new StdSchedulerFactory();
+  Scheduler scheduler = schedulerfactory.getScheduler();
+  
+   DirectSchedulerFactory factory = DirectSchedulerFactory.getInstance();
+  try {
+      Scheduler scheduler = factory.getScheduler();
+  } catch (SchedulerException e) {
+      e.printStackTrace();
+  }
+  ```
+  
+  ### 5. SchedulerFactory
+  
+  - 使用一组参数（`java.util.Properties`）来创建Quartz调度器
+  - 配置参数一般存储在`quartz.properties`中
+  - 调用getScheduler方法就能创建和初始化调度器
+  
+  **quartz.properties:**
+  
+  Quartz-Job的quartz.properties配置文件说明，此文件在quartz的jar包有，可直接拿过来使用不过只有基本的几个配置 自己可根据需要进行扩充；
+  另外如果项目中没有对该配置文件重写，则Quartz会加载自己jar包中的quartz.properties文件。
+  
+  ```
+  # Default Properties file for use by StdSchedulerFactory  
+  # to create a Quartz Scheduler Instance, if a different  
+  # properties file is not explicitly specified.  
+  #  
+  # ===========================================================================  
+  # Configure Main Scheduler Properties 调度器属性  
+  # ===========================================================================  
+  org.quartz.scheduler.instanceName: DefaultQuartzScheduler  
+  #org.quartz.scheduler.instanceid:AUTO  
+  org.quartz.scheduler.rmi.export: false  
+  org.quartz.scheduler.rmi.proxy: false  
+  org.quartz.scheduler.wrapJobExecutionInUserTransaction: false  
+  # ===========================================================================    
+  # Configure ThreadPool 线程池属性    
+  # ===========================================================================  
+  #线程池的实现类（一般使用SimpleThreadPool即可满足几乎所有用户的需求）  
+  org.quartz.threadPool.class: org.quartz.simpl.SimpleThreadPool  
+  #指定线程数，至少为1（无默认值）(一般设置为1-100直接的整数合适)  
+  org.quartz.threadPool.threadCount: 10  
+  #设置线程的优先级（最大为java.lang.Thread.MAX_PRIORITY 10，最小为Thread.MIN_PRIORITY 1，默认为5）  
+  org.quartz.threadPool.threadPriority: 5  
+  #设置SimpleThreadPool的一些属性  
+  #设置是否为守护线程  
+  #org.quartz.threadpool.makethreadsdaemons = false  
+  #org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread: true  
+  #org.quartz.threadpool.threadsinheritgroupofinitializingthread=false  
+  #线程前缀默认值是：[Scheduler Name]_Worker  
+  #org.quartz.threadpool.threadnameprefix=swhJobThead;  
+  # 配置全局监听(TriggerListener,JobListener) 则应用程序可以接收和执行 预定的事件通知  
+  # ===========================================================================  
+  # Configuring a Global TriggerListener 配置全局的Trigger监听器  
+  # MyTriggerListenerClass 类必须有一个无参数的构造函数，和 属性的set方法，目前2.2.x只支持原始数据类型的值（包括字符串）  
+  # ===========================================================================  
+  #org.quartz.triggerListener.NAME.class = com.swh.MyTriggerListenerClass  
+  #org.quartz.triggerListener.NAME.propName = propValue  
+  #org.quartz.triggerListener.NAME.prop2Name = prop2Value  
+  # ===========================================================================  
+  # Configuring a Global JobListener 配置全局的Job监听器  
+  # MyJobListenerClass 类必须有一个无参数的构造函数，和 属性的set方法，目前2.2.x只支持原始数据类型的值（包括字符串）  
+  # ===========================================================================  
+  #org.quartz.jobListener.NAME.class = com.swh.MyJobListenerClass  
+  #org.quartz.jobListener.NAME.propName = propValue  
+  #org.quartz.jobListener.NAME.prop2Name = prop2Value  
+  # ===========================================================================    
+  # Configure JobStore 存储调度信息（工作，触发器和日历等）  
+  # ===========================================================================  
+  # 信息保存时间 默认值60秒  
+  org.quartz.jobStore.misfireThreshold: 60000  
+  #保存job和Trigger的状态信息到内存中的类  
+  org.quartz.jobStore.class: org.quartz.simpl.RAMJobStore  
+  # ===========================================================================    
+  # Configure SchedulerPlugins 插件属性 配置  
+  # ===========================================================================  
+  # 自定义插件    
+  #org.quartz.plugin.NAME.class = com.swh.MyPluginClass  
+  #org.quartz.plugin.NAME.propName = propValue  
+  #org.quartz.plugin.NAME.prop2Name = prop2Value  
+  #配置trigger执行历史日志（可以看到类的文档和参数列表）  
+  org.quartz.plugin.triggHistory.class = org.quartz.plugins.history.LoggingTriggerHistoryPlugin    
+  org.quartz.plugin.triggHistory.triggerFiredMessage = Trigger {1}.{0} fired job {6}.{5} at: {4, date, HH:mm:ss MM/dd/yyyy}    
+  org.quartz.plugin.triggHistory.triggerCompleteMessage = Trigger {1}.{0} completed firing job {6}.{5} at {4, date, HH:mm:ss MM/dd/yyyy} with resulting trigger instruction code: {9}    
+  #配置job调度插件  quartz_jobs(jobs and triggers内容)的XML文档    
+  #加载 Job 和 Trigger 信息的类   （1.8之前用：org.quartz.plugins.xml.JobInitializationPlugin）  
+  org.quartz.plugin.jobInitializer.class = org.quartz.plugins.xml.XMLSchedulingDataProcessorPlugin  
+  #指定存放调度器(Job 和 Trigger)信息的xml文件，默认是classpath下quartz_jobs.xml  
+  org.quartz.plugin.jobInitializer.fileNames = my_quartz_job2.xml    
+  #org.quartz.plugin.jobInitializer.overWriteExistingJobs = false    
+  org.quartz.plugin.jobInitializer.failOnFileNotFound = true    
+  #自动扫描任务单并发现改动的时间间隔,单位为秒  
+  org.quartz.plugin.jobInitializer.scanInterval = 10  
+  #覆盖任务调度器中同名的jobDetail,避免只修改了CronExpression所造成的不能重新生效情况  
+  org.quartz.plugin.jobInitializer.wrapInUserTransaction = false  
+  # ===========================================================================    
+  # Sample configuration of ShutdownHookPlugin  ShutdownHookPlugin插件的配置样例  
+  # ===========================================================================  
+  #org.quartz.plugin.shutdownhook.class = \\org.quartz.plugins.management.ShutdownHookPlugin  
+  #org.quartz.plugin.shutdownhook.cleanShutdown = true  
+  #  
+  # Configure RMI Settings 远程服务调用配置  
+  #  
+  #如果你想quartz-scheduler出口本身通过RMI作为服务器，然后设置“出口”标志true(默认值为false)。  
+  #org.quartz.scheduler.rmi.export = false  
+  #主机上rmi注册表(默认值localhost)  
+  #org.quartz.scheduler.rmi.registryhost = localhost  
+  #注册监听端口号（默认值1099）  
+  #org.quartz.scheduler.rmi.registryport = 1099  
+  #创建rmi注册，false/never：如果你已经有一个在运行或不想进行创建注册  
+  # true/as_needed:第一次尝试使用现有的注册，然后再回来进行创建  
+  # always:先进行创建一个注册，然后再使用回来使用注册  
+  #org.quartz.scheduler.rmi.createregistry = never  
+  #Quartz Scheduler服务端端口，默认是随机分配RMI注册表  
+  #org.quartz.scheduler.rmi.serverport = 1098  
+  #true:链接远程服务调度(客户端),这个也要指定registryhost和registryport，默认为false  
+  # 如果export和proxy同时指定为true，则export的设置将被忽略  
+  #org.quartz.scheduler.rmi.proxy = false  关注下面的标
+  ```
+  
+  
+  ### 6. 使用:
+  
+  #### 
+  
+  创建 Job:
+  
+  ```
+  import java.util.Date;
+  import org.quartz.Job;
+  import org.quartz.JobExecutionContext;
+  import org.quartz.JobExecutionException;
+  
+  public class SimpleQuartzJob implements Job {
+  
+      public SimpleQuartzJob() {
+      }
+  
+      public void execute(JobExecutionContext context) throws JobExecutionException {
+          System.out.println("In SimpleQuartzJob - executing its JOB at " 
+                  + new Date() + " by " + context.getTrigger().getName());
+      }
+  }
+  ```
+  
+  触发器和调度器:
+  
+  ```
+  public void task() throws SchedulerException
+  {
+      //通过SchedulerFactory来获取一个调度器
+      SchedulerFactory schedulerFactory = new StdSchedulerFactory();
+      Scheduler scheduler = schedulerFactory.getScheduler();
+  
+  
+  
+      //引进作业程序
+      JobDetail jobDetail = 
+      new JobDetail("jobDetail-s1", "jobDetailGroup-s1", SimpleQuartzJob.class);
+  
+       //new一个触发器
+      SimpleTrigger simpleTrigger = 
+      new SimpleTrigger("simpleTrigger", "triggerGroup-s1");
+  
+  
+      //设置作业启动时间
+  
+      long ctime = System.currentTimeMillis(); 
+      simpleTrigger.setStartTime(new Date(ctime));
+  
+  
+      //设置作业执行间隔 
+      simpleTrigger.setRepeatInterval(10000);
+  
+      //设置作业执行次数
+      simpleTrigger.setRepeatCount(10);
+  
+      //设置作业执行优先级默认为5
+      //simpleTrigger.setPriority(10);
+  
+  
+      //作业和触发器设置到调度器中
+      scheduler.scheduleJob(jobDetail, simpleTrigger);
+  
+      //启动调度器
+      scheduler.start();
+  }
+  ```
+'''
+tags: []
+isStarred: false
+isTrashed: false
