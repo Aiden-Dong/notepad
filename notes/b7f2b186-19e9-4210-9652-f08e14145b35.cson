@@ -1,5 +1,5 @@
 createdAt: "2018-06-21T03:41:56.838Z"
-updatedAt: "2018-06-21T07:09:03.762Z"
+updatedAt: "2018-06-21T11:46:25.888Z"
 type: "MARKDOWN_NOTE"
 folder: "826d02692db86deab330"
 title: "11-java调度框架Quartz"
@@ -25,7 +25,6 @@ content: '''
   3. 强大的分布式和集群能力
   
   **Quartz设计模式**
-  
   
   1. Builder 模式
   2. 组件模式
@@ -399,64 +398,65 @@ content: '''
   创建 Job:
   
   ```
-  import java.util.Date;
+  package com.cn.myScheduler;
+  
   import org.quartz.Job;
   import org.quartz.JobExecutionContext;
   import org.quartz.JobExecutionException;
-  
-  public class SimpleQuartzJob implements Job {
-  
-      public SimpleQuartzJob() {
+  public class MyJob implements Job {
+      @Override
+      public void execute(JobExecutionContext arg0) throws JobExecutionException {
+          // TODO Auto-generated method stub
+          System.out.println("this is my first scheduler!");
       }
   
-      public void execute(JobExecutionContext context) throws JobExecutionException {
-          System.out.println("In SimpleQuartzJob - executing its JOB at " 
-                  + new Date() + " by " + context.getTrigger().getName());
-      }
   }
   ```
   
   触发器和调度器:
   
   ```
-  public void task() throws SchedulerException
-  {
-      //通过SchedulerFactory来获取一个调度器
-      SchedulerFactory schedulerFactory = new StdSchedulerFactory();
-      Scheduler scheduler = schedulerFactory.getScheduler();
+  package com.cn.myScheduler;
   
+  import org.quartz.JobBuilder;
+  import org.quartz.JobDetail;
+  import org.quartz.Scheduler;
+  import org.quartz.SchedulerException;
+  import org.quartz.SchedulerFactory;
+  import org.quartz.SimpleScheduleBuilder;
+  import org.quartz.Trigger;
+  import org.quartz.TriggerBuilder;
+  import org.quartz.impl.StdSchedulerFactory;
+  public class TestMyJob {
+      public static void main(String[] args) {
+          // TODO Auto-generated method stub
+          try{
+          //1、获得一个scheduler
+          SchedulerFactory sf=new StdSchedulerFactory();
+          Scheduler scheduler =sf.getScheduler();
+          //2、获得一个jobDetail
+          JobDetail job = JobBuilder.newJob(MyJob.class)
+                   .withIdentity("myJob")
+                   .build();
   
+          //3、获得一个trigger
+           Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity("trigger1", "group1")
+                    .startNow()
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                            .withIntervalInSeconds(40)
+                            .withRepeatCount(10))
+                           .build();
+          //4、把任务和触发器放到scheduler中
+          scheduler.scheduleJob(job, trigger);
+          //5、开始任务调度
+          scheduler.start();
+          }
+          catch(SchedulerException e){
+              e.printStackTrace();
+          }
+      }
   
-      //引进作业程序
-      JobDetail jobDetail = 
-      new JobDetail("jobDetail-s1", "jobDetailGroup-s1", SimpleQuartzJob.class);
-  
-       //new一个触发器
-      SimpleTrigger simpleTrigger = 
-      new SimpleTrigger("simpleTrigger", "triggerGroup-s1");
-  
-  
-      //设置作业启动时间
-  
-      long ctime = System.currentTimeMillis(); 
-      simpleTrigger.setStartTime(new Date(ctime));
-  
-  
-      //设置作业执行间隔 
-      simpleTrigger.setRepeatInterval(10000);
-  
-      //设置作业执行次数
-      simpleTrigger.setRepeatCount(10);
-  
-      //设置作业执行优先级默认为5
-      //simpleTrigger.setPriority(10);
-  
-  
-      //作业和触发器设置到调度器中
-      scheduler.scheduleJob(jobDetail, simpleTrigger);
-  
-      //启动调度器
-      scheduler.start();
   }
   ```
 '''
