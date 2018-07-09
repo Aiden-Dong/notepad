@@ -1,0 +1,335 @@
+createdAt: "2018-07-04T08:36:36.280Z"
+updatedAt: "2018-07-04T11:38:46.957Z"
+type: "MARKDOWN_NOTE"
+folder: "3d96f15f77c92116ffd3"
+title: "8-Amabari 源码分析总览"
+content: '''
+  ### 8-Amabari 源码分析总览
+  
+  ---
+  
+  转载自:[Ambari架构源码解析 - CSDN博客](https://blog.csdn.net/chengyuqiang/article/details/60963480)
+  
+  ### 1.Ambari介绍
+  
+  Ambari是hadoop分布式集群配置管理工具，是由hortonworks主导的开源项目。它已经成为apache基金会的孵化器项目，已经成为hadoop运维系统中的得力助手，引起了业界和学术界的关注。
+  
+  #### 1.1 基本概念:
+  
+  参考http://blog.csdn.net/j2eelamp/article/details/25416943 
+  
+  1. **Resource**：Ambari把可以被管理的资源的抽象为一个Resource实例，资源可以包括服务、组件、主机节点等，一个resource实例中包含了一系列该资源的属性； 
+  
+  2. **Property**：服务组件的指标名称； 
+  
+  3. **ResourceProvider** 和 **PropertyProvider** 分别对应 **Resource** 和 **Property** 的提供方，获取指标需要先获取**Resource**，然后获取Property对应的metric； 
+  4. **Query** : **Query** 是 **Resource** 的内部对象，代表了对该资源的操作； 
+  5. **Request** ：一个 **Request** 代表了对 **Resource** 的操作请求，包含http信息及要操作的Resource的实例，Request按照http的请求方式分为四种：GET、PUT、DELETE、POST； 
+  6. **Predicate** ：一个**Predicate** 代表了一系列表达式，如and、or等；
+  
+  #### 1.2 基本组件
+  
+  **Ambari** 可以分为 5个大的组件,分别是是 **Ambari-server**、**Ambari-web** 、 **Ambari-agent** 、 **Ambari-metrics-collector** 和 **Ambari-metrics-monitor** 。 
+  
+  1. 在集群的每一台机器上都会部署 **Ambari-agent** 程序。 **Agent** 主要负责接收来着 **Server** 端的命令, 
+  
+  这些命令可以是安装、启动、停止 Hadoop 集群上的某一服务。同时, agent 端需要向 Ambari-server 端上 
+  报命令执行的结果,是执行成功还是失败。 
+  
+  2. **Ambari-Server** 提供 **REST** 接口给 **Agent** 和 **Web** 访问。用户甚至可以不用界面,而是通过 curl 命令来操控集群。 
+  
+  3. **Ambari-metric-collector** 和 **Ambari-metrics-monitor** 是收集群中组件 metrics 的模块。 关于Ambari Metrics ，请参考：https://www.ibm.com/developerworks/cn/opensource/os-cn-ambari-metrics/index.html
+  
+  #### 1.3 相关技术
+  
+  **Ambari**充分利用了一些已有的优秀开源软件，巧妙地把它们结合起来，使其在分布式环境中做到了集群式服务管理能力、监控能力、展示能力，这些优秀的开源软件有： 
+  
+  （1）agent端，采用了puppet管理节点。 
+  （2）在web端，采用ember.js作为前端MVC框架和NodeJS相关工具，用handlebars.js作为页面渲染引擎，在CSS/HTML方面还用了Bootstrap框架。 
+  （3）在Server端，采用了Jetty、Spring、JAX-RS等。 
+  （4）同时利用了Ganglia、Nagios的分布式监控能力。
+  
+  **Ambari** 架构采用的是 **Server/Client** 的模式，主要由两部分组成：**ambari-agent** 和 **ambari-server** 。
+  
+  **ambari** 依赖其它已经成熟的工具，例如其 **ambari-server** 就依赖 **python**，而 **ambari-agent** 还同时依赖 **ruby**, **puppet**，**facter**等工具，还有它也依赖一些监控工具**nagios**和**ganglia**用于监控集群状况。 
+  
+  其中：
+  
+  1. **puppet**是分布式集群配置管理工具，也是典型的**Server/Client**模式，能够集中式管理分布式集群的安装配置部署，主要语言是ruby。 
+  
+  2. **facter**是用**python**写的一个节点资源采集库，用于采集节点的系统信息，例如**OS**信息，主机信息等。由于**ambari-agent**主要是用**python**写的，因此用**facter**可以很好地采集到节点信息。
+  
+  **Ambari Server**
+  
+  - Server code: Java 1.7 / 1.8
+  - Agent scripts: Python
+  - Database: Postgres, Oracle, MySQL
+  - ORM: EclipseLink
+  - Security: Spring Security with remote LDAP integration and local database
+  - REST server: Jersey (JAX-RS)
+  - Dependency Injection: Guice
+  - Unit Testing: JUnit
+  - Mocks: EasyMock
+  - Configuration management: Python
+  
+  **Ambari Web**
+  
+  - Frontend code: JavaScript
+  - Client-side MVC framework: Ember.js / AngularJS
+  - Templating: Handlebars.js (integrated with Ember.js)
+  - DOM manipulation: jQuery
+  - Look and feel: Bootstrap 2
+  - CSS preprocessor: LESS
+  - Unit Testing: Mocha
+  - Mocks: Sinon.js
+  - Application assembler/tester: Brunch / Grunt / Gulp 
+  
+  ### 2.Ambari项目目录结构
+  
+  #### 2.1 总体目录
+  
+  
+  目录 | 描述
+  --- | ---
+  ambari-server | Ambari的Server程序，主要管理部署在每个节点上的管理监控程序
+  Ambari-agent | 部署在监控节点上运行的管理监控程序
+  ambari-web | Ambari页面UI的代码，作为用户与Ambari server交互的。
+  ambari-views | 用于扩展Ambari Web UI中的框架
+  ambari-common | Ambari-server 和Ambari-agent 共用的代码
+  ambari-metrics | 在Ambari所管理的集群中用来收集、聚合和服务Hadoop和系统计量
+  Contrib | 自定义第三方库
+  Docs | 文档
+  
+  #### 2.2 Ambari-server目录
+  
+  目录 | 描述
+  --- | ---
+  org.apache.ambari.server.api.services | 对web接口的入口方法，处理/api/v1/* 的请求
+  org.apache.ambari.server.controller | 对Ambari中cluster的管理处理，如新增host，更service、删除component等
+  org.apache.ambari.server.controller.internal | 主要存放ResourceProvider和PropertyProvider；
+  org.apache.ambari.service.orm.* | 对数据库的操作
+  org.apache.ambari.server.agent.rest | 处理与Agent的接口的入口方法
+  org.apache.ambari.security | 使用Spring Security来做权限管理
+  
+  其中，每一种Resource都对应一个ResourceProvider，对应关系如下： 
+  
+  Resource.Type | ResourceProvider
+  --- | ---
+  Workflow | WorkflowResourceProvider
+  Job | JobResourceProvider
+  TaskAttempt | TaskAttemptResourceProvider
+  View | ViewResourceProvider
+  ViewInstance | ViewInstanceResourceProvider
+  Blueprint | BlueprintResourceProvider
+  Cluster | ClusterResourceProvider
+  Service | ServiceResourceProvider
+  Component | ComponentResourceProvider
+  Host | HostResourceProvider
+  HostComponent | HostComponentResourceProvider
+  Configuration | ConfigurationResourceProvider
+  Action | ActionResourceProvider
+  Request | RequestResourceProvider
+  Task | TaskResourceProvider
+  User | UserResourceProvider
+  Stack | StackResourceProvider
+  StackVersion | StackVersionResourceProvider
+  StackService | StackServiceResourceProvider
+  StackServiceComponent | StackServiceComponentResourceProvider
+  StackConfiguration | StackConfigurationResourceProvider
+  OperatingSystem | OperatingSystemResourceProvider
+  Repository | RepositoryResourceProvider
+  RootService | RootServiceResourceProvider
+  RootServiceComponent | RootServiceComponentResourceProvider
+  RootServiceHostComponent | RootServiceHostComponentResourceProvider
+  ConfigGroup | ConfigGroupResourceProvider
+  RequestSchedule | RequestScheduleResourceProvider
+  
+  
+  #### 2.3 Ambari-agent 目录
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-73725ca990800ca9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 2.4 Ambari-web 目录
+  
+  **1）Ambari-web 目录结构**
+  
+  目录或文件 | 描述
+  --- | ---
+  app/ | 主要应用程序代码。包括Ember中的view、templates、controllers、models、routes
+  config.coffee | Brunch应用程序生成器的配置文件
+  package.json | Npm包管理配置文件
+  test/ | 测试文件
+  vendor/ | Javascript库和样式表适用第三方库。
+  
+  **2） Ambari-web/app/**
+  
+  目录或文件 | 描述
+  assets/ | 静态文件
+  controllers/ | 控制器
+  data/ | 数据
+  mappers/ | JSON数据到Client的Ember实体的映射
+  models | MVC中的Model
+  routes/ | 路由器
+  styles | 样式文件
+  views | 视图文件
+  templates/ | 页面模板
+  app.js | Ember主程序文件
+  config.js | 配置文件
+  
+  **3）Ambari-web/app/templates 模版目录**
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-be14ba0f69185da6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  目录或文件 | 描述
+  --- | ---
+  commom | 公用模板（可以不动）
+  main | 模板的主体部分
+  utils | 工具模板
+  wizard | ambari	部署子模板
+  application.hbs | ambari	主体模板
+  experimental.hbs | 实验性模板，用于测试新模板
+  installer.hbs ambari | 部署入口模板
+  login.hbs | 登陆模板
+  main.hbs | 顶上的导航条模板(?)
+  
+  **4) Ambari-web/app/templates/main **
+  
+  ```
+  
+  --|dashboard                              Dashboard标签模板
+      --|widgets                            组件模板
+          --|cluster_metrics.hbs            生成显示集群资源信息的图表
+          --|hbase_links.hbs                生成Hbase的监控图表
+          --|hdfs_links.hbs                 生成HDFS的监控图表
+          --|pie_chart.hbs                  生成显示饼状图的监控图表
+          --|simple_text.hbs                生成显示简单文字的监控图表
+          --|uptime.hbs                     生成集群启动信息的监控图表
+          --|yarn_links.hbs                 生成Yarn的监控图表
+      --|config_history.hbs                 Config History标签模板
+      --|edit_widget_popup.hbs              编辑组件弹出模板
+      --|plus_button_filter.hbs             按下后的反应过滤器(?)
+      --|widgets.hbs                        用于生成操作和生成监控图表
+  --|service                                services标签模板
+  --|hosts                                  hosts标签模板
+  --|alerts                                 alerts标签模板
+  --|admim                                  admin标签模板
+  --|charts                                 图表模板
+  --|service.hbs                            services标签入口模板
+  --|hosts.hbs                              hosts标签入口模板
+  --|alerts .hbs                            alerts标签入口模板
+  --|admin.hbs                              admin标签入口模板
+  --|charts.hbs                             图表入口模板
+  --|memu.hbs                               菜单栏入口模板
+  --|memu_item.hbs                          菜单栏入口模板
+  --|views.hbs                              生成组件列表(?)
+  ```
+  
+  ### 3.Ambari-server
+  
+  #### 3.1 ambari-server结构
+  
+  **ambari-server** 是一个有状态的，它维护着自己的一个有限状态机 FSM。同时这些状态机存储在数据库中，前期数据库主要采用postgres。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b37257e323063b5c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  1. 对外，**Ambari-Server** 提供 **ambari web**，**rest api**，**ambari shell**三大方式操作机群； 
+  2. **ambari** 将集群的配置、各个服务的配置等信息存在 **ambari server** 端的DB中(比如可以是postgresql)； 
+  3. **ambari server**与**ambari agent**的交流走**RPC**，即**agent**向**server**报告心跳，**server**将**command**通过**respons**发回给**agent**，**agent**本地执行命令，比如：**agent**端执行相应的**python**脚本； 
+  4. **ambari** 有自己的一套监控、告警、镜像服务，以可插拔的形式供上层服务调用；
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-810c65871562782b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  **Ambari-Server** 是一个 **WEB Server**，提供统一的REST API接口，同时向web和agent开放了两个不同的端口（默认前者是8080, 后者是8440或者8441）。
+  
+  它是由**Jetty Server**容器构建起来的，通过**Spring Framework**构建出来的WEB服务器，其中大量采用了google提供的Guice注解完成spring框架所需要的注入功能（想一想，之前spring框架需要加载一个applicationcontext.xml文件来把bean注入进来，现在可以用Guice注解的方式就可以轻松完成）。 REST框架由JAX-RS标准来构建。
+  
+  ---
+  
+  如下图所示，server端主要维护三类状态： 
+  
+  1. **Live Cluster State**：集群现有状态，各个节点汇报上来的状态信息会更改该状态; 
+  2. **Desired State**：用户希望该节点所处状态，是用户在页面进行了一系列的操作，需要更改某些服务的状态，这些状态还没有在节点上产生作用; 
+  3. **Action State**：操作状态，是状态改变时的请求状态，也可以看作是一种中间状态，这种状态可以辅助Live Cluster State向Desired State状态转变。
+  
+  **Ambari-server**的**Heartbeat Handler**模块用于接收各个agent的心跳请求（心跳请求里面主要包含两类信息：节点状态信息和返回的操作结果），把节点状态信息传递给FSM状态机去维护着该节点的状态，并且把返回的操作结果信息返回给Action Manager去做进一步的处理。 
+  **Coordinator**模块又可以称为API handler，主要在接收WEB端操作请求后，会检查它是否符合要求，stage planner分解成一组操作，最后提供给Action Manager去完成执行操作。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-6df485d62000c9bd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  因此，从上图就可以看出，Ambari-Server的所有状态信息的维护和变更都会记录在数据库中，用户做一些更改服务的操作都会在数据库上做一些相应的记录，同时，agent通过心跳来获得数据库的变更历史。
+  
+  ---
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-e7658cec704c871a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  **Ambari Server** 会读取 **Stack** 和 **Service** 的配置文件。当用 Ambari 创建集群的时候，Ambari Server 传送 Stack 和 Service 的配置文件以及 Service 生命周期的控制脚本到 Ambari Agent。Agent 拿到配置文件后，会下载安装公共源里软件包（Redhat，就是使用 yum 服务）。安装完成后，Ambari Server 会通知 Agent 去启动 Service。之后 Ambari Server 会定期发送命令到 Agent 检查 Service 的状态，Agent 上报给 Server，并呈现在 Ambari 的 GUI 上。 
+  
+  **Ambari Server** 支持 Rest API，这样可以很容易的扩展和定制化 Ambari。甚至于不用登陆 Ambari 的 GUI，只需要在命令行通过 curl 就可以控制 Ambari，以及控制 Hadoop 的 cluster。具体的 API 可以参见 Apache Ambari 的官方网页 API reference。
+  
+  ### 4. Ambari-Agent
+  
+  #### 4.1 ambari-agent结构
+  
+  ambari-agent是一个无状态的。其功能主要分两部分：
+  
+  - 采集所在节点的信息并且汇总发心跳汇报给ambari-server;
+  - 处理ambari-server的执行请求。
+  
+  因此它有两种队列：
+  
+  - 消息队列MessageQueue，或为ResultQueue。包括节点状态信息（包括注册信息）和执行结果信息，并且汇总后通过心跳发送给ambari-server;
+  
+  - 操作队列ActionQueue。用于接收ambari-server返回过来的状态操作，然后能过执行器按序调用puppet或python脚本等模块完成任务。 
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-de7344d6d3e3b6b5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 4.2 Ambari-agent引导流程
+  
+  图片来源于https://www.slideshare.net/hortonworks/ambari-agentregistrationflow-17041261
+  
+  **自动化:**
+  
+  步骤： 
+  
+  1. Ambari Server通过调用bootstrap.py来初始化整个bootstrap进程 
+  2. Server端通过SSH Keys在Agent上配置Ambari Repo：利用Ambari Server上的ambari.repo文件，并且scp到Agent Host上。 
+  3. 复制Ambari Agent Setup script：利用scp命令将setupAgent.py脚本复制到Agent host上。 
+  4. 在各个Agent上执行Ambari Agent Setup script：SSH到各个Agent Host上然后执行setupAgent.py。 
+  5. 在Agent上安装epel-release：用apt-get/yum/zypper工具来安装epel-release包 
+  6. 在Agent上安装Ambari-agent：用apt-get/yum/zypper工具来安装Ambari-Agent包 
+  7. 配置Ambari-agent.ini：修改/etc/ambari-agent/conf/ambari-agent.ini，并设置agent host上的hostname 
+  8. 启动Ambari-agent:启动Ambari-agent进程 
+  9. 开始Ambari Agent注册：agent开始registration进程
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b9d53393fac29bac.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  **人工手动引导**
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-ab05717059afe1e9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### 4.3 Agent注册流程
+  
+  **步骤**
+  
+  1. 连接握手端口8441：Ambari Agent连接到Ambari Server的握手端口8441。 
+  2. 下载Server Certification：Ambari Agent下载Server Certification。 
+  3. 请求签署Agent Certification：Ambari Agent请求Ambari Server来签署Agent证书。 
+  4. 签署Agent Cert：Ambari Server通过密码签署Agent证书。 
+  5. 下载Agent Cert并断掉连接：Ambari Agent下载Agent证书，然后断掉之前的连接。 
+  6. 连接注册端口8440：Ambari Agent连接到Ambari Server的注册端口8441 
+  7. 用Agent Cert执行2WAY auth：在Agent和Server之间完成2WAY权限认证。 
+  8. 获取FQDN：Ambari Agent host获取Fully Qualified Domain Name（FQDN） 
+  9. 注册Host：利用FQDN，host向Ambari Server提出注册。 
+  10. 完成Host注册：Ambari Server完成host的注册过程，把host加入到Ambari数据库 
+  11. Agent心跳程序启动：Ambari Agent向Ambari Server开启心跳程序，确认各种命令的执行 
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-c38ad4479930d29c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-6e3bf665b25ff6c8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false
