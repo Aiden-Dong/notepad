@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
-folder: "7671e01e5a4a4ee04aa9"
-title: "4-HDFS 操作"
+folder: "098403beadb3e4ebea05"
+title: "3-HDFS 操作"
 content: '''
-  ### 4-HDFS 操作
+  ### 3-HDFS 操作
   
   ---
   
@@ -305,4 +305,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T10:16:05.992Z"
-updatedAt: "2017-09-20T10:20:03.160Z"
+updatedAt: "2018-07-18T09:03:39.917Z"

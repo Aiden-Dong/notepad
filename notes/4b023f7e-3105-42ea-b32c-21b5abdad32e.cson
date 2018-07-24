@@ -1,10 +1,10 @@
 createdAt: "2018-07-09T13:28:19.010Z"
-updatedAt: "2018-07-09T14:17:07.859Z"
+updatedAt: "2018-07-23T12:41:40.288Z"
 type: "MARKDOWN_NOTE"
 folder: "89d365e1ad8628f10c32"
 title: "15-行为型模式之中介者模式"
 content: '''
-  ### 15-行为型模式之中介者模式
+  ![e610a2a5.png](:storage/4b023f7e-3105-42ea-b32c-21b5abdad32e/e610a2a5.png)### 15-行为型模式之中介者模式
   
   ---
   

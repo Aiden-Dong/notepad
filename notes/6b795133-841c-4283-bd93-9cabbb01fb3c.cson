@@ -1,5 +1,5 @@
 createdAt: "2018-07-04T08:36:36.280Z"
-updatedAt: "2018-07-04T11:38:46.957Z"
+updatedAt: "2018-07-12T07:25:37.774Z"
 type: "MARKDOWN_NOTE"
 folder: "3d96f15f77c92116ffd3"
 title: "8-Amabari 源码分析总览"
@@ -193,7 +193,7 @@ content: '''
   login.hbs | 登陆模板
   main.hbs | 顶上的导航条模板(?)
   
-  **4) Ambari-web/app/templates/main **
+  **4) Ambari-web/app/templates/main**
   
   ```
   
@@ -304,10 +304,14 @@ content: '''
   
   ![image.png](https://upload-images.jianshu.io/upload_images/10402860-b9d53393fac29bac.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
-  
-  **人工手动引导**
-  
   ![image.png](https://upload-images.jianshu.io/upload_images/10402860-ab05717059afe1e9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  
+  **人工手动引导**:
+  
+  具体步骤内容基本同上
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-caa3175cc5066ac0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
   #### 4.3 Agent注册流程
   
@@ -329,6 +333,181 @@ content: '''
   
   ![image.png](https://upload-images.jianshu.io/upload_images/10402860-6e3bf665b25ff6c8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
+  
+  ### 5. Ambari-web 内部框架:
+  
+  **Ambari-web** 使用了一个流行的前端 **Embar.js MVC** 框架实现，**Embar.js** 是一个 **TodoMVC** 框架，它涵盖了现今典型的单页面应用（single page application）几乎所有的行为。
+  
+  使用了nodejs
+  
+  使用brunch 作为项目的构建管理工具
+  
+  Brunch ,是一个超快的HTML5构建工具。它有如下功能：
+  
+  （1）编译你的脚本、模板、样式、链接它们。
+  
+  （2）将脚本和模板封装进common.js/AMD模块里，链接脚本和样式。
+  
+  （3）为链接文件生成源地图，复制资源和静态文件。
+  
+  （4）通过缩减代码和优化图片来收缩输出，看管你的文件更改。
+  
+  （5）并通过控制台和系统提示通知你错误。
+  
+  Nodejs 是一个基于Chrome JavaScript运行时建立的一个平台，用来方便的搭建快速的易于扩展的网络应用，NodeJS借助事件驱动，非阻塞I/O模型变得轻量和高效，非常适合运行在分布式设备的数据密集型的实时应用。
+  
+  
+  ### 6.源码分析:
+  
+  #### 6.1 Ambari-Server处理Ambari-Agent请求
+  
+  Agent发送过来的心跳请求由 `org.apache.ambari.server.agent.HeartBeatHandler.handleHeartBeat(HeartBeat)` 来处理，执行完后，同时会返回 `org.apache.ambari.server.agent.HeartBeatResponse` 给 **Agent**。
+  
+  `org.apache.ambari.server.agent.HeartBeat` 里面主要含了两类信息：
+  **节点的状态信息nodeStatus**和**服务状态信息componentStatus**。
+  
+  
+  ```
+  public class HeartBeatHandler {
+    ...
+      public HeartBeatResponse handleHeartBeat(HeartBeat heartbeat)
+        throws AmbariException {
+      long now = System.currentTimeMillis();
+      if (heartbeat.getAgentEnv() != null && heartbeat.getAgentEnv().getHostHealth() != null) {
+        heartbeat.getAgentEnv().getHostHealth().setServerTimeStampAtReporting(now);
+      }
+  
+      String hostname = heartbeat.getHostname();
+      Long currentResponseId = hostResponseIds.get(hostname);
+      HeartBeatResponse response;
+  
+      if (currentResponseId == null) {
+        //Server restarted, or unknown host.
+        LOG.error("CurrentResponseId unknown for " + hostname + " - send register command");
+        // 无responseId, 新请求，就进行注册, responseId ＝0
+        return createRegisterCommand();
+      }
+  
+      LOG.debug("Received heartbeat from host"
+          + ", hostname=" + hostname
+          + ", currentResponseId=" + currentResponseId
+          + ", receivedResponseId=" + heartbeat.getResponseId());
+  
+      if (heartbeat.getResponseId() == currentResponseId - 1) {
+        LOG.warn("Old responseId received - response was lost - returning cached response");
+        return hostResponses.get(hostname);
+      } else if (heartbeat.getResponseId() != currentResponseId) {
+        LOG.error("Error in responseId sequence - sending agent restart command");
+        // 心跳是历史记录，那么就要求其重启，重新注册,responseId 不变
+        return createRestartCommand(currentResponseId);
+      }
+  
+      response = new HeartBeatResponse();
+      //responseId 加 1 , 返回一个新的responseId，下次心跳又要把这个responseId带回来。
+      response.setResponseId(++currentResponseId);
+  
+      Host hostObject;
+      try {
+        hostObject = clusterFsm.getHost(hostname);
+      } catch (HostNotFoundException e) {
+        LOG.error("Host: {} not found. Agent is still heartbeating.", hostname);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Host associated with the agent heratbeat might have been " +
+            "deleted", e);
+        }
+        // For now return empty response with only response id.
+        return response;
+      }
+      //失去心跳，要求重新注册, responseId=0
+      if (hostObject.getState().equals(HostState.HEARTBEAT_LOST)) {
+        // After loosing heartbeat agent should reregister
+        LOG.warn("Host is in HEARTBEAT_LOST state - sending register command");
+        return createRegisterCommand();
+      }
+  
+      hostResponseIds.put(hostname, currentResponseId);
+      hostResponses.put(hostname, response);
+  
+      // If the host is waiting for component status updates, notify it
+      //如果主机正在等待组件状态更新，请通知它
+      //节点已经进行了注册，但是该节点还没有汇报相关状态信息,等待服务状态更新
+      if (heartbeat.componentStatus.size() > 0
+          && hostObject.getState().equals(HostState.WAITING_FOR_HOST_STATUS_UPDATES)) {
+        try {
+          LOG.debug("Got component status updates");
+          //更新服务状态机
+          hostObject.handleEvent(new HostStatusUpdatesReceivedEvent(hostname, now));
+        } catch (InvalidStateTransitionException e) {
+          LOG.warn("Failed to notify the host about component status updates", e);
+        }
+      }
+  
+      if (heartbeat.getRecoveryReport() != null) {
+        RecoveryReport rr = heartbeat.getRecoveryReport();
+        processRecoveryReport(rr, hostname);
+      }
+  
+      try {
+        if (heartbeat.getNodeStatus().getStatus().equals(HostStatus.Status.HEALTHY)) {
+          //向状态机发送更新事件，更新节点至正常状态
+          hostObject.handleEvent(new HostHealthyHeartbeatEvent(hostname, now,
+              heartbeat.getAgentEnv(), heartbeat.getMounts()));
+        } else { // 把节点列入不健康
+          hostObject.handleEvent(new HostUnhealthyHeartbeatEvent(hostname, now, null));
+        }
+      } catch (InvalidStateTransitionException ex) {
+        LOG.warn("Asking agent to re-register due to " + ex.getMessage(), ex);
+        hostObject.setState(HostState.INIT);
+        return createRegisterCommand();
+      }
+  
+      /**
+       * A host can belong to only one cluster. Though getClustersForHost(hostname)
+       * returns a set of clusters, it will have only one entry.
+       *主机只能属于一个集群。 通过getClustersForHost(hostname)返回一组集群，它只有一个条目。
+       *
+       * TODO: Handle the case when a host is a part of multiple clusters.
+       * 处理 主机是多个集群的一部分时的 情况。
+       */
+      Set<Cluster> clusters = clusterFsm.getClustersForHost(hostname);
+  
+      if (clusters.size() > 0) {
+        String clusterName = clusters.iterator().next().getClusterName();
+  
+        if (recoveryConfigHelper.isConfigStale(clusterName, hostname, heartbeat.getRecoveryTimestamp())) {
+          RecoveryConfig rc = recoveryConfigHelper.getRecoveryConfig(clusterName, hostname);
+          response.setRecoveryConfig(rc);
+  
+          if (response.getRecoveryConfig() != null) {
+            LOG.info("Recovery configuration set to {}", response.getRecoveryConfig().toString());
+          }
+        }
+      }
+  
+      heartbeatProcessor.addHeartbeat(heartbeat);
+  
+      // Send commands if node is active
+      if (hostObject.getState().equals(HostState.HEALTHY)) {
+        sendCommands(hostname, response);
+        annotateResponse(hostname, response);
+      }
+  
+      return response;
+    }
+  
+    ...
+  }
+  ```
+  
+  
+  #### 6.2 Ambari-Agent执行流程
+  
+  安装 **ambari-agent** 服务时会把相应在的 **python** 代码置于python执行的环境上下文中，例如其入口代码可能是`/usr/lib/python2.6/site-packages/ambari_agent/main.py`，并且进行相关初始化工作（例如验证参数，与server建立连接，初始化安全验证证书），最后会产生一个新的控制器 `Controller` 子线程来统一管理节点的状态。
+  
+  **Controller** 线程里面有一个动作队列 **ActionQueue** 线程，并且开启向Server注册和发心跳服务。
+  
+  可以看出来，ambari-agent主要由两个线程组成，Controller线程向Server发送注册或心跳请求，请求到的Action数据放到
+  ActionQueue线程里面，ActionQueue线程维护着两个队列：commandQueue和resultQueue。ActionQueue线程会监听commandQueue的状况。
 '''
 tags: []
 isStarred: false
