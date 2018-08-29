@@ -180,9 +180,14 @@ content: '''
   SET character_set_connection = utf8; 
   ```
   
+  ### 4.mysql 客户端链接状态:
+  
+  `information_schema.processlist`
+  
+  
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-08-26T02:42:46.186Z"
-updatedAt: "2017-09-28T04:14:10.277Z"
+updatedAt: "2018-08-29T07:01:57.246Z"

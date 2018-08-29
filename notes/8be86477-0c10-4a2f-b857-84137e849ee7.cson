@@ -1,0 +1,211 @@
+createdAt: "2018-08-24T03:10:57.073Z"
+updatedAt: "2018-08-24T11:02:46.845Z"
+type: "MARKDOWN_NOTE"
+folder: "826d02692db86deab330"
+title: "12-嵌入式数据库的使用"
+content: '''
+  ### 12-嵌入式数据库的使用
+  
+  ---
+  
+  ### 1. 简介:
+  
+  我们在开发环境中经常需要用到嵌入式数据库来处理测试等相关的处理,嵌入式数据库一般会跟自身应用程序工作在同一个JVM中。
+  这样的优势是不必依赖于生产数据库(mysql等)复杂的权限配置与数据库配置，尤其在代码测试过程中，我们无需要预装生产版本数据库，不需要预配置数据库权限等相关操作.
+  拿来就跑，用完就删，简单快捷。
+  
+  ### 2. derby : 
+  
+  
+  derby 就是一款可以支持嵌入式开发的数据库:[Derby embedded basics](https://db.apache.org/derby/docs/10.4/devguide/cdevdvlp39409.html).
+  
+  Derby是一个开源的，100%由Java开发的关系数据库，随着Java平台的普及Derby也收到了越来越多的关注。
+  Derby的前身是美国IBM公司的ColudScape。2004年4月，IBM公司将CloudScape的数据库捐献给了Apache软件基金会，并将其更名为Derby，
+  接着SUN也为Derby捐献了一个团队。不同的是，在JavaSE6.0中，SUN将其命名为JavaDB。
+  因此，CloudScape、Derby和JavaDB只是该项目在不同时期的不同名称而已。
+  
+  初次见到使用场景还是在Hive中。但是在绝大多数的关于嵌入式数据库应用中derby的出场次数还是较少。
+  
+  ##### 2.1 maven 地址: 
+  
+  ```
+  <!-- https://mvnrepository.com/artifact/org.apache.derby/derby -->
+  <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>10.14.1.0</version>
+      <scope>test</scope>
+  </dependency>
+  ```
+  
+  
+  ##### 2.2 Derby 嵌入式环境配置:
+  
+  - Driver : `org.apache.derby.jdbc.EmbeddedDriver`
+  - url : `jdbc:derby:${testDB}$;create=true`
+  - user : `${userName}$`
+  - passwd : `test`
+  
+  `org.apache.derby.jdbc.EmbeddedDriver` 的Driver表示使用derby嵌入式数据库模式。
+  `${testDB}$` 是你的临时数据库的名称。
+  `${userName}$` 是登陆这个数据库的用户名，在derby中的概念是schema. 每个用户的数据库并不共享。
+  
+  ##### 2.3 Derby 在单元测试中的应用:
+  
+  当配置完成之后，接下来在代码中的使用就跟其他数据库使用相同：
+  
+  1. **加载 Driver**
+  2. **链接 URL**
+  3. **获取 Connect**
+  4. **操作数据库**
+  
+  ```
+  @BeforeClass
+  public static void initDBEnv() throws SQLException {
+  
+      String createClusterMessage = "CREATE TABLE CLUSTER_MANAGER(\\n" +
+              "    cluster_id  VARCHAR(50) PRIMARY KEY ,\\n" +
+              "    cluster_name VARCHAR(20) NOT NULL ,\\n" +
+              "    cluster_time BIGINT NOT NULL ,\\n" +
+              "    cluster_address VARCHAR(50) NOT NULL ,\\n" +
+              "    cluster_access_user VARCHAR(50) NOT NULL ,\\n" +
+              "    cluster_access_passwd VARCHAR(50) NOT NULL\\n" +
+              ")";
+  
+      SqlSession session = queryManager.getSession();
+      ClusterMessage clusterMessage = new ClusterMessage();
+  
+      clusterMessage.setClusterId("000-000000-00001");
+      clusterMessage.setClusterName("testCluster");
+      clusterMessage.setClusterTime(DateTime.now().getMillis());
+      clusterMessage.setClusterAddress("localhost");
+      clusterMessage.setClusterAccessUser("test");
+      clusterMessage.setClusterAccessPasswd("test");
+  
+      try{
+          session.getMapper(UserDefineActionMapper.class).updateAction(createClusterMessage);
+          session.getMapper(ClusterMessageMapper.class).insertClusterMessage(clusterMessage);
+      }catch (Exception e){
+          throw new SQLException("create table cluster_manager error : " + e);
+      }finally {
+          session.close();
+      }
+  }
+  ```
+  
+  > **说明**: 
+  
+  - **文件位置**:
+  
+  测试过程中会在当前路径下面建立一个Derby数据库的目录文件夹，derby的建表数据都在这个文件下下面， 所以如果没有 `drop table` 操作或者删除目录，下次数据依然存在，这个需要注意。
+  
+  - **兼容性问题**:
+  
+  我在建表过程中发现derby 很多mysql的关键字并不支持: 
+  原始建表语句:
+  
+  ```
+  CREATE TABLE IF NOT EXISTS `cluster_manager`(
+      `cluster_id`  VARCHAR(50) PRIMARY KEY COMMENT '集群ID',
+      `cluster_name` VARCHAR(20) NOT NULL COMMENT '集群名称',
+      `cluster_time` BIGINT NOT NULL COMMENT '集群创建时间',
+      `cluster_address` VARCHAR(50) NOT NULL COMMENT '集群内网域名地址',
+      `cluster_access_user` VARCHAR(50) NOT NULL COMMENT '集群认证用户',
+      `cluster_access_passwd` VARCHAR(50) NOT NULL COMMENT '集群认证密码'
+  );
+  ```
+  
+  derby :
+  ```
+  CREATE TABLE CLUSTER_MANAGER(
+    cluster_id  VARCHAR(50) PRIMARY KEY ,
+    cluster_name VARCHAR(20) NOT NULL , 
+    cluster_time BIGINT NOT NULL ,
+    cluster_address VARCHAR(50) NOT NULL ,
+    cluster_access_user VARCHAR(50) NOT NULL ,
+    cluster_access_passwd VARCHAR(50) NOT NULL 
+  )
+  ```
+  
+  网上查阅了解到，derby 不支持插入空值。
+  
+  ### 3.H2 :
+  
+  h2 数据库是另一款可用于嵌入式数据库的版本，网上有拿它与derby做过对比，称它与mysql数据库兼容性强，口碑较好。
+  
+  我见azkaban 在测试时用过 h2 数据库与mysql可选。
+  
+  > **H2的优势**：
+  
+  1、h2采用纯Java编写，因此不受平台的限制。
+  2、h2只有一个jar文件，十分适合作为嵌入式数据库试用。
+  3、h2提供了一个十分方便的web控制台用于操作和管理数据库内容。
+  
+  ##### 3.1 maven 地址:
+  
+  ```
+  <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.4.196</version>
+      <scope>test</scope>
+  </dependency>
+  ```
+  
+  ##### 3.2 环境配置:
+  
+  **driver** : `org.h2.Driver`
+  **url** : `jdbc:h2:mem:testDB`
+  **userName** : `test`
+  **passWord** : `test`
+  
+  嵌入式数据库应用可以选择两种类型的 url :
+  
+  第一种就是 : `jdbc:h2:mem:testDB` 这是使用的内存模式运行， 将数据临时放到内存中,程序结束数据销毁，环境干净，问题就是资源占用较高。
+  第二种就是 : `jdbc:h2:file:./target/testDB` 可以使用本地文件方式, `file` 后面指明文件位置。
+  
+  ##### 3.3 H2 在开发环境中的使用:
+  
+  上层基本不用感知数据库的变化， 使用方式相同。
+  > **注意情况**：
+  
+  1.不支持表级别的Comment
+  2.插入语句单引号中的\\'转义不支持
+  3.H2 UNIQUE KEY是数据库级别的
+  4.无法执行多个Update语句
+  列别名无法用于子查询
+  
+  ### 4. HSQLDB:
+  
+  HSQLDB 业界也有很多人在用， 很多人也有比较关于HSQLDB与H2的区别优劣，所以这里也列下使用方式
+  
+  ##### 4.1 maven :
+  
+  ```
+  <dependency>
+  	<groupId>org.hsqldb</groupId>
+  	<artifactId>hsqldb</artifactId>
+  	<version>2.3.2</version>
+  	<scope>test</scope>
+  </dependency>
+  ```
+  
+  
+  ##### 4.2 环境配置
+  
+  **driver** : `org.hsqldb.jdbc.JDBCDriver`
+  **url** : `jdbc:hsqldb:mem:db;sql.syntax_mys=true`
+  **userName** : `sa`
+  **passWord** : `test`
+  
+  注意url中的syntax_mys参数，会让hsqldb兼容mysql的语法，虽然兼容的不完全。。。
+  对于oracle也有一个类似的参数，可以让hsqldb兼容oracle的varchar2之类的
+  
+  #### 4.3 HSQLDB的使用：
+  
+  上层使用与之前基本相同。
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

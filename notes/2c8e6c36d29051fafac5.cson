@@ -96,7 +96,7 @@ content: '''
   
   #### 13.合并小文件
   
-  hive.merg.mapfiles=true：合并map输出
+  hive.merge.mapfiles=true：合并map输出
   hive.merge.mapredfiles=false：合并reduce输出
   hive.merge.size.per.task=256*1000*1000：合并文件的大小
   hive.mergejob.maponly=true：如果支持CombineHiveInputFormat则生成只有Map的任务执行merge
@@ -199,4 +199,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-11-27T10:10:20.353Z"
-updatedAt: "2018-03-14T11:45:53.845Z"
+updatedAt: "2018-08-21T02:39:10.240Z"

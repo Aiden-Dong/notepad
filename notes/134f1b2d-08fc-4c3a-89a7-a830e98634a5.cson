@@ -1,5 +1,5 @@
 createdAt: "2018-07-09T10:00:13.393Z"
-updatedAt: "2018-07-23T12:40:54.894Z"
+updatedAt: "2018-07-24T12:38:29.462Z"
 type: "MARKDOWN_NOTE"
 folder: "89d365e1ad8628f10c32"
 title: "14-行为型模式之命令模式"
@@ -22,7 +22,7 @@ content: '''
   
   ### 14.3 模式结构
   
-  - **Command: 抽象命令类
+  - **Command**: 抽象命令类
   - **ConcreteCommand**: 具体命令类
   - **Invoker**: 调用者
   - **Receiver**: 接收者

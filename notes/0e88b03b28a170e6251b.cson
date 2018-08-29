@@ -57,6 +57,12 @@ content: '''
   echo "varibale : ${one[@]}"  # 获取所有数组元素
   echo "split : ${#one[@]}"    # 数组长度
   echo ${one[4]}               # 索引数组内容内容
+  
+  ### 数组切片
+  
+  ${ARRAR_NAME[@]:offset:uumber} 
+  - offset：要路过的元素个数，前几个不要 
+  - number：要取出的元素个数；省略number时，表示取
   ```
   
   ---
@@ -90,19 +96,6 @@ content: '''
   ${变量%%关键字}              # 从右边开始删除最长匹配项
   ${变量/旧字符串/新字符串}      # 从左边找到第一个匹配项替换
   ${变量//旧字符串//新字符串}    # 找到所有匹配的字符串替换 
-  
-  
-  ### 测试
-  
-  for v_line in $(env)
-  do
-    echo "${v_line%%=*} ----- ${v_line#*=}"
-  done
-  
-  
-  -> 数组:
-  
-  VAR[index] = count;
   ```
   
   #### 变量高级处理:
@@ -208,4 +201,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-19T09:53:46.117Z"
-updatedAt: "2018-07-19T07:54:10.115Z"
+updatedAt: "2018-08-09T03:51:28.616Z"
