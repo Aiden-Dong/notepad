@@ -1,0 +1,61 @@
+createdAt: "2018-11-04T11:18:33.154Z"
+updatedAt: "2018-11-16T03:45:27.989Z"
+type: "MARKDOWN_NOTE"
+folder: "ceae56396fb314adeed3"
+title: "SpringBean篇 (2) 注解配置形式"
+content: '''
+  ### SpringBean篇 (2) 注解配置形式
+  
+  ---
+  
+  使用注解配置的形式来构造bean需要首先引入 `context:component-scan` 的配置。他指定了 spring ioc 需要扫描的包，包下面的类将通过注解配置，构造bean对象。
+  
+  例如:
+  
+  ```
+  <context:component-scan base-package="com.saligia.spring.bean.annotation"></context:component-scan>
+  ```
+  
+  ### @Configuration 组件
+  
+  
+  这种配置与在xml传参构造 bean 对象目的是一致的, IOC 容器初始化时候会扫描 `@Configuration` 注解的类，并扫描这个类下所有的 `@Bean` 注解的方法，并根据配置调用拿到 bean， 装载到容器中。
+  
+  比如我们构造 `Persion`类,并设置了 `getter`, `setter` 方法.
+  
+  它的基础成员变量为:
+  
+  ```
+  private String name;
+  private int value;
+  ```
+  
+  我们这时候通过注解形式构造这个 bean,看一下 :
+  
+  ```
+  @Configuration
+  public class BeanConfiguraton {
+  
+      @Bean("persion")
+      public Persion getPersion(){
+          Persion persion = new Persion();
+  
+          persion.setName("test");
+          persion.setValue(20);
+  
+          return persion;
+      }
+  }
+  ```
+  
+  这个时候我们就可以通过 `Persion persion = (Persion)ioc.getBean("persion");` 的方式拿到这个bean对象。
+  
+  
+  #### 
+  
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

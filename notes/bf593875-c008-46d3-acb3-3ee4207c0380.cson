@@ -1,0 +1,223 @@
+createdAt: "2018-10-21T07:28:20.801Z"
+updatedAt: "2018-10-21T07:28:41.929Z"
+type: "MARKDOWN_NOTE"
+folder: "3d96f15f77c92116ffd3"
+title: "9-Ambari 服务编写"
+content: '''
+   ### 9-Ambari 服务编写
+   
+   ---
+   
+   ### 背景：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-a585024e54333c37.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800)
+  
+  CMT主要是负责集群节点状态维护与集群资源动态伸缩管理。
+  
+  最终达到的目的是管理公司所有集群元信息， 及时处理状态异常机器， 动态调整集群资源。
+  
+  ---
+  
+  ### 设计：
+  
+  #### 整体服务架构：
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-7ff0d92791d28cc0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800)
+  
+  #### 用户管理功能：
+  
+  - 提供rest api 接口， 提供用户注册新集群集群与删除集群功能。
+  - 提供rest api 接口， 提供用户创建，修改，与删除策略信息。
+  - 提供rest api 接口， 提供用户修改每个标签组的机器数量。
+  - 提供rest api 接口， 提供用户获取每个标签组的当前信息。
+  
+  #### 元信息存储信息 :
+  
+  主要维护集群内部元信息。
+  
+  每一个集群内部有三个标签组(SERVER, MASTER, CORE, TASK).
+  
+  - **SERVER** : ambari server 地址
+  - **MASTER** : 负责主要包含集群的服务主机组。
+  - **CORE**   : 主要包含不可变的NodeManager机器组。
+  - **TASK**   : 主要包含动态缩减的机器组。
+  
+  对于每一个机器组包含有这个集群标签组的所有机器。
+  
+  #### 机器状态维护层 :
+  
+  负责监控处理每个机器的具体动作。
+  
+  每个机器有三个状态:
+  
+  - **NEW**       ： 对于刚创建完成的机器，监控机器是否初始化完成，并将 **NEW** 转变为 **RUNNING** 。
+  - **RUNNING**   ： 对于处于 RUNNING 的机器， 监控机器的存活性，服务状态， 并负责重启失败的服务与下掉不可达机器。
+  - **FINISHING** ： 对于处于 FINISHING 的机器， 监控机器的延迟时间，如果延迟时间超过规定下机器的延迟时间，则下掉机器。
+  
+  #### 动作处理层 :
+  
+  检查当前的机器组的动作需求:
+  
+  - 如果是需求增长机器， 则首先先根据数量召回处于 FINISHING 的机器(重新设置为RUNNING)， 如果不够则发出向云主机运营商开启机器，注册服务，并将主机状态置为NEW。
+  - 如果是删除机器需求， 则将机器状态置为 FINISHING , 并更新状态改变时间。
+  
+  #### 策略管理:
+  
+  **资源策略(ResourceStrategy)**：
+  
+  > 指标项 :
+  
+  - 资源百分比。
+  - 比较方式(大于，小于)
+  - 持续时间(单位:min)
+  - 触发(动作:数量)
+  
+  > 序列化:
+  
+  ```
+  {
+      "strategy-model" : "ResourceStrategy",
+      "cluster_id" : 1,
+      "resource-radio" : 90.0,
+      "resource-comparison" : ">",
+      "duration" : 30,
+      "trigger" : {
+        "action" : "ADD",
+        "instance-num" : 5
+      },
+      "instance_group" : "TASK"
+  }
+  ```
+  
+  **时间策略(TimeStrategy)**:
+  
+  > 指标项 :
+  
+  - 触发时间:
+  - 触发(动作:数量)
+  
+  > 序列化:
+  
+  ```
+  {
+    "strategy-model" : "TimeStrategy",
+    "cluster_id" : 1,
+    "action-time" : "0 10 * * * *",
+    "trigger" : {
+          "action" : "ADD",
+          "instance-num" : 5
+    },
+    "instance_group" : "TASK"
+  }
+  ```
+  
+  #### 机器标签 :
+  
+  Key | Value
+  --- | ---
+  team | dataplatform
+  Group | dataplatform_cluster
+  Name  | vg_{{clustername}}
+  Type | SERVER/MASTER/CORE/TASK
+  
+  ---
+  
+  ### 数据结构:
+  
+  **集群信息(clusterMsg)**:
+  
+  ```
+  clusterId                      : 集群ID
+  clusterStatus                  : 集群状态
+  clusterAddress                 : 集群server地址
+  clusterName                    : 认证用户名
+  clusterPasswd                  : 认证密码
+  yarnAddress                    : 集群地址
+  nodeGroup ([TAG:NodeGroup])    : 集群节点组映射
+  ```
+  
+  **集群节点组(instanceGroup)** :
+  
+  ```
+  groupFlag                          : 节点组标签 (SERVER,MASTER, CORE, TASK)
+  trigger                            : 节点组触发动作
+  instanceHandler                    : 实例动作执行工具(GET, COMMAND, CREATE)
+  instanceList(List[InstanceMessage]): 集群标签下的具体实例信息
+  ```
+  
+  **集群节点信息(instanceMsg)** :
+  
+  ```
+  instanceId              : 实例地址
+  instanceInternalAddress : 实例内网地址
+  instanceExternalAddress : 实例外网地址
+  instanceStatus          : 实例状态
+  instanceStartTime       : 实例开始时间
+  instanceUpdateTime      : 实例状态更新时间
+  ```
+  
+  **触发(Trigger)** :
+  
+  ```
+  action                 : ADD DELETE
+  instanceNum            : 实例数量
+  ```
+  
+  **策略(Stragegy)** :
+  
+  > 资源需求触发策略
+  
+  ```
+  strategyId         : 策略ID
+  clusterId          : 集群ID
+  resourceRadio      : 资源需求指标
+  resourceComparision : 资源触发条件
+  duration           : 时间触发条件
+  trigger            : 动作触发
+  ```
+  ---
+  
+  ### 数据库表设计:
+  
+  #### instance_message:
+  
+  字段名 | 类型 | 说明
+  --- | --- | ---
+  instance_id | string , primary key | 实例ID
+  instance_type | string， not null | 机型: m4.4xlarge, h1.4xlarge, md5.4xlarge
+  instance_internal_address | string, not null | 实例内部地址
+  instance_external_address | string, not null | 实例外部地址
+  instance_tag    | string, not null | 实例标签 TASK, CORE, MASTER, SERVER
+  instance_status | string, not null | NEW : 机器处于初始化阶段 , RUNNING: 处于正在运行状态的instance ,FINISHING:标识要终止的instance，过段时间后终止
+  instance_start_time | long, not null | 实例开启时间
+  cluster_id           |  string,not null | 	集群ID
+  
+  #### cluster_message :
+  
+  字段名 | 类型 | 说明
+  --- | --- | ---
+  cluster_id | string, primary key | 集群ID
+  cluster_name | string, not null| 集群名称
+  cluster_time | long ,not null     | 集群创建时间
+  cluster_status | string, not null | 集群状态(NEW, RUNNING, FINISHING)
+  cluster_address | string, not null | 集群地址
+  cluster_access_user | string, not null | 集群认证用户名
+  cluster_access_passwd | string, not null | 集群认证密码
+  
+  #### cluster_strategy:
+  
+  字段名 | 类型	 | 说明
+  --- | --- | ---
+  strategy_id | string, primary key | 策略ID
+  strategy_data | bigint , not null	策略内容 | Json 文件配置
+  cluster_id | string, not null |  集群ID
+  
+  ---
+  
+  ### UML :
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-d3ba7dd42f5fc091.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+'''
+tags: []
+isStarred: false
+isTrashed: false

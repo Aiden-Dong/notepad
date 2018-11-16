@@ -43,12 +43,12 @@
     {
       "key": "5ebd9b00f5963387cb73",
       "color": "#30D5C8",
-      "name": "JavaEE"
+      "name": "Web"
     },
     {
       "key": "ceae56396fb314adeed3",
       "color": "#30D5C8",
-      "name": "SpringBoot"
+      "name": "Spring"
     },
     {
       "key": "672efc3aadb5d16c7fef",
@@ -64,11 +64,6 @@
       "key": "becbb124877573c964e3",
       "color": "#E8D252",
       "name": "JVM"
-    },
-    {
-      "key": "87dcccdbb31f5c64eb21",
-      "color": "#B013A4",
-      "name": "jetty"
     },
     {
       "key": "ef3e1850a2ffff04209d",

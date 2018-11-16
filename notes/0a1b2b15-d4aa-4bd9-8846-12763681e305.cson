@@ -1,5 +1,5 @@
 createdAt: "2018-03-20T09:29:20.235Z"
-updatedAt: "2018-03-20T09:29:44.545Z"
+updatedAt: "2018-11-15T02:22:49.399Z"
 type: "MARKDOWN_NOTE"
 folder: "5ebd9b00f5963387cb73"
 title: "1-Tomcat 基本配置"
@@ -43,4 +43,4 @@ content: '''
 '''
 tags: []
 isStarred: false
-isTrashed: false
+isTrashed: true

@@ -1,0 +1,265 @@
+createdAt: "2018-09-04T07:08:42.659Z"
+updatedAt: "2018-10-17T09:36:59.046Z"
+type: "MARKDOWN_NOTE"
+folder: "ef3e1850a2ffff04209d"
+title: "13. Hive 版本升级记录(0.13.0 - 2.3.3)"
+content: '''
+  ### 13. Hive 版本升级记录(0.13.0 -> 2.3.3)
+  
+  ---
+  
+  
+  ### 背景:
+  
+  
+  
+  我们这边有线上线下两套hive, 版本：0.13.0，由于版本较低，近期准备升级新的hive版本。
+  
+  首先选择升级线下hive集群:
+  
+  线下 hive 集群覆盖较广,牵扯大概10台左右客户端， 覆盖公司所有的技术部门业务数据。 每天通过客户端或者azkaban上传作业 1w 左右的任务量.
+  meta store 包含分区大概700w左右的量。业务量重，而且 sql 变化较多， 有较多的自定义 udf 与 自定义 serde 文件在其中。
+  
+  如果一次性做全量升级容易出现较多问题， 影响较多部门，一旦出现意外情况回滚较为复杂。
+  而且一次性全量升级需要同时处理客户端与meta的升级，中间有较长的hive离线时间，造成作业失败。
+  
+  所以最终的实践措施是： 
+  首先只升级 **metastore server** , 然后分部门升级每个部分的**hive客户端**， **hive thrift server**。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-ee1ee67b0452ede0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ### 准备:
+  
+  准备升级之前，需要客户端进入**灰度模式**： 
+  
+  > 关闭元数据`VERISON`校验相关功能:
+  
+  ```
+  <property>
+    <name>hive.metastore.schema.verification</name>
+    <value>false</value>
+    <description>
+      Enforce metastore schema version consistency.
+      True: Verify that version information stored in is compatible with one from Hive jars.  Also disable automatic
+            schema migration attempt. Users are required to manually migrate schema after Hive upgrade which ensures
+            proper metastore schema migration. (Default)
+      False: Warn if the version information stored in metastore doesn't match with one from in Hive jars.
+    </description>
+  </property>
+  ```
+  > 配置禁止JDO框架来自动更新元数据`schema`:
+  
+  ```
+  <property>
+    <name>datanucleus.autoCreateSchema</name>
+    <value>false</value>
+  </property>
+  
+  <property>
+    <name>datanucleus.fixedDatastore</name>
+    <value>true</value>
+  </property>
+  ```
+  
+  ### hive meta store 升级： 
+  
+  当 hive 客户端不再 check meta 版本信息时候， 我们再对 hive meta store 进行升级。
+  
+  接下来分析 ： `hive meta store` 的升级脚本:
+  
+  经调研sql升级过程发现，hive新版本库主要做出的改变有：
+  
+  1. 创建新表。
+  2. 增加原表的新字段。
+  3. 扩展原列的长度，如表名。列名等。
+  4. 新建存储过程
+  
+  > 我们可以看下它的升级脚本
+  
+  ```
+  # add acid
+  # 创建各种事物表
+  source hive-txn-schema-0.13.0.mysql.sql
+  
+  # 0.13.0 -> 0.14.0
+  # create table PART_COL_STATS
+  # create index PCS_STATS_IDX on PART_COL_STATS
+  # set version 0.14.0
+  source upgrade-0.13.0-to-0.14.0.mysql.sql
+  
+  # 0.14.0 -> 1.1.0
+  # create table NOTIFICATION_LOG
+  # create table NOTIFICATION_SEQUENCE
+  # set version 1.1.0
+  source upgrade-0.14.0-to-1.1.0.mysql.sql
+   
+  # 1.1.0 -> 1.2.0
+  # set version 1.2.0
+  source upgrade-1.1.0-to-1.2.0.mysql.sql 
+  # 1.2.0 -> 2.0.0
+  # create procedure RM_TLBS_LINKID
+  # create procedure RM_PARTITIONS_LINKID
+  # create procedure RM_LINKID
+  # ALTER TABLE `COLUMNS_V2` MODIFY `COLUMN_NAME` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ===> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL
+  # ALTER TABLE `PART_COL_PRIVS` MODIFY `COLUMN_NAME` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ===>`COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # ALTER TABLE `TBL_COL_PRIVS` MODIFY `COLUMN_NAME` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ====>`COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # ALTER TABLE `SORT_COLS` MODIFY `COLUMN_NAME` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ===> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # ALTER TABLE `TAB_COL_STATS` MODIFY `COLUMN_NAME` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ===> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL
+  # ALTER TABLE `PART_COL_STATS` MODIFY `COLUMN_NAME` varchar(767) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ===> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL
+  
+  # 添加字段 : ALTER TABLE `COMPACTION_QUEUE` ADD `CQ_HIGHEST_TXN_ID` bigint;
+  # 添加字段 : ALTER TABLE `COMPACTION_QUEUE` ADD `CQ_META_INFO` varbinary(2048);
+  # 添加字段 : ALTER TABLE `COMPACTION_QUEUE` ADD `CQ_HADOOP_JOB_ID` varchar(32);
+  # 添加字段 : ALTER TABLE `TXNS` ADD `TXN_AGENT_INFO` varchar(128);
+  # 添加字段 : ALTER TABLE `TXNS` ADD `TXN_HEARTBEAT_COUNT` int;
+  # 添加字段 : ALTER TABLE `HIVE_LOCKS` ADD `HL_HEARTBEAT_COUNT` int;
+  # 添加字段 : ALTER TABLE `TXNS` ADD `TXN_META_INFO` varchar(128);
+  # 添加字段 : ALTER TABLE `HIVE_LOCKS` ADD `HL_AGENT_INFO` varchar(128);
+  # 添加字段 : ALTER TABLE `HIVE_LOCKS` ADD `HL_BLOCKEDBY_EXT_ID` bigint;
+  # 添加字段 : ALTER TABLE `HIVE_LOCKS` ADD `HL_BLOCKEDBY_INT_ID` bigint;
+  # create table COMPLETED_COMPACTIONS
+  # create table AUX_TABLE
+  # set version 2.0.0
+  source upgrade-1.2.0-to-2.0.0.mysql.sql
+  
+  # 2.0.0 -> 2.1.0
+  # create table KEY_CONSTRAINTS
+  # create table WRITE_SET
+  # create table
+  # 添加字段 : TXN_COMPONENTS
+  # 添加字段 : ALTER TABLE COMPACTION_QUEUE ADD CQ_TBLPROPERTIES varchar(2048);
+  # 添加字段 : ALTER TABLE COMPLETED_COMPACTIONS ADD CC_TBLPROPERTIES varchar(2048);
+  # set version : 2.1.0
+  source upgrade-2.0.0-to-2.1.0.mysql.sql
+   
+  
+  # 2.1.0 -> 2.2.0
+  # 添加字段 : ALTER TABLE `TBLS` ADD `IS_REWRITE_ENABLED` bit(1);
+  # 设置字段 : UPDATE `TBLS` SET `IS_REWRITE_ENABLED` = false;
+  # 修改字段 : ALTER TABLE `TBLS` MODIFY COLUMN `IS_REWRITE_ENABLED` bit(1) NOT NULL;
+  # 添加字段 : ALTER TABLE `NOTIFICATION_LOG` ADD `MESSAGE_FORMAT` varchar(16);
+  # 修改字段 : ALTER TABLE `NOTIFICATION_LOG` MODIFY `MESSAGE` longtext; (1.1.0)
+  # ===> `MESSAGE` mediumtext
+  # 修改字段 : ALTER TABLE COLUMNS_V2 MODIFY TYPE_NAME MEDIUMTEXT;
+  # ==> `TYPE_NAME` varchar(4000) DEFAULT NULL
+  # 修改字段 : ALTER TABLE TABLE_PARAMS MODIFY PARAM_VALUE MEDIUMTEXT;
+  # ==> `PARAM_VALUE` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  # 修改字段 : ALTER TABLE SERDE_PARAMS MODIFY PARAM_VALUE MEDIUMTEXT;
+  # ==> `PARAM_VALUE` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE SD_PARAMS MODIFY PARAM_VALUE MEDIUMTEXT;
+  # ==> `PARAM_VALUE` varchar(4000) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE TBLS MODIFY TBL_NAME varchar(256) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ==> `TBL_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE NOTIFICATION_LOG MODIFY TBL_NAME varchar(256) CHARACTER SET latin1 COLLATE latin1_bin;
+  # ==> `TBL_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE PARTITION_EVENTS MODIFY TBL_NAME varchar(256) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ==> `TBL_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE TAB_COL_STATS MODIFY TABLE_NAME varchar(256) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ==> `TBL_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE PART_COL_STATS MODIFY TABLE_NAME varchar(256) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ==> `TABLE_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL
+  # 修改字段 : ALTER TABLE COMPLETED_TXN_COMPONENTS MODIFY CTC_TABLE varchar(256) CHARACTER SET latin1 COLLATE latin1_bin;
+  # ==> CTC_TABLE varchar(128)
+  # 修改字段 : ALTER TABLE COLUMNS_V2 MODIFY COLUMN_NAME varchar(767) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ==> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL,
+  # 修改字段 : ALTER TABLE PART_COL_PRIVS MODIFY COLUMN_NAME varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ==> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE TBL_COL_PRIVS MODIFY COLUMN_NAME varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ==> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE SORT_COLS MODIFY COLUMN_NAME varchar(767) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL;
+  # ==> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE TAB_COL_STATS MODIFY COLUMN_NAME varchar(767) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ==> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # 修改字段 : ALTER TABLE PART_COL_STATS MODIFY COLUMN_NAME varchar(767) CHARACTER SET latin1 COLLATE latin1_bin NOT NULL;
+  # ==> `COLUMN_NAME` varchar(128) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+  # set version 2.2.0
+  source upgrade-2.1.0-to-2.2.0.mysql.sql
+  
+  # 2.2.0 -> 2.3.0
+  # 添加索引 ： CREATE INDEX TC_TXNID_INDEX ON TXN_COMPONENTS (TC_TXNID);
+  # set version : 2.3.0
+  source upgrade-2.2.0-to-2.3.0.mysql.sql
+  ```
+  
+  我们需要注意在**2.1.0** 升级到 **2.2.0**的脚本策略中，在`TBLS`表中添加了一个非空列`IS_REWRITE_ENABLED`,并将旧版本表中的所有这个字段的值设置为 `false`.
+  但是对于旧版的客户端在创建表时候， 并没有填充这个字段，导致客户端写数据库时候造成元信息插入失败:**非空依赖**。
+  
+  所以我们需要修改下这个升级脚本`037-HIVE-14496.mysql.sql`:
+  
+  ```
+  ALTER TABLE `TBLS` ADD `IS_REWRITE_ENABLED` bit(1) DEFAULT false;
+  ```
+  
+  这样就避免了老版本的非空依赖冲突可以对**hive metastore**升级了。
+  
+  ### hive 客户端升级 :
+  
+  当完成了 hive metastore 的升级之后就可以上 hive-2.3.3 客户端了。我们采用了分部门更新客户端环境，隔离升级的策略完成的升级。
+  
+  > 升级过程主要发现的问题是:
+  
+  1. 新版hive对关键字的处理发生改变:
+  
+  例如: `select timestamp from table_name;` 这种脚本需要对关键字做单独处理 <code>select &#96;timestamp&#96; from table_name;</code>
+  
+  有关hive个版本保留关键字请参照 : [LanguageManual DDL - Apache Hive - Apache Software Foundation](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-Keywords,Non-reservedKeywordsandReservedKeywords)
+  
+  2. hive 数据库连接池存在的问题:
+  
+  我升级过程中原版hive使用的数据库连接池为**BoneCP**,使用升级之后发现这个连接池建立之后无法感知链接挂断事件，导致如果长时间没有操作重新查询会发生意外的连接断开异常。
+  
+  调试之后我选择了 DBCP 连接池， 并且设置了测试存活sql.来避免链接被断开的问题。
+  
+  ```
+  <property>
+    <name>datanucleus.connectionPoolingType</name>
+    <value>DBCP</value>
+    <description>Uses a BoneCP connection pool for JDBC metastore</description>
+   </property>
+  <property>
+    <name>datanucleus.connectionPool.testSQL</name>
+    <value>select 1</value>
+   </property>
+  <property>
+    <name>datanucleus.connectionPool.maxPoolSize</name>
+    <value>4</value>
+   </property>
+  <property>
+    <name>datanucleus.connectionPool.minIdle</name>
+    <value>2</value>
+   </property>
+  ```
+  
+  3. Hive 目的数据存在.hive-staging_hive_date-time_ XXX文件:
+  
+  设置中间数据存放位置:
+  
+  ```
+  <!-- tmp dir -->
+   <property>
+    <name>hive.exec.scratchdir</name>
+    <value>/tmp/hive</value>
+    <description>Scratch space for Hive jobs</description>
+   </property>
+  <property>
+    <name>hive.exec.local.scratchdir</name>
+    <value>/tmp/${user.name}</value>
+    <description>Local scratch space for Hive jobs</description>
+   </property>
+  <property>
+    <name>hive.exec.stagingdir</name>
+    <value>/tmp/hive-staging/.hive-staging</value>
+   </property>
+  ```
+  
+  至此， hive 升级完成。并顺利完成上线。
+'''
+tags: []
+isStarred: false
+isTrashed: false

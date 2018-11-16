@@ -1,11 +1,10 @@
 createdAt: "2018-03-20T09:29:56.810Z"
-updatedAt: "2018-03-20T09:30:07.662Z"
+updatedAt: "2018-11-15T02:23:45.882Z"
 type: "MARKDOWN_NOTE"
 folder: "5ebd9b00f5963387cb73"
-title: "2-servlet的基础"
+title: "Servlet篇 (1) 之Servlet基础内容"
 content: '''
-  ### 2-servlet的基础
-  
+  ### Servlet篇 (1) 之Servlet基础内容
   ---
   
   ### 1.servlet的基本组成
