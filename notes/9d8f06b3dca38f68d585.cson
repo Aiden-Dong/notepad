@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "11- MapReduce 深度分析"
+title: "MapReduce篇 (09) MapReduce深度分析"
 content: '''
-  ### 11- MapReduce 深度分析
+  ### MapReduce篇 (09) MapReduce深度分析
   ---
   
   #### 1- 综述框架
@@ -391,4 +391,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T11:52:06.218Z"
-updatedAt: "2017-12-19T11:39:23.022Z"
+updatedAt: "2018-11-19T06:47:26.622Z"

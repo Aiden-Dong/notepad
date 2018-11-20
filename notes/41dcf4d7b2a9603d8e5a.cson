@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "13 - Hadoop 环境变量"
+title: "Hadoop篇 (1) 环境变量"
 content: '''
-  ### 13 - Hadoop 环境变量
+  ### Hadoop篇 (1) 环境变量
   
   ----
   
@@ -87,4 +87,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-18T06:29:45.468Z"
-updatedAt: "2018-09-13T09:03:59.045Z"
+updatedAt: "2018-11-19T06:41:41.970Z"

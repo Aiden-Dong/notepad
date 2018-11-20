@@ -1,10 +1,10 @@
 createdAt: "2018-10-09T10:57:06.053Z"
-updatedAt: "2018-10-10T11:45:37.565Z"
+updatedAt: "2018-11-19T06:47:13.646Z"
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "22-Hadoop Mapreduce shuffle 过程详解"
+title: "MapReduce篇 (07) Shuffle 过程详解"
 content: '''
-  ### 22-Hadoop Mapreduce shuffle 过程详解
+  ### MapReduce篇 (07) Shuffle 过程详解
   
   ---
   

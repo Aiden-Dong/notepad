@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
-folder: "098403beadb3e4ebea05"
-title: "1-hdfs 概念"
+folder: "7671e01e5a4a4ee04aa9"
+title: "HDFS篇 (2) 概念"
 content: '''
-  ### 1-hdfs 概念
+  ### HDFS篇 (2) 概念
   
   ---
   
@@ -104,4 +104,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T10:13:31.902Z"
-updatedAt: "2018-07-18T08:21:46.788Z"
+updatedAt: "2018-11-19T06:35:16.149Z"

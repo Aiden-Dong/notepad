@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "15-MapReduce GC overhead limit exceeded"
+title: "MapReduce篇 (06) GC overhead limit exceeded"
 content: '''
-  ### 15-MapReduce GC overhead limit exceeded
+  ### MapReduce篇 (06) GC overhead limit exceeded
   
   ---
   
@@ -199,4 +199,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-02T14:26:49.755Z"
-updatedAt: "2017-12-02T14:48:46.638Z"
+updatedAt: "2018-11-19T06:46:47.513Z"

@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "16 - InputFormat组件"
+title: "MapReduce篇 (05) InputFormat 说明"
 content: '''
-  ### 16 - InputFormat组件
+  ### MapReduce篇 (05) InputFormat 说明
   
   ---
   
@@ -304,4 +304,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-05T10:11:01.901Z"
-updatedAt: "2018-01-22T10:43:31.661Z"
+updatedAt: "2018-11-19T06:47:04.665Z"

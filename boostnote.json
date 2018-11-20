@@ -81,11 +81,6 @@
       "name": "Apache Hadoop"
     },
     {
-      "key": "098403beadb3e4ebea05",
-      "color": "#2BA5F7",
-      "name": "Apache Hadoop Hdfs"
-    },
-    {
       "key": "d218c9600accb5c277d2",
       "color": "#2BA5F7",
       "name": "Apache Spark"

@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
-folder: "098403beadb3e4ebea05"
-title: "2-HDFS 架构"
+folder: "7671e01e5a4a4ee04aa9"
+title: "HDFS篇 (3) HDFS 架构"
 content: '''
-  ### 2-HDFS 架构
+  ### HDFS篇 (3) HDFS 架构
   
   ---
   
@@ -126,4 +126,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T10:14:32.593Z"
-updatedAt: "2018-07-18T08:31:24.878Z"
+updatedAt: "2018-11-19T06:35:22.407Z"

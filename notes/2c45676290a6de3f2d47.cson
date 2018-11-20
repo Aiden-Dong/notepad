@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "9-书写MR作业"
+title: "MapReduce篇 (04) 书写MR作业"
 content: '''
-  ### 9-书写MR作业
+  ### MapReduce篇 (04) 书写MR作业
   
   ---
   
@@ -343,4 +343,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T11:44:26.027Z"
-updatedAt: "2017-09-20T11:46:01.225Z"
+updatedAt: "2018-11-19T06:46:38.188Z"

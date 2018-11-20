@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "7-MapReduce 输入与输出"
+title: "MapReduce篇 (02) 输入与输出"
 content: '''
-  #### 7-MapReduce 输入与输出
+  #### MapReduce篇 (02) 输入与输出
   
   ---
   
@@ -431,4 +431,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T10:59:11.053Z"
-updatedAt: "2017-09-20T11:07:12.894Z"
+updatedAt: "2018-11-19T06:46:28.380Z"

@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "6- MapReduce 基础"
+title: "MapReduce篇 (01) 基础"
 content: '''
-  ### 6- MapReduce 基础
+  ### MapReduce篇 (01) 基础
   
   ---
   
@@ -316,4 +316,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T10:51:54.671Z"
-updatedAt: "2017-09-20T10:57:59.577Z"
+updatedAt: "2018-11-19T06:46:21.912Z"

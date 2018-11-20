@@ -1,10 +1,10 @@
 createdAt: "2018-04-13T06:54:04.245Z"
-updatedAt: "2018-04-13T09:20:52.691Z"
+updatedAt: "2018-11-19T06:43:54.559Z"
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "18-Yarn FairSheduler使用FairSharePolicy计算Fair Share的规则、原理和代码实现"
+title: "Yarn篇 (3) FairSheduler使用FairSharePolicy计算Fair Share的规则、原理和代码实现"
 content: '''
-  ### 18-Yarn FairSheduler使用FairSharePolicy计算Fair Share的规则、原理和代码实现
+  ### Yarn篇 (3) FairSheduler使用FairSharePolicy计算Fair Share的规则、原理和代码实现
   
   ---
   

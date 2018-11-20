@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
-folder: "098403beadb3e4ebea05"
-title: "4-HDFS API"
+folder: "7671e01e5a4a4ee04aa9"
+title: "HDFS篇 (5) API"
 content: '''
-  ### 4-HDFS API
+  ### HDFS篇 (5) API
   ---
   
   #### 1-读取文件
@@ -800,4 +800,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T10:20:35.945Z"
-updatedAt: "2018-07-18T09:03:49.451Z"
+updatedAt: "2018-11-19T06:35:33.885Z"

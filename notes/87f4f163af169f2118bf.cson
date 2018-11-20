@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "10-MapReduce 特性"
+title: "MapReduce篇 (08) MapReduce特性"
 content: '''
-  ### 10-MapReduce 特性
+  ### MapReduce篇 (08) MapReduce特性
   
   ---
   
@@ -945,4 +945,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T11:46:16.695Z"
-updatedAt: "2017-09-20T11:48:22.130Z"
+updatedAt: "2018-11-19T06:47:19.609Z"

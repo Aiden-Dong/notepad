@@ -1,10 +1,10 @@
 createdAt: "2018-04-13T10:23:29.116Z"
-updatedAt: "2018-05-30T07:28:00.494Z"
+updatedAt: "2018-11-19T06:47:31.886Z"
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "19-Hadoop的常用配置参数:"
+title: "MapReduce篇 (10) 常用配置参数:"
 content: '''
-  ### 19-Hadoop的常用配置参数:
+  ### MapReduce篇 (10) 常用配置参数:
   
   ---
   

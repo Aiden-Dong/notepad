@@ -1,5 +1,5 @@
 createdAt: "2018-07-04T07:08:46.729Z"
-updatedAt: "2018-07-04T07:09:42.907Z"
+updatedAt: "2018-11-19T06:39:44.687Z"
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
 title: "21-HA高可用集群配置详解"
@@ -14,4 +14,4 @@ content: '''
 '''
 tags: []
 isStarred: false
-isTrashed: false
+isTrashed: true

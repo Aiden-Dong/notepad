@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "14 - Yarn下MapReduce部分参数理解"
+title: "Yarn篇 (1) 优化相关参数理解"
 content: '''
-  ### 14 - Yarn下MapReduce部分参数理解
+  ### Yarn篇 (1) 优化相关参数理解
   
   ---
   
@@ -196,4 +196,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-01T10:19:30.208Z"
-updatedAt: "2017-12-02T14:24:55.837Z"
+updatedAt: "2018-11-19T06:43:11.976Z"

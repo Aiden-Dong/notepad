@@ -1,10 +1,10 @@
 createdAt: "2018-05-28T08:27:56.326Z"
-updatedAt: "2018-05-29T12:24:55.854Z"
+updatedAt: "2018-11-19T06:42:01.284Z"
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "20-Hadoop 中用户安全伪装/模仿机制实现原理"
+title: "Hadoop篇 (2) 用户安全伪装/模仿机制实现原理"
 content: '''
-  ### 20-Hadoop 中用户安全伪装/模仿机制实现原理
+  ### Hadoop篇 (2) 用户安全伪装/模仿机制实现原理
   
   ---
   

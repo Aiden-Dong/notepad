@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "7671e01e5a4a4ee04aa9"
-title: "12 - Yarn 调度器Scheduler详解"
+title: "Yarn篇 (2) 调度器Scheduler详解"
 content: '''
-  ### 12 - Yarn 调度器Scheduler详解
+  ### Yarn篇 (2) 调度器Scheduler详解
   
   转载 : http://blog.csdn.net/suifeng3051/article/details/49508261
   
@@ -477,4 +477,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-13T13:57:42.403Z"
-updatedAt: "2018-04-12T09:09:12.424Z"
+updatedAt: "2018-11-19T06:43:33.393Z"
