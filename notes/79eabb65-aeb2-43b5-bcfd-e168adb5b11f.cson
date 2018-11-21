@@ -1,5 +1,5 @@
 createdAt: "2018-11-04T11:18:33.154Z"
-updatedAt: "2018-11-20T10:45:49.747Z"
+updatedAt: "2018-11-20T13:46:09.969Z"
 type: "MARKDOWN_NOTE"
 folder: "ceae56396fb314adeed3"
 title: "SpringBean篇 (2) 注解配置形式"
@@ -215,6 +215,11 @@ content: '''
       }
   }
   ```
+  
+  #### 懒加载(@Lazy(true))
+  
+  用于指定该Bean是否取消预初始化，用于注解类，延迟初始化。
+  
   
   
   
