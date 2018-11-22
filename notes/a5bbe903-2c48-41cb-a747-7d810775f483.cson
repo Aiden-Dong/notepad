@@ -1,10 +1,10 @@
 createdAt: "2018-04-04T02:55:04.804Z"
-updatedAt: "2018-04-04T03:52:44.257Z"
+updatedAt: "2018-11-22T08:11:25.907Z"
 type: "MARKDOWN_NOTE"
 folder: "826d02692db86deab330"
-title: "9-使用 typesafe.config 管理你的配置文件"
+title: "Java框架篇 (2) 配置解析框架 TypeSafa"
 content: '''
-  ### 9-使用 typesafe.config 管理你的配置文件
+  ### Java框架篇 (2) 配置解析框架 TypeSafa 
   
   ---
   

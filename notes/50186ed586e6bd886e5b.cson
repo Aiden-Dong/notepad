@@ -1,134 +1,351 @@
 type: "MARKDOWN_NOTE"
 folder: "826d02692db86deab330"
-title: "4- java 解析 json 的方式"
+title: "Java序列化篇 (3) Json解析工具Jackson"
 content: '''
-  ### 4- java 解析 json 的方式
+  ### Java序列化篇 (3) Json解析工具Jackson
   
   ---
   
   json 的解析包:
   
   ```
-  <!-- https://mvnrepository.com/artifact/org.codehaus.jackson/jackson-mapper-asl -->
+  <!--核心类 -->
   <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.9.13</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.9.6</version>
+  </dependency>
+  <!--注解-->
+  <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.9.6</version>
+  </dependency>
+  <!--数据绑定-->
+  <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.9.6</version>
   </dependency>
   ```
   
-  #### 1-数据转 jsonNode 格式:
+  #### Jackson的基本应用:
   
-  > 标准形式 
-  
-  ```
-  ObjectMapper mapper = new ObjectMapper();
-  JsonFactory factory = new JsonFactory();
-  JsonParser parser = factory.createJsonParser(json);
-  JsonNode node = mapper.readTree(parser);
-  ```
-  
-  > String 转 jsonNode
+  **JsonNode** 类是 Jackson 的一个将 `Json` 内容反序列到内存的一种内存数据结构表达方式。
+  例如对于一个测试的Json内容:
   
   ```
-  public static JsonNode parseJSONFromString(String json) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(json);
-    JsonNode node = mapper.readTree(parser);
-    return node;
+  {
+    "name" : "test",
+    "value" : 20,
+    "address" : [
+      {
+       "addressId" : "0001" 
+      },
+      {
+      "addressId" : "0002"
+      }
+    ]
   }
   ```
   
-  > File 转JsonNode
+  当我们把json内容反序列化到内存中的时候，便可以如同操作一个树结构读取json内容:
   
   ```
-  public static JsonNode parseJSONFromFile(File file) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(file);
-    JsonNode node = mapper.readTree(parser);
-    
-    return node;
+  String name = node.get("name").asText();
+  Integer value = node.get("value").asInt();
+  Iterator<JsonNode> addressNodes = node.get("address").elements();
+  String address = addressNodes.next().get("addressId").asText();
+  ```
+  
+  从上我们可以发现， jackson 可以方便的进行节点定位跟类型转换。
+  
+  > 如何才能将json内容转换成 JsonNode 呢 ？ 
+  
+  
+  - 文件字符串解析
+  
+  ```
+  public static JsonNode str2JsonNode(String str) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readTree(str);
+  }
+  
+  ```
+  - stream 解析
+  
+  ```
+  public static JsonNode str2JsonNode(InputStream stream) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readTree(stream);
+  }
+  ```
+  - file 解析
+  ```
+  public static JsonNode str2JsonNode(File file) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readTree(file);
+  }
+  ```
+  - reader 解析
+  ```
+  public static JsonNode str2JsonNode(Reader reader) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readTree(reader);
   }
   ```
   
-  > Reader转JsonNode
   
+  - bytes 解析
   ```
-  public static JsonNode parseJSONFromReader(Reader reader) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(reader);
-    JsonNode node = mapper.readTree(parser);
-    
-    return node;
+  public static JsonNode str2JsonNode(byte[] datas) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readTree(datas);
   }
   ```
   
-  #### 2-JsonNode 转 object 
+  
+  #### Json 与 基本类型的相互转化:  
+  
+  readValue 方法能够帮助我们将字符串序列化成指定的
   
   ```
-  private static Object toObjectFromJSONNode(JsonNode node) {
-    if (node.isObject()) {
-      HashMap<String, Object> obj = new HashMap<String, Object>();
-      Iterator<String> iter = node.getFieldNames();
-      while (iter.hasNext()) {
-        String fieldName = iter.next();
-        JsonNode subNode = node.get(fieldName);
-        Object subObj = toObjectFromJSONNode(subNode);
-        obj.put(fieldName, subObj);
+   public static Object json2Object(String str) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+      JsonNode node = objectMapper.readTree(str);
+      if(node.isObject()){
+          return objectMapper.readValue(str, Map.class);
+      }else if(node.isArray()){
+          return objectMapper.readValue(str, List.class);
+      }else{
+          if (node.isInt()) {
+              return node.asInt();
+          } else if (node.isLong()) {
+              return node.asLong();
+          } else if (node.isDouble()) {
+              return node.asDouble();
+          } else if(node.isTextual()) {
+              return node.asText();
+          } else if (node.isNull()){
+              return null;
+          }
+          else {
+              throw new IOException("Json node exception type :  " + node.numberType());
+          }
+      }
+  }
+  ```
+  
+  例如上面的字符串我们将其解析为 常见的Map结构: 
+  
+  ```
+  Map map = JsonUtil.json2Bean(str, Map.class);
+  System.out.println(map.get("address"));
+  List<Map<String, String>> list = (List<Map<String, String>>)map.get("address");
+  System.out.println(list.get(1).get("addressId"));
+  ```
+  
+  当然我们也可以通过 writeValue的方式将普通类型转换成 String 打印出来:
+  
+  ```
+  public static String object2Str(Object object, boolean prettyPrint) throws IOException {
+      ObjectMapper objectMapper = new ObjectMapper();
+  
+      // 美化方式打印
+      if(prettyPrint){
+          ObjectWriter write = objectMapper.writerWithDefaultPrettyPrinter();
+          return write.writeValueAsString(object);
+      }
+      // 单行打印
+      return objectMapper.writeValueAsString(object);
+  }
+  ```
+  
+  
+  #### String 与 Bean 的相互转化
+  
+  - **转换工具方法为**:
+  
+  ```
+  public static <T> T str2Bean(String str, Class<T> beanClass) throws IOException {
+      ObjectMapper mapper = new ObjectMapper();
+      return mapper.readValue(str, beanClass);
+  }
+  ```
+  要将 string -> bean , 对于每一个 jsonStr, 我们都需要创建一个与之对应的 bean class.
+  
+  例如 : 
+  
+  ```
+  {
+    "name" : "test",
+    "value" : 20
+  }
+  ```
+  
+  对应的 Bean 为 :
+  
+  ```
+  public class Persion {
+      private String name;
+      private int value;
+  
+      public void setName(String name) {
+          this.name = name;
       }
   
-      return obj;
-    } else if (node.isArray()) {
-      ArrayList<Object> array = new ArrayList<Object>();
-      Iterator<JsonNode> iter = node.getElements();
-      while (iter.hasNext()) {
-        JsonNode element = iter.next();
-        Object subObject = toObjectFromJSONNode(element);
-        array.add(subObject);
+      public void setValue(int value) {
+          this.value = value;
       }
-      return array;
-    } else if (node.isTextual()) {
-      return node.asText();
-    } else if (node.isNumber()) {
-      if (node.isInt()) {
-        return node.asInt();
-      } else if (node.isLong()) {
-        return node.asLong();
-      } else if (node.isDouble()) {
-        return node.asDouble();
-      } else {
-        System.err.println("ERROR What is this!? " + node.getNumberType());
-        return null;
-      }
-    } else if (node.isBoolean()) {
-      return node.asBoolean();
-    } else {
-      return null;
-    }
+      
   }
   ```
   
+  我们通过 `Persion persion = JsonUtil.str2Bean(str, Persion.class);` 这时候会通过 `setter` 方法将json内容注入到 `Persion`类的对应字段中。
   
-  #### 3-Object 转 Json
+  如果 json 中的 key 与 Bean 中的字段名称不对应，我们可以通过 **@JsonProperty** 注解为其声明对应关系。
+  
+  例如 :
   
   ```
-  public static String toJSON(Object obj, boolean prettyPrint) {
-    ObjectMapper mapper = new ObjectMapper();
+  public class Persion {
+      private String name;
+      private int value;
   
-    try {
-      if (prettyPrint) {
-        ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
-        return writer.writeValueAsString(obj);
+      @JsonProperty("v-name")
+      public void setName(String name) {
+          this.name = name;
       }
-      return mapper.writeValueAsString(obj);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  
+      @JsonProperty("v-value")
+      public void setValue(int value) {
+          this.value = value;
+      }
   }
   ```
+  
+  - **排除未知的字段@JsonIgnoreProperties(ignoreUnknown = true)**
+  
+  有时候json中出了具有bean声明的字段以外，有时候还会有其他信息，但这些信息并不是我们所关系的，我们这时候就需要舍弃这部分内容， 我们可以在类开始处使用 **@JsonIgnoreProperties(ignoreUnknown = true)** 注解，忽略掉不匹配或者转换失败的字段。
+  
+  ```
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public class Persion {
+      private String name;
+      private int value;
+  
+      @JsonProperty("v-name")
+      public void setName(String name) {
+          this.name = name;
+      }
+  
+      @JsonProperty("v-value")
+      public void setValue(int value) {
+          this.value = value;
+      }
+  }
+  ```
+  
+  - **自定义序列号与反序列化方式**:
+  
+  有时候 json 与 bean 并不是简单的对应关系， 反序列化过程往往存在困难， 例如对于开始处这个 json 内容 :
+  
+  ```
+  {
+    "name" : "test",
+    "value" : 20,
+    "address" : [
+      {
+       "addressId" : "0001" 
+      },
+      {
+      "addressId" : "0002"
+      }
+    ]
+  }
+  ```
+  
+  我们的对应 bean 为：
+  
+  ```
+  public class Persion {
+      private String name;
+      private int value;
+      private List<Address> address;
+  }
+  ```
+  
+  ```
+  public class Address {
+      private String addressId;
+  
+      public void setAddressId(String addressId) {
+          this.addressId = addressId;
+      }
+  }
+  ```
+  正常情况下， 对于 address 字段会映射为 `List<Map>` 类型, 但是此处我们需要让他自动转换为 `List<Address>`
+  这时候就需要我们自定义反序列化过程:
+  
+  反序列化类需要继承 `JsonDeserializer<T>` 泛型对应反序列化的返回类型 ：
+  
+  反序列化工具类
+  
+  ```
+  public class AddressDeserde extends JsonDeserializer<List> {
+      public List deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+          ObjectMapper mapper = new ObjectMapper();
+          JsonNode nodes = mapper.readTree(jsonParser);
+  
+          List<Address> addresses = new LinkedList<Address>();
+  
+          for(JsonNode node :  Lists.newArrayList(nodes.elements())){
+              System.out.println(node.toString());
+              addresses.add(JsonUtil.str2Bean(node.toString(), Address.class));
+          }
+          return addresses;
+      }
+  }
+  ```
+  
+  然后便可以再 bean 中字段指名反序列化工具：
+  ```
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public class Persion {
+      private String name;
+      private int value;
+      private List<Address> address;
+  
+      @JsonProperty("v-name")
+      public void setName(String name) {
+          this.name = name;
+      }
+  
+      @JsonProperty("v-value")
+      public void setValue(int value) {
+          this.value = value;
+      }
+  
+  
+      @JsonProperty("address")
+      @JsonDeserialize(using = bean.AddressDeserde.class)
+      public void setAddress(List<Address> address) {
+          this.address = address;
+      }
+  
+      @Override
+      public String toString() {
+          return "Persion{" +
+                  "name='" + name + '\\'' +
+                  ", value=" + value +
+                  ", addresses=" + address +
+                  '}';
+      }
+  }
+  ```
+  
+  这时候便可以用了。
+  
   
   
 '''
@@ -136,4 +353,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T06:19:28.329Z"
-updatedAt: "2017-09-20T08:20:01.565Z"
+updatedAt: "2018-11-22T12:48:58.715Z"

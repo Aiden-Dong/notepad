@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "826d02692db86deab330"
-title: "5- java 压缩方式"
+title: "Java序列化篇 (1) Gzip 解析"
 content: '''
-  ### 5- java 压缩方式
+  ### Java序列化篇 (1) Gzip 解析
   
   ---
   
@@ -12,32 +12,32 @@ content: '''
   
   ```
   public static byte[] unGzipBytes(byte[] bytes) throws IOException {
-      ByteArrayInputStream byteInputStream = new ByteArrayInputStream(bytes);
-      GZIPInputStream gzipInputStream = new GZIPInputStream(byteInputStream);
+    ByteArrayInputStream byteInputStream = new ByteArrayInputStream(bytes);
+    GZIPInputStream gzipInputStream = new GZIPInputStream(byteInputStream);
   
-      ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-      IOUtils.copy(gzipInputStream, byteOutputStream);
+    ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+    IOUtils.copy(gzipInputStream, byteOutputStream);
   
-      return byteOutputStream.toByteArray();
-    }
+    return byteOutputStream.toByteArray();
+  }
   ```
   压缩
   ```
   public static byte[] gzipBytes(byte[] bytes, int offset, int length)
-        throws IOException {
-      ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-      GZIPOutputStream gzipStream = null;
+      throws IOException {
+    ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
+    GZIPOutputStream gzipStream = null;
   
-      gzipStream = new GZIPOutputStream(byteOutputStream);
+    gzipStream = new GZIPOutputStream(byteOutputStream);
   
-      gzipStream.write(bytes, offset, length);
-      gzipStream.close();
-      return byteOutputStream.toByteArray();
-    }
+    gzipStream.write(bytes, offset, length);
+    gzipStream.close();
+    return byteOutputStream.toByteArray();
+  }
   ```
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T08:22:03.493Z"
-updatedAt: "2017-09-20T09:38:01.752Z"
+updatedAt: "2018-11-22T07:59:51.611Z"

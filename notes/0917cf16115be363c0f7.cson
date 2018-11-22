@@ -1,8 +1,8 @@
 type: "MARKDOWN_NOTE"
 folder: "826d02692db86deab330"
-title: "1- java 解析 xml 文件"
+title: "Java序列化篇 (2) xml 文件解析"
 content: '''
-  ## 1- java 解析 xml 文件
+  ### Java序列化篇 (2) xml 文件解析
   
   ---
   
@@ -513,4 +513,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-08-25T15:02:19.635Z"
-updatedAt: "2017-08-25T15:02:37.902Z"
+updatedAt: "2018-11-22T07:58:36.564Z"
