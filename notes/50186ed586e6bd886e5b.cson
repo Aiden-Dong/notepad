@@ -204,7 +204,7 @@ content: '''
   我们通过 `Persion persion = JsonUtil.str2Bean(str, Persion.class);` 这时候会通过 `setter` 方法将json内容注入到 `Persion`类的对应字段中。
   
   如果 json 中的 key 与 Bean 中的字段名称不对应，我们可以通过 **@JsonProperty** 注解为其声明对应关系。
-  
+  **@JsonProperty** 注解可以用于 `getter`,`setter`,或者构造函数参数中。
   例如 :
   
   ```
@@ -346,11 +346,41 @@ content: '''
   
   这时候便可以用了。
   
+  同样的，我们要自定义序列化方式需要继承 `JsonSerializer<T>` 抽象方法
   
+  例如对于 `address` 的字段，的序列化过程:
+  
+  ```
+  public class AddressSerde extends JsonSerializer<List<Address>> {
+      @Override
+      public void serialize(List<Address> addresses, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+  
+          jsonGenerator.writeStartArray();
+          for(Address address : addresses){
+              jsonGenerator.writeObject(address);
+          }
+          jsonGenerator.writeEndArray();
+  
+  
+      }
+  }
+  ```
+  
+  我们可以在 `getter` 方法中加入序列化方式:
+  
+  ```
+  @JsonProperty("v-address")
+  @JsonSerialize(using = bean.AddressSerde.class)
+  public List<Address> getAddress() {
+      return address;
+  }
+  ```
+  
+  然后便能够成功的解析出 `List<Address>`
   
 '''
 tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-09-20T06:19:28.329Z"
-updatedAt: "2018-11-22T12:48:58.715Z"
+updatedAt: "2018-11-22T14:34:03.289Z"
