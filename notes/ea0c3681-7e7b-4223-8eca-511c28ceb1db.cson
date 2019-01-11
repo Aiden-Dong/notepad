@@ -1,0 +1,182 @@
+createdAt: "2019-01-11T07:47:25.268Z"
+updatedAt: "2019-01-11T09:03:11.219Z"
+type: "MARKDOWN_NOTE"
+folder: "ceae56396fb314adeed3"
+title: "SpringMvc篇(5) Jetty+Spring MVC 开发"
+content: '''
+  ### SpringMvc篇(5) Jetty+Spring MVC 开发
+  
+  ---
+  
+  #### 简介:
+  
+  很多时候我们在编写服务类应用程序时候，web服务作为应用程序的一部分功能实现。这个时候我们就考虑到使用到 **嵌入式jetty框架** 来在应用程序内部启动一个web容器，来执行与用户交互的逻辑。
+  
+  这里就讲解一个 Jetty 容器启动 Spring web 应用的例子。
+  
+  首先我这边使用的各个框架的版本为:
+  
+  ```
+  <jetty.version>9.4.10.v20180503</jetty.version>
+  <spring.version>5.0.8.RELEASE</spring.version>
+  <thymeleaf.version>3.0.10.RELEASE</thymeleaf.version>
+  ```
+  
+  因为jetty与spring 已经支持了 **servlet3**, 所以我是用了**免web.xml配置**的方式来启动应用。
+  
+  #### Jetty 容器的配置:
+  
+  这是一个典型的jetty容器的启动方式，包含了链接端口配置以及web应用启动。
+  
+  ```
+  Server server = new Server();
+  // 关闭时候停止服务
+  server.setStopAtShutdown(true);                                
+  
+  // 创建链接
+  ServerConnector connector = new ServerConnector(server);       
+  connector.setPort(port);
+  connector.setReuseAddress(true);
+  server.setConnectors(new Connector[] { connector});
+  
+  WebAppContext webContext = new WebAppContext(SERVER_NAME, CONTEXT);  
+  
+  
+  webContext.setServer(server);
+  
+  // 从所有的jar中 扫描 javax.servlet.ServletContainerInitializer 的实现，构建应用程序
+  webContext.setConfigurations(new Configuration[] {
+          new AnnotationConfiguration(),
+          new WebInfConfiguration(),
+          new EnvConfiguration(),
+          new WebXmlConfiguration(),
+          new MetaInfConfiguration(),
+          new PlusConfiguration(),
+          new FragmentConfiguration(),
+  });
+  webContext.setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern", ".*\\\\.jar");
+  
+  // 静态资源文件配置
+  //由于资源文件位于jar中， 首先需要获取资源文件的位置，然后注册到webContext资源文件中
+  String resourcePath = ClusterManagerServer.class.getClassLoader().getResource(DEFAULT_WEBAPP_PATH).toExternalForm();
+  webContext.setResourceBase(resourcePath);
+  // 静态资源映射
+  ServletHolder staticServlet = new ServletHolder(new DefaultServlet());
+  webContext.addServlet(staticServlet, "/css/*");
+  webContext.addServlet(staticServlet, "/icon/*");
+  webContext.addServlet(staticServlet, "/js/*");
+  
+  server.setHandler(webContext);
+  
+  return server;
+  ```
+  
+  如上所示， web 应用通过 jetty `WebAppContext` handler 来扫描构建， 
+  传统的web应用需要调用 `webContext.setDescriptor('WEB-INF/web.xml');`来将web应用配置传递给容器来解析构建。
+  但是 servlet3 允许**通过实现 javax.servlet.ServletContainerInitializer 接口代替`web.xml`配置**的方式构建web应用。
+  我这边`webContext.setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern", ".*\\\\.jar");`是以正则方式告诉jetty去扫描所有的jar包寻找**javax.servlet.ServletContainerInitializer** 的实现类。
+  
+  另外因为thymeleaf模板需要`css`,与`js`等的渲染, 我便将渲染的资源文件传递给WebAppContext`webContext.setResourceBase(resourcePath);`.
+  然后DefaultServlet的 Handler 来处理资源位置与映射关系。
+  
+  ---
+  
+  #### Web App 配置
+  
+  spring mvc 通过实现 **org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer** 的方式来以代码方式代替`web.xml`配置文件。
+  
+  因为spring mvc 中存在**org.springframework.web.SpringServletContainerInitializer** 实现了 **javax.servlet.ServletContainerInitializer**,所以容器启动时候会读取**SpringServletContainerInitializer**类来启动web应用， 这个类会扫描**org.springframework.web.WebApplicationInitializer**的实现类来配置web应用程序。
+  
+  spring mvc 提供了 **org.springframework.web.WebApplicationInitializer** 的抽象实现简化了我们的编写工**AbstractAnnotationConfigDispatcherServletInitializer**, 最终我们只需要通过实现**AbstractAnnotationConfigDispatcherServletInitializer**就能够配置部署web应用程序。
+  
+  ```
+  public class WebApplicationContainer extends AbstractAnnotationConfigDispatcherServletInitializer {
+      static {
+          System.out.println("[CLUSTER MANAGER START]");
+      }
+  
+      //配置root上下文,如Jpa数据源等等的配置
+      @Override
+      protected Class<?>[] getRootConfigClasses() {
+          return null;
+      }
+      // 配置 servlet
+      @Override
+      protected Class<?>[] getServletConfigClasses() {
+          return new Class[]{WebMvcConfig.class};
+      }
+  
+      //指定开始被servlet处理的url
+      @Override
+      protected String[] getServletMappings() {
+          return new String[]{"/"};
+      }
+  
+      // 自定义servlet 名称
+      @Override
+      protected String getServletName() {
+          return ClusterManagerServer.SERVER_NAME;
+      }
+  
+      // 自定义 Dispather servlet
+      @Override
+      protected FrameworkServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
+          return new ServerDispatcherServlet(servletAppContext);
+      }
+  }
+  ```
+  
+  servlet 配置部分通过继承`WebMvcConfigurationSupport` 来简化大部分的配置
+  
+  ```
+  @Configuration
+  @ComponentScan(basePackages = "com.mobvista.dataplatform.cluster.web,com.mobvista.dataplatform.cluster.services")
+  public class WebMvcConfig extends WebMvcConfigurationSupport {
+      // 默认 HandlerMapping/ HandlerAdapter
+      // org.springframework.web.servlet.HandlerMapping : org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+      // org.springframework.web.servlet.HandlerAdapter : org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
+  
+      @Autowired
+      private ApplicationContext applicationContext;
+  
+      @Override
+      protected void addInterceptors(InterceptorRegistry registry) {
+          registry.addInterceptor(new RestInterceptHandler()).addPathPatterns("/api/v1/*");
+          registry.addInterceptor(new ViewInterceptHandler())
+                  .addPathPatterns("/clusters")
+                  .addPathPatterns("/clusters/*");
+      }
+  
+      @Bean
+      public SpringResourceTemplateResolver templateResolver() {
+          SpringResourceTemplateResolver templateResolver = new SpringResourceTemplateResolver();
+          templateResolver.setCharacterEncoding(Charsets.UTF_8.displayName());
+          templateResolver.setApplicationContext(applicationContext);
+          templateResolver.setPrefix("classpath:/model/");
+          templateResolver.setSuffix(".html");
+          return templateResolver;
+      }
+  
+      @Bean
+      public SpringTemplateEngine templateEngine() {
+          SpringTemplateEngine templateEngine = new SpringTemplateEngine();
+          templateEngine.setTemplateResolver(templateResolver());
+          templateEngine.setEnableSpringELCompiler(true);
+  
+          return templateEngine;
+      }
+  
+      @Override
+      protected void configureViewResolvers(ViewResolverRegistry registry) {
+          ThymeleafViewResolver resolver = new ThymeleafViewResolver();
+          resolver.setCharacterEncoding(Charsets.UTF_8.displayName());
+          resolver.setTemplateEngine(templateEngine());
+          registry.viewResolver(resolver);
+      }
+  }
+  ```
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

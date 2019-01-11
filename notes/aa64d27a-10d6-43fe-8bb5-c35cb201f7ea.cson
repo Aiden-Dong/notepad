@@ -1,5 +1,5 @@
 createdAt: "2018-11-26T07:48:57.249Z"
-updatedAt: "2018-12-03T12:46:12.357Z"
+updatedAt: "2018-12-23T02:22:28.091Z"
 type: "MARKDOWN_NOTE"
 folder: "ceae56396fb314adeed3"
 title: "SpringAop篇 (2) Spring中的切面编程技术 AspectJ"
@@ -229,11 +229,11 @@ content: '''
   通知是指我们事件的具体逻辑内容(比如上面的`log()`),
   以及触发的时机既在切点的是么时候触发,Spring 有 5种类型的触发时机可以使用 : 
   
-  - 前置通知(Before) : 在目标方法被调用之前调用通知功能
-  - 后置通知(After) : 在方法返回或者抛出异常后调用通知。
-  - 返回通知(AfterReturning) : 在目标方法被调用之后调用通知。
-  - 异常通知(AfterThrowing) : 在目标方法抛出异常之后调用通知。
-  - 环绕通知(Around) :通知包裹了被通知的方法,通知的方法调用之前和调用之后执行自定义的行为。
+  - 前置通知(@Before) : 在目标方法被调用之前调用通知功能
+  - 后置通知(@After) : 在方法返回或者抛出异常后调用通知。
+  - 返回通知(@AfterReturning) : 在目标方法被调用之后调用通知。
+  - 异常通知(@AfterThrowing) : 在目标方法抛出异常之后调用通知。
+  - 环绕通知(@Around) :通知包裹了被通知的方法,通知的方法调用之前和调用之后执行自定义的行为。
   
   #### 切面(Aspect):
   
@@ -241,10 +241,88 @@ content: '''
   
   一个切面完整说明了一个事件触发的地点，时机，内容。
   
+  - **前置通知** 
+  
+  ```
+  @Pointcut("execution(public void com.saligia.spring.aop.aspectj.Persion.say())")
+  public void execPointCut(){}
+  
+  @Before("execPointCut()")
+  public void log(){
+      System.out.println("Before say : ");
+  }
+  ```
+  
+  所以当我们调用 `persion.say();`
+  
+  显示结果:
+  
+  ```
+  Before say : 
+  hello : saligia
+  ```
+  
+  - **后置通知** :
+  
+  ```
+  @After("execPointCut()")
+  public void log(){
+      System.out.println("After say : ");
+  }
+  ```
+  
+  显示结果 :
+  
+  ```
+  hello : saligia
+  After say : 
+  ```
+  
+  - **环绕通知**:
+  
+  ```
+  @Around("execPointCut()")
+  public void log(ProceedingJoinPoint joinPoint){
+      // 方法执行前的动作
+      System.out.println("Before say : ");
+      try {
+          // 执行目标方法
+          joinPoint.proceed();
+      } catch (Throwable throwable) {
+          // 异常抛出之后的动作
+          System.out.println("After Exception say :");
+      }finally {
+          // 无论是否抛出异常都执行的动作
+      }
+      // 正常结束后的动作
+      System.out.println("After say : ");
+  }
+  ```
+  
+  显示方式 :
+  
+  ```
+  Before say : 
+  hello : saligia
+  After say : 
+  ```
+  
+  
+  **其他的通知方式写法与这些有雷同，在这里就不在一一表述**
+  
   #### 连接点(JoinPoint)
   
   连接点是一个动态的概念，是指在应用程序执行过程中插入切面的位置点。
   比如程序执行之前，程序异常抛出时候等等。
+  
+  
+  > 总结内容：
+  
+  使用 **SpringAop** 可以帮助我们在对代码非侵入的情况下实现功能块的侵入，在系统架构保持一定的系统完整性与可拔插与复用性。
+  
+  但是由于这种操作是非感知性的， 在一定程度上增加了代码阅读的复杂性。
+  
+  所以有关利弊性取舍还是酌情考虑是否使用SpringAOP 还是手动编写动态代理形式。
   
   
 '''

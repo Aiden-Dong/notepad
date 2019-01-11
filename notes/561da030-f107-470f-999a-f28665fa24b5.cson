@@ -1,5 +1,5 @@
 createdAt: "2018-03-20T09:35:20.611Z"
-updatedAt: "2018-03-20T09:35:43.452Z"
+updatedAt: "2018-12-25T06:44:42.584Z"
 type: "MARKDOWN_NOTE"
 folder: "5ebd9b00f5963387cb73"
 title: "11-JSP指令"
@@ -96,4 +96,4 @@ content: '''
 '''
 tags: []
 isStarred: false
-isTrashed: false
+isTrashed: true
