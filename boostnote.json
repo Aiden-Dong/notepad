@@ -6,24 +6,29 @@
       "name": "DataStructure"
     },
     {
-      "key": "fec47565a0577152774f",
-      "color": "#B013A4",
-      "name": "MachineLearning"
-    },
-    {
-      "key": "353d9e00445c35bfac25",
-      "color": "#E10051",
-      "name": "Math"
-    },
-    {
       "key": "89d365e1ad8628f10c32",
       "color": "#E8D252",
       "name": "DesignPatterns"
     },
     {
+      "key": "472daf04bea65891d250",
+      "color": "#B013A4",
+      "name": "c++"
+    },
+    {
+      "key": "199632a5d0d7fd0aac09",
+      "color": "#30D5C8",
+      "name": "Linux Kernel"
+    },
+    {
       "key": "826d02692db86deab330",
       "color": "#E10051",
       "name": "java"
+    },
+    {
+      "key": "becbb124877573c964e3",
+      "color": "#E8D252",
+      "name": "JVM"
     },
     {
       "key": "e6c9bd1f0c13e9eccb37",
@@ -56,14 +61,14 @@
       "name": "Mysql"
     },
     {
-      "key": "199632a5d0d7fd0aac09",
-      "color": "#30D5C8",
-      "name": "Linux"
+      "key": "353d9e00445c35bfac25",
+      "color": "#E10051",
+      "name": "Math"
     },
     {
-      "key": "becbb124877573c964e3",
-      "color": "#E8D252",
-      "name": "JVM"
+      "key": "fec47565a0577152774f",
+      "color": "#B013A4",
+      "name": "MachineLearning"
     },
     {
       "key": "ef3e1850a2ffff04209d",

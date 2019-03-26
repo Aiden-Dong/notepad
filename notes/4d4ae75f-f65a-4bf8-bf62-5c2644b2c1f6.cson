@@ -1,0 +1,208 @@
+createdAt: "2019-03-26T04:09:59.204Z"
+updatedAt: "2019-03-26T12:36:39.739Z"
+type: "MARKDOWN_NOTE"
+folder: "199632a5d0d7fd0aac09"
+title: "Linux 内存管理篇(1)内存寻址"
+content: '''
+  ### Linux 内存管理篇(1)内存寻址
+  
+  ---
+  
+  ### 内存地址:
+  
+  现代操作系统为了实现程序的**运行时动态链接**, **动态运行时的装入方式**和 **虚拟内存** 等技术, 在程序的内存寻址方面采用逻辑地址替代物理地址。
+  
+  - **运行时动态链接** : 是指将程序运行时所需要的链接库暂时驻留在磁盘中， 当程序执行到需要的库函数时，才将库链接到内存中，加入程序的地址空间。
+  - **动态运行时的装入方式** : 是指装入程序在把装入模块装入内存后，并不立即把装入模块中的相对地址转换为绝对地址，而是把这种地址转换推迟到程序真正要执行时才进行。
+  
+  由于这种功能的支持导致程序实现不能确定每一个指令或者操作数的物理地址， 寻址上造成困难，所以引入逻辑地址来标识每一个指令或操作数的位置。
+  
+  而现在操作系统的硬件级别已经支持了一种**内存控制单元(MMU)** 的地址转换器用来实现逻辑地址到物理地址的转换。
+  
+  MMU先通过分段单元的硬件电路把一个逻辑地址转换成线性地址， 然后通过分页单元的硬件电路把线性地址换成一个物理地址。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-d12f90d41c8e6d43.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  ##### 逻辑地址:
+  
+  包括在机器语言指令中指定操作数或者一条指令的地址。每个逻辑地址都由一个段选择符和偏移量组成，偏移量指明了从段开始的地方到实际地址的距离。
+  
+  ##### 线性地址:
+  
+  也称为虚拟地址，32位或64位的无符号整数，在32位系统中可以用来表示高达4GB的地址。
+  
+  ##### 物理地址:
+  
+  芯片级内存单元寻址。与从微处理器的地址引脚发送到内存总线上的电信号相对应。地址空间大小由微处理器地址引脚数决定，无符号整数表示。
+  
+  ---
+  
+  ### 分段技术：
+  
+  
+  分段单元是用于实现物理地址到线性地址的转换
+  
+  
+  #### 分段单元:
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2e0bdb7c5ac883b2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  分段单元（segmentation）执行下列操作：
+  
+  1. 定位 GDT/LDT 表的起始位置
+  
+  先检查段选择符中的`TI`字段，以决定**段描述符**保存在哪一个描述符表中，`TI=1`则在**LDT**中，`TI=0`则在**GDT**中。如果在**GDT**中，分段单元从**gdtr寄存器**中得到**GDT**的线性地址，否则从**ldtr寄存器**中得到**LDT**的线性地址。
+  
+  2. 定位段描述符的位置(距离起始位置偏移量)
+  
+  从段选择符的index字段计算段描述符的地址，index字段的值乘以8，这个结果与gdtr或ldtr的内容相加。
+  
+  3. 计算线性地址:
+  
+  把逻辑地址的偏移量与段描述符的Base字段的值相加就得到了线性地址。
+  
+  #### 段选择符:
+  
+  一个逻辑地址由两部分组成：**一个段标识符** 和一个**指定段内相对地址的偏移量** 。段标识符是一个16位长的字段，称为段选择符（Segment Selector），而偏移量是一个32位长的字段。
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-071bb6ceffe40b30.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  字段名 | 描述
+  --- | ---
+  索引 | 指定了放在GDT或LDT中的相应段描述符
+  TI | TI（Table Indicator）标志，指明段描述符是在GDT中（TI=0）或在LDT中（TI=1）
+  RPL | 请求者特权级，当相应的段选择符装入到cs寄存器中时指示出CPU当前的特权级，它还可以用于在访问数据段时有选择地削弱处理器的特权级。 Linux 只用 0 和 3.用来表示用户态和内核态。
+  
+  
+  为了快速方便地找到段选择符，处理器提供段寄存器，段寄存器地唯一目的是存放段选择符。这些段寄存器称为cs、ss、ds、es、fs和gs。尽管只有6个段寄存器，但程序可以把同一个段寄存器用于不同地目的，这6个段寄存器3个有专门的用途：
+  
+  - **cs**：代码段寄存器，指向包含程序指令的段。
+  - **ss**：栈段寄存器，指向包含当前程序栈的段。
+  - **ds**：数据段寄存器，指向包含静态数据或者全局数据段
+  
+  其他3个段寄存器作一般用途，可以指向任意的数据段。cs寄存器还有一个很重要的功能：它含有一个 两位的字段，用以指明CPU的 当前特权级(Current Privilege Level, CPL)。0代表最高优先级——内核态，而3代表最低优先级——用户态。
+  
+  #### 段描述符表
+  
+  段描述符表是用来存放段描述符的一个数据结构，段表分为**全局描述符表（Global Descriptor Table, GDT）**或 **局部描述符表（Local Descriptor Table, LDT）** .
+  
+  GDT在主存中的地址和大小存放在 **gdtr控制寄存器** 中，当前正被使用的LDT地址和大小放在 **ldtr控制寄存器** 中。
+  
+  由 GDT 映射的地址空间称为全局地址空间，由 LDT 映射的地址空间则称为局部地址空间，而这两者构成了虚拟地址的空间。
+  
+  > **Linux GDT** :
+  
+  在操作系统中，每一个cpu对应一个GDT.
+  GDT 为一个长度为32的段描述符数组:`extern struct desc_struct cpu_gdt_table[NR_CPUS][GDT_ENTRIES];`
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-696d4f1f29122f08.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  - 用户态和内核态下的代码段和数据段，共4个。
+  - 任务状态段（TSS），每个处理器有1个。每个TSS相应的线性地址空间都是内核数据段相应线性地址空间的一个小子集。所有的任务状态段都顺序地存放在init_tss数组中，值得特别说明的是，第n个CPU的TSS描述符的Base字段指向init_tss数组的第n个元素。G(粒度)标志被清0，而Limit字段置为0xeb, 因为TSS段是236字节长。Type字段置为9或11(可用的32位TSS)，且DPL置 为0，因为不允许用户态下的进程访问TSS段。
+  - 1个包括缺省局部描述符表的段，这个段通常被所有进程共享。
+  - 3个局部线程存储（Thread-Local Storage, TLS）段：这种机制允许多线程应用程序使用最多3个局部于线程的数据段。系统使用set_thread_area()和get_thread_area()分别为正在执行的进程创建和撤销一个TLS段。
+  - 与高级电源管理（APM）相关的3个段：由于BIOS代码使用段，所以当Linux APM驱动程序调用BIOS函数来获取或者设置APM设备的状态时，就可以使用自定义的代码段和数据段。
+  - 与支持即插即用（PnP）功能的BIOS服务程序相关的5个段。
+  - 被内核用来处理“双重错误”异常（处理一个异常时可能会引发另一个异常）的特殊TSS段。
+  
+  > **Linux LDT** : 
+  
+  大多数用户态下的Linux程序不使用局部描述符表，因此内核就定义了一个缺省的LDT供大多数进程共享。缺省的局部描述符表存放在default_ldt数组中。它包含5个项，但内核仅仅有效地使用了其中的两个项：用于iBCS执行文件的调用门和Solaris/x86可执行文件的调用门。调用门是80x86微处理器提供的一种机制，用于在调用预定义函数时改变CPU的特权级（参考Intel文档以获取更多详情）
+  
+  #### 段描述符:
+  
+  段描述符表中的每一项为一个段描述符
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4aad303cbd5f7a0b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  字段名 | 描述
+  --- | ---
+  基地址（Base）| 包含段的首字节的线性地址 （32 bit）
+  G | 粒度标志；置0，则段大小以字节为单位，否则以4096字节的倍数计
+  Limit | 最大段偏移量，段的长度（20 bit）。如果G被置为0，则一个段的大小在1个字节到1MB之间变化；否则，将在4KB到4GB之间变化
+  S | 系统标志；置0，系统段，存储诸如LDT这种关键的数据结构，否则它是一个普通的代码段或数据段
+  Type | 描述了段的类型特征和它的存取权限(数据段为2, 代码段为10)
+  DPL | 描述符特权级（Descriptor Privilege Level）字段；用于限制对这个段的存取。表示访问这个段要求的CPU最小的优先级, 用户段为3， 内核段为0
+  P | Segment-Present标志；为0表示段当前不在主存中。Linux总是把这个标志（第47位）设为1，因为它从来不把整个段交换到磁盘上去
+  D或B | 取决于是代码段还是数据段
+  AVL | 操作系统使用，但被Linux忽略
+  
+  > 主要的Linux 段的描述符字段值:
+  
+  段 | Base | G | Limit | S | Type | DPL | D/B | P
+  --- | --- | --- | --- | --- | --- | --- | --- | --- 
+  用户代码段 | 0x00000000 | 1 | 0xfffff | 1 | 10 | 3 | 1 | 1
+  用户数据段 | 0x00000000 | 1 | 0xfffff | 1 | 2 | 3 | 1 | 1
+  内核代码段 | 0x00000000 | 1 | 0xfffff | 1 | 10 | 0 | 1 | 1
+  内核数据段 | 0x00000000 | 1 | 0xfffff | 1 | 2 | 0 | 1 | 1
+  
+  #### linux 中的分段小说明:
+  
+  2.6的Linux只在x86下需要分段，而且这个分段实际上是个面子工程。Linux用户态的所有进程使用相同的段对指令和数据寻址，内核态所有进程也使用相同的段来对指令和数据寻址。
+  
+  所有的段都是0~0xFFFFFFFF 4G的寻址空间，也就是说它们共享同一片虚拟地址空间。换句话说，对于Linux来说，**逻辑地址**和**线性地址**是一致的，这也是为什么逻辑地址并不广为人知的原因，Linux的设计让他的存在感微乎其微。
+  
+  区别之处在于DPL不同，这很好理解。数据段的Type为2也就是0010B，它表示可读可写，尚未受到访问。而代码段Type为10也就是1010B，表示可读可执行，尚未受到访问。CPU映射过程中会核对这些项。如果DPL为0，CS中RPL为3，对不起，不允许。
+  
+  4个段的段选择符由宏 `__USER_CS`, `__USER_DS`, `__KERNEL_CS`, `__KERNEL_DS` 分别定义。当对内核代码段寻址时，内核只需要把 `__KERNEL_CS` 宏值装入cs即可。
+  ```
+  #define __USER_DS     0x2b   /* 5*8+3 */ 
+  #define __USER_CS     0x33   /* 6*8+3 */ 
+  #define __KERNEL_CS	  0x10
+  #define __KERNEL_DS	  0x18
+  ```
+  CPU的CPL反映了进程实在用户态还是内核态，由存放在cs寄存器的RPL字段指定。当CPL改变时，一些段寄存器必须更新。这一点很好理解，当cs寄存器的RPL字段是3，也就是说CPL为3，表示当前进程是用户态进程，那么此时ds寄存器就应该包含的是用户数据段的段选择符，也就是__USER_DS，而当cs寄存器RPL切换到0时，ds寄存器也要切换到内核态数据段。除了ds，ss亦是如此。Linux每个进程都有内核栈和用户栈，ring0和ring3之间的切换也会导致系统栈的切换。
+  
+  有关 Linux GDT 定义:
+  
+  ```
+  ENTRY(cpu_gdt_table)
+  	.quad 0x0000000000000000	/* NULL descriptor */
+  	.quad 0x0000000000000000	/* 0x0b reserved */
+  	.quad 0x0000000000000000	/* 0x13 reserved */
+  	.quad 0x0000000000000000	/* 0x1b reserved */
+  	.quad 0x0000000000000000	/* 0x20 unused */
+  	.quad 0x0000000000000000	/* 0x28 unused */
+  	.quad 0x0000000000000000	/* 0x33 TLS entry 1 */
+  	.quad 0x0000000000000000	/* 0x3b TLS entry 2 */
+  	.quad 0x0000000000000000	/* 0x43 TLS entry 3 */
+  	.quad 0x0000000000000000	/* 0x4b reserved */
+  	.quad 0x0000000000000000	/* 0x53 reserved */
+  	.quad 0x0000000000000000	/* 0x5b reserved */
+  
+  	.quad 0x00cf9a000000ffff	/* 0x60 kernel 4GB code at 0x00000000 */
+  	.quad 0x00cf92000000ffff	/* 0x68 kernel 4GB data at 0x00000000 */
+  	.quad 0x00cffa000000ffff	/* 0x73 user 4GB code at 0x00000000 */
+  	.quad 0x00cff2000000ffff	/* 0x7b user 4GB data at 0x00000000 */
+  
+  	.quad 0x0000000000000000	/* 0x80 TSS descriptor */
+  	.quad 0x0000000000000000	/* 0x88 LDT descriptor */
+  
+  	/* Segments used for calling PnP BIOS */
+  	.quad 0x00c09a0000000000	/* 0x90 32-bit code */
+  	.quad 0x00809a0000000000	/* 0x98 16-bit code */
+  	.quad 0x0080920000000000	/* 0xa0 16-bit data */
+  	.quad 0x0080920000000000	/* 0xa8 16-bit data */
+  	.quad 0x0080920000000000	/* 0xb0 16-bit data */
+  	/*
+  	 * The APM segments have byte granularity and their bases
+  	 * and limits are set at run time.
+  	 */
+  	.quad 0x00409a0000000000	/* 0xb8 APM CS    code */
+  	.quad 0x00009a0000000000	/* 0xc0 APM CS 16 code (16 bit) */
+  	.quad 0x0040920000000000	/* 0xc8 APM DS    data */
+  
+  	.quad 0x0000000000000000	/* 0xd0 - unused */
+  	.quad 0x0000000000000000	/* 0xd8 - unused */
+  	.quad 0x0000000000000000	/* 0xe0 - unused */
+  	.quad 0x0000000000000000	/* 0xe8 - unused */
+  	.quad 0x0000000000000000	/* 0xf0 - unused */
+  	.quad 0x0000000000000000	/* 0xf8 - GDT entry 31: double-fault TSS */
+  ```
+  
+  
+  
+'''
+tags: []
+isStarred: false
+isTrashed: false

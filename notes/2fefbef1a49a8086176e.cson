@@ -8,7 +8,7 @@ content: '''
   
   ```
   ${hadoophome}hadoop fs -rmr $OUTPUT_PATH
-  ${hadoophome}hadoop-streaming \\
+  hadoop-streaming \\
   	-input "$INPUT_PATH" \\
   	-output "$OUTPUT_PATH" \\
   	-mapper "python mapper_deviceId_outlier.py" \\
@@ -38,4 +38,4 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-12-19T03:45:19.129Z"
-updatedAt: "2018-11-19T06:47:36.598Z"
+updatedAt: "2019-03-13T03:14:44.550Z"
