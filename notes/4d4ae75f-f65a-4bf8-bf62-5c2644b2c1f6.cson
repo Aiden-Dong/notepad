@@ -1,5 +1,5 @@
 createdAt: "2019-03-26T04:09:59.204Z"
-updatedAt: "2019-03-26T12:36:39.739Z"
+updatedAt: "2019-03-27T13:05:52.215Z"
 type: "MARKDOWN_NOTE"
 folder: "199632a5d0d7fd0aac09"
 title: "Linux 内存管理篇(1)内存寻址"
@@ -45,7 +45,7 @@ content: '''
   
   #### 分段单元:
   
-  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2e0bdb7c5ac883b2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4a88062840a0b64f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/700)
   
   分段单元（segmentation）执行下列操作：
   
@@ -55,7 +55,7 @@ content: '''
   
   2. 定位段描述符的位置(距离起始位置偏移量)
   
-  从段选择符的index字段计算段描述符的地址，index字段的值乘以8，这个结果与gdtr或ldtr的内容相加。
+  将段选择符的地址与gdtr或ldtr的内容相加。
   
   3. 计算线性地址:
   
@@ -146,16 +146,32 @@ content: '''
   
   4个段的段选择符由宏 `__USER_CS`, `__USER_DS`, `__KERNEL_CS`, `__KERNEL_DS` 分别定义。当对内核代码段寻址时，内核只需要把 `__KERNEL_CS` 宏值装入cs即可。
   ```
-  #define __USER_DS     0x2b   /* 5*8+3 */ 
-  #define __USER_CS     0x33   /* 6*8+3 */ 
-  #define __KERNEL_CS	  0x10
-  #define __KERNEL_DS	  0x18
+  /**
+   * asm-i386/segment.h
+   */ 
+  #define GDT_ENTRY_DEFAULT_USER_CS	14
+  #define __USER_CS (GDT_ENTRY_DEFAULT_USER_CS * 8 + 3)  // 0x73
+  
+  #define GDT_ENTRY_DEFAULT_USER_DS	15
+  #define __USER_DS (GDT_ENTRY_DEFAULT_USER_DS * 8 + 3)  // 0x7b
+  
+  
+  #define GDT_ENTRY_KERNEL_BASE	12
+  
+  #define GDT_ENTRY_KERNEL_CS		(GDT_ENTRY_KERNEL_BASE + 0) // 0x60
+  #define __KERNEL_CS (GDT_ENTRY_KERNEL_CS * 8)
+  
+  #define GDT_ENTRY_KERNEL_DS		(GDT_ENTRY_KERNEL_BASE + 1) // 0x68
+  #define __KERNEL_DS (GDT_ENTRY_KERNEL_DS * 8)
   ```
   CPU的CPL反映了进程实在用户态还是内核态，由存放在cs寄存器的RPL字段指定。当CPL改变时，一些段寄存器必须更新。这一点很好理解，当cs寄存器的RPL字段是3，也就是说CPL为3，表示当前进程是用户态进程，那么此时ds寄存器就应该包含的是用户数据段的段选择符，也就是__USER_DS，而当cs寄存器RPL切换到0时，ds寄存器也要切换到内核态数据段。除了ds，ss亦是如此。Linux每个进程都有内核栈和用户栈，ring0和ring3之间的切换也会导致系统栈的切换。
   
   有关 Linux GDT 定义:
   
   ```
+  /**
+   * i386/head/head.S
+   */
   ENTRY(cpu_gdt_table)
   	.quad 0x0000000000000000	/* NULL descriptor */
   	.quad 0x0000000000000000	/* 0x0b reserved */
@@ -200,6 +216,61 @@ content: '''
   	.quad 0x0000000000000000	/* 0xf8 - GDT entry 31: double-fault TSS */
   ```
   
+  ---
+  
+  ### 分页技术
+  
+  当由逻辑地址转换到线性地址后，下一步经过 **分页单元** 来将线性地址转换为物理地址。
+  
+  Linux 提供了一种同时适用于32位和64位系统的四级分页模型分页模型
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-2bf0532e264f3513.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  > 这四种页表分别为 : 
+  
+  - **页全局目录(PGD)**
+  - **页上级目录(PUD)**
+  - **页中间目录(PMD)**
+  - **页表(PT)**
+  
+  寻址过程为: 
+  
+  1. 首先读取 **cr3** 寄存器，获取 **页全局目录 PGD** 的位置
+  2. 根据线性地址中的**GLOBAL DIR** 部分的值计算找到指定的目录项，获取到**页上级目录 PUD**的地址。
+  3. 根据线性地址中的**UPPER DIR** 部分的值计算找到指定的目录项， 获得**页中间目录 PMD**的地址。
+  4. 根据线性地址中的**MIDDLE DIR** 部分的值计算找到指定目录项， 获得**页表 PT** 的地址。
+  5. 根据线性地址中的 **TABLE** 部分的值计算找到指定目录项， 计算找到指定的页地址。
+  6. **OFFSET** 为实际地址在页内偏移量。
+  
+  但并不是所有的地址寻址都具有完整的四级分页模型。
+  
+  #### x86(32位) 的普通分页模型
+  
+  在 i386 的体系架构中，地址长度为 32 位， 所以默认情况下只采用了两级页表索引： `10 + 10 + 12`， 即
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4d114f19d4103173.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  相应的寻址变为:
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-440ae6a22ec51b16.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+  
+  #### x86中启用PAE的分页模型
+  
+  **物理地址扩展（Physical Address Extension）**，是x86处理器的一个功能，让中央处理器在32位操作系统下存取超过4GB的实体内存。
+  
+  PAE 为 **Intel Pentium Pro** 及以上级别的CPU（包括除了总线频率为400MHz的这个版本的奔腾M之外的所有新型号Pentium系列处理器）所支持，其他兼容的处理器，如速龙（Athlon）和AMD的较新型号的CPU也支持PAE。
+  
+  在硬件层面上Intel 通过在它的处理器上把管脚数从32位扩展到了36位，从而支持达到 64G 的物理地址寻址技术。
+  
+  在分页技术上，线性地址仍然适用32位长度，但是在页表跟页目录上对页表项的物理地址字段从20位扩展到了24位($2^{24}$ 个页框， offset 仍为 12)，每个页项大小变为64位， 一个4KB的页表存储的页项变为 512个($2^{3} * 2^{9}  = 2^{12}$)。
+  
+  通过设置**cr4 控制寄存器**的PAE标志来激活PAE, 寻址演变成:
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-4966c10f755b1f3a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/800)
+  
+  寻址演变为:
+  
+  ![image.png](https://upload-images.jianshu.io/upload_images/10402860-8a018453dc5419fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
   
   
 '''
