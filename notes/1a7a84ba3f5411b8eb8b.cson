@@ -26,7 +26,7 @@ content: '''
   
   > RDD 优势 :
   
-  - RDD只能从持久存储或通过Transformations操作产生，相比于分布式共享内存(DSM)可以更高效实现容错，对于丢失部分数据分区只需根据它的lineage就可重新计算出来，而不需要做特定的Checkpoint。
+  - RDD只能从持久存储或通过 Transformations 操作产生，相比于分布式共享内存(DSM)可以更高效实现容错，对于丢失部分数据分区只需根据它的lineage就可重新计算出来，而不需要做特定的Checkpoint。
   
   - RDD的不变性，可以实现类Hadoop MapReduce的推测式执行。
   
@@ -173,4 +173,5 @@ tags: []
 isStarred: false
 isTrashed: false
 createdAt: "2017-10-14T14:34:23.562Z"
-updatedAt: "2017-10-31T09:39:27.954Z"
+updatedAt: "2019-12-05T07:07:47.437Z"
+linesHighlighted: []
