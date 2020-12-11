@@ -94,6 +94,11 @@
       "key": "3d96f15f77c92116ffd3",
       "color": "#30D5C8",
       "name": "Software Source"
+    },
+    {
+      "key": "f60a221e692d9d904267",
+      "color": "#3FD941",
+      "name": "DeepLearning"
     }
   ],
   "version": "1.0"
